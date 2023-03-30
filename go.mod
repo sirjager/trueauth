@@ -8,7 +8,7 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rakyll/statik v0.1.7
 	github.com/rs/zerolog v1.29.0
-	github.com/sirjager/rpcs v0.0.0-20230330132056-658e5578cd1b
+	github.com/sirjager/rpcs v0.0.0-20230330133733-05d863821ee7
 	github.com/spf13/viper v1.15.0
 	google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf v1.29.0

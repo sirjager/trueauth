@@ -7,6 +7,8 @@ import "protoc-gen-openapiv2/options/annotations.proto";
 
 import "rpc-welcome.proto"; 
 import "rpc-health.proto"; 
+import "rpc-register.proto"; 
+import "rpc-login.proto"; 
 
  
 option go_package = "github.com/sirjager/rpcs/trueauth";
@@ -54,6 +56,28 @@ service TrueAuth {
         };
     }
 
+    rpc Register(RegisterRequest) returns (RegisterResponse) {
+        option (google.api.http) = {
+            get: "/v1/register"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description: "Register User";
+            summary: "Register User";
+            tags: "Auth";
+        };
+    }
+
+
+    rpc Login(LoginRequest) returns (LoginResponse) {
+        option (google.api.http) = {
+            get: "/v1/login"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description: "Login User";
+            summary: "Login User";
+            tags: "Auth";
+        };
+    }
 
 
 }
