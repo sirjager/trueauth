@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package trueauth;
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+import "rpc-welcome.proto"; 
+
+ 
+option go_package = "github.com/sirjager/rpcs/trueauth";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: { 
+        title: "TrueAuth Api";
+        version: "0.1.0";
+        contact: {
+            name:   "SirJager";
+            url: "https://github.com/sirjager/trueauth";
+        };
+    };
+};
+
+service TrueAuth {
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_tag) = {
+        description: "True Auth is a standalone authentication gRPC and rest api"
+        external_docs: {
+            url: "https://github.com/sirjager/trueauth";
+            description: "Find out more about TrueAuth";
+        }
+    };
+
+    rpc Welcome(WelcomeRequest) returns (WelcomeResponse) {
+        option (google.api.http) = {
+            get: "/"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description: "Returns welcome message";
+            summary: "Welcome Message";
+            tags: "System";
+        };
+    }
+ 
+}
