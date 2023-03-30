@@ -11,7 +11,9 @@ PY_RPC_DIR=$(RPCS_DIR)/$(SERVICE_NAME)/py
 STATIK_OUT=./docs
 SWAGGER_OUT=./docs/swagger
 
-
+# TEST: database configs 
+DB_MIGRATIONS=./db/migration
+DB_URL=postgres://postgres:password@localhost:5432/testdb?sslmode=disable
 
 proto:
 	- rm -rf $(GO_RPC_DIR) $(JS_RPC_DIR) $(PY_RPC_DIR)
@@ -57,7 +59,15 @@ dbschema:
 	dbml2sql --postgres -o ./db/schema.sql ./db/db.dbml
 
 
+migratenew:
+	migrate create -ext sql -dir $(DB_MIGRATIONS) -seq $(filter-out $@,$(MAKECMDGOALS))
+
+migrateup:
+	migrate -source file://$(DB_MIGRATIONS) -database $(DB_URL) -verbose up
+
+migratedown:
+	migrate -source file://$(DB_MIGRATIONS) -database $(DB_URL) -verbose down
 
 
-.PHONY: proto tidy test run dbdocs dbschema
+.PHONY: proto tidy test run dbdocs dbschema migratenew migrateup migratedown
 
