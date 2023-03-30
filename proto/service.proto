@@ -41,5 +41,18 @@ service TrueAuth {
             tags: "System";
         };
     }
- 
+
+    rpc Health(HealthRequest) returns (HealthResponse) {
+        option (google.api.http) = {
+            get: "/v1/health"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description: "Returns api health";
+            summary: "Api Health";
+            tags: "System";
+        };
+    }
+
+
+
 }
