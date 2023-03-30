@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package trueauth;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/sirjager/rpcs/trueauth";
+
+message User {
+  string id = 1; 
+  string email = 2; 
+  string username = 3; 
+  string password = 4; 
+  string firstname = 5; 
+  string lastname = 6; 
+  bool verified = 7; 
+  bool blocked = 8; 
+  google.protobuf.Timestamp created_at = 9; 
+  google.protobuf.Timestamp updated_at = 10; 
+}
