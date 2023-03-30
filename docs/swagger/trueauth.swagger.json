@@ -1,0 +1,91 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "TrueAuth Api",
+    "version": "0.1.0",
+    "contact": {
+      "name": "SirJager",
+      "url": "https://github.com/sirjager/trueauth"
+    }
+  },
+  "tags": [
+    {
+      "name": "TrueAuth",
+      "description": "True Auth is a standalone authentication gRPC and rest api",
+      "externalDocs": {
+        "description": "Find out more about TrueAuth",
+        "url": "https://github.com/sirjager/trueauth"
+      }
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Welcome Message",
+        "description": "Returns welcome message",
+        "operationId": "TrueAuth_Welcome",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/trueauthWelcomeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "System"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "trueauthWelcomeResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
