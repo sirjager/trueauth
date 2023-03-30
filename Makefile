@@ -50,6 +50,14 @@ build:
 run:
 	go run ./cmd/main.go
 
+dbdocs:
+	dbdocs build ./db/db.dbml
 
-.PHONY: proto tidy test run
+dbschema:
+	dbml2sql --postgres -o ./db/schema.sql ./db/db.dbml
+
+
+
+
+.PHONY: proto tidy test run dbdocs dbschema
 

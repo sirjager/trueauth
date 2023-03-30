@@ -1,0 +1,25 @@
+Project trueauth {
+    database_type: 'PostgreSQL'
+    Note: '''
+    # TrueAuth Database
+    '''
+}
+
+
+Table users as U {
+  id uuid [pk, not null, note: 'user id']
+  email varchar [unique, not null, note: 'unique email']
+  username varchar [unique, not null, note: 'unique username']
+  password varchar [not null, note: 'hashed password']
+  firstname varchar [default: '', not null, note: 'first name can be empty']
+  lastname varchar [default:'', not null, note: 'last name can be empty']
+  verified bool [not null, default: false, note: 'email verified or not']
+  blocked bool [not null, default: false, note: 'user blocked or not']
+  created_at timestampz [default: 'now()', note:'created at timestamp']
+  updated_at timestampz [default: 'now()', note: 'last updated at timestamp']
+
+  Indexes {
+    firstname
+    lastname
+  }
+}
