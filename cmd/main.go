@@ -15,6 +15,7 @@ import (
 	"github.com/sirjager/trueauth/cmd/server"
 	"github.com/sirjager/trueauth/db"
 	"github.com/sirjager/trueauth/db/sqlc"
+	"github.com/sirjager/trueauth/mail"
 	"github.com/sirjager/trueauth/service"
 	"github.com/sirjager/trueauth/worker"
 )
@@ -49,10 +50,15 @@ func main() {
 		logger.Fatal().Err(err).Msg("failed to migrate database")
 	}
 
+	mailer, err := mail.NewGmailSender(config.GmailSMTP)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to initialize gmail smtp")
+	}
+
 	store := sqlc.NewStore(conn)
 	redisOpt := asynq.RedisClientOpt{Addr: config.DBConfig.RedisAddr}
 	taskDistributor := worker.NewRedisTaskDistributor(logger, redisOpt)
-	go server.RunTaskProcessor(logger, store, redisOpt)
+	go server.RunTaskProcessor(logger, store, mailer, redisOpt)
 
 	errs := make(chan error)
 	go handleSignals(errs)

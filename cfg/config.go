@@ -15,6 +15,8 @@ type Config struct {
 	GrpcPort string `mapstructure:"GRPC_PORT"` //? port for serving "Grpc" requests
 
 	DBConfig DBConfig //? database configs
+
+	GmailSMTP GmailSMTP //? Gmail Stmp server configs
 }
 
 type DBConfig struct {
@@ -30,6 +32,12 @@ type DBConfig struct {
 	DBUrl     string //? database url
 }
 
+type GmailSMTP struct {
+	SMTPSender string `mapstructure:"GMAIL_SMTP_NAME"` //? smtp account holder name
+	SMTPUser   string `mapstructure:"GMAIL_SMTP_USER"` //? smtp email provider user
+	SMTPPass   string `mapstructure:"GMAIL_SMTP_PASS"` //? smtp email provider pass
+}
+
 func LoadConfigs(path, name string) (config Config, err error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName(name)
@@ -43,14 +51,15 @@ func LoadConfigs(path, name string) (config Config, err error) {
 		return
 	}
 
-	var dbConfig DBConfig
-	if err = viper.Unmarshal(&dbConfig); err != nil {
+	if err = viper.Unmarshal(&config.DBConfig); err != nil {
 		return
 	}
-	dbConfig.DBUrl = fmt.Sprintf("%s://%s:%s@%s:%s/%s%s", dbConfig.DBDriver, dbConfig.DBUser, dbConfig.DBPass, dbConfig.DBHost, dbConfig.DBPort, dbConfig.DBName, dbConfig.DBArgs)
-	dbConfig.DBMigrate = "file://" + dbConfig.DBMigrate
+	config.DBConfig.DBUrl = fmt.Sprintf("%s://%s:%s@%s:%s/%s%s", config.DBConfig.DBDriver, config.DBConfig.DBUser, config.DBConfig.DBPass, config.DBConfig.DBHost, config.DBConfig.DBPort, config.DBConfig.DBName, config.DBConfig.DBArgs)
+	config.DBConfig.DBMigrate = "file://" + config.DBConfig.DBMigrate
 
-	config.DBConfig = dbConfig
+	if err = viper.Unmarshal(&config.GmailSMTP); err != nil {
+		return
+	}
 
 	return
 }

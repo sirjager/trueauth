@@ -5,7 +5,7 @@ import (
 	"net/smtp"
 
 	"github.com/jordan-wright/email"
-	_ "github.com/jordan-wright/email"
+	"github.com/sirjager/trueauth/cfg"
 	"github.com/sirjager/trueauth/validator"
 )
 
@@ -16,20 +16,23 @@ type GmailSender struct {
 	senderEmail string
 }
 
-func NewGmailSender(host, port, email, pass, senderName string) (MailSender, error) {
-	if err := validator.ValidateEmail(email); err != nil {
+const (
+	GMAIL_SMTP_HOST = "smtp.gmail.com"
+	GMAIL_SMTP_PORT = "587"
+)
+
+func NewGmailSender(config cfg.GmailSMTP) (MailSender, error) {
+	if err := validator.ValidateEmail(config.SMTPUser); err != nil {
 		return nil, err
 	}
-	if err := validator.ValidatePassword(pass); err != nil {
+	if err := validator.ValidatePassword(config.SMTPPass); err != nil {
 		return nil, err
 	}
-	address := fmt.Sprintf("%s:%s", host, port)
-	plainAuth := smtp.PlainAuth("", email, pass, host)
 	return &GmailSender{
-		address:     address,
-		plainAuth:   plainAuth,
-		senderEmail: email,
-		senderName:  senderName,
+		senderEmail: config.SMTPUser,
+		senderName:  config.SMTPSender,
+		address:     GMAIL_SMTP_HOST + ":" + GMAIL_SMTP_PORT,
+		plainAuth:   smtp.PlainAuth("", config.SMTPUser, config.SMTPPass, GMAIL_SMTP_HOST),
 	}, nil
 }
 

@@ -5,7 +5,9 @@ import (
 
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
+
 	"github.com/sirjager/trueauth/db/sqlc"
+	"github.com/sirjager/trueauth/mail"
 )
 
 const (
@@ -23,9 +25,10 @@ type RedisTaskProcessor struct {
 	server *asynq.Server
 	logger zerolog.Logger
 	store  sqlc.Store
+	mailer mail.MailSender
 }
 
-func NewRedisTaskProcessor(logger zerolog.Logger, store sqlc.Store, redisOpts asynq.RedisClientOpt) TaskProcessor {
+func NewRedisTaskProcessor(logger zerolog.Logger, store sqlc.Store, mailer mail.MailSender, redisOpts asynq.RedisClientOpt) TaskProcessor {
 	clientConfig := asynq.Config{
 		Queues: map[string]int{
 			QUEUE_CRITICAL: 10,
@@ -35,13 +38,13 @@ func NewRedisTaskProcessor(logger zerolog.Logger, store sqlc.Store, redisOpts as
 		ErrorHandler: asynq.ErrorHandlerFunc(func(ctx context.Context, task *asynq.Task, err error) {
 			logger.Error().Err(err).
 				Str("type", task.Type()).
-				Bytes("payload", task.Payload()).
+				Interface("payload", task.Payload()).
 				Msg("failed to process task")
 		}),
 		Logger: NewLogger(logger),
 	}
 	server := asynq.NewServer(redisOpts, clientConfig)
-	return &RedisTaskProcessor{server, logger, store}
+	return &RedisTaskProcessor{server, logger, store, mailer}
 }
 
 func (processor *RedisTaskProcessor) Start() error {
