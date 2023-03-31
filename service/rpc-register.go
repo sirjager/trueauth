@@ -2,12 +2,17 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/lib/pq"
 	rpc "github.com/sirjager/rpcs/trueauth/go"
+	"github.com/sirjager/trueauth/db/sqlc"
+	"github.com/sirjager/trueauth/utils"
 	"github.com/sirjager/trueauth/validator/validator"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (s *TrueAuthService) Register(ctx context.Context, req *rpc.RegisterRequest) (*rpc.RegisterResponse, error) {
@@ -16,7 +21,33 @@ func (s *TrueAuthService) Register(ctx context.Context, req *rpc.RegisterRequest
 		return nil, invalidArgumentsError(violations)
 	}
 
-	return &rpc.RegisterResponse{}, nil
+	hashedPassword, err := utils.HashString(req.GetPassword())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to hash password: %s", err.Error())
+	}
+
+	params := sqlc.CreateUserTxParams{
+		CreateUserParams: sqlc.CreateUserParams{
+			Email:     req.GetEmail(),
+			Username:  req.GetUsername(),
+			Password:  hashedPassword,
+			Firstname: req.GetFirstname(),
+			Lastname:  req.GetLastname(),
+		},
+	}
+
+	user, err := s.store.CreateUserTx(ctx, params)
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			switch pqErr.Code.Name() {
+			case "unique_violation":
+				return nil, status.Errorf(codes.Internal, fmt.Sprintf("%s already exists", unique_violation(pqErr)))
+			}
+		}
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return &rpc.RegisterResponse{User: publicProfile(user)}, nil
 }
 
 func validateRegisterRequest(req *rpc.RegisterRequest) (violations []*errdetails.BadRequest_FieldViolation) {

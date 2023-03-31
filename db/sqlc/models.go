@@ -5,7 +5,7 @@
 package sqlc
 
 import (
-	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -28,7 +28,7 @@ type User struct {
 	// user blocked or not
 	Blocked bool `json:"blocked"`
 	// created at timestamp
-	CreatedAt sql.NullTime `json:"created_at"`
+	CreatedAt time.Time `json:"created_at"`
 	// last updated at timestamp
-	UpdatedAt sql.NullTime `json:"updated_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

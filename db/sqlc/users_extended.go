@@ -43,3 +43,23 @@ func (q *Queries) GetUser(ctx context.Context, arg GetUserParams) (User, error) 
 	err := _scanUser(row, i)
 	return i, err
 }
+
+type CreateUserTxParams struct {
+	CreateUserParams
+	AfterCreate func(user User) error
+}
+
+func (store *SQLStore) CreateUserTx(ctx context.Context, arg CreateUserTxParams) (User, error) {
+	var user User
+	err := store.execTx(ctx, func(q *Queries) (err error) {
+		user, err = q.CreateUser(ctx, arg.CreateUserParams)
+		if err != nil {
+			return err
+		}
+		if arg.AfterCreate != nil {
+			return arg.AfterCreate(user)
+		}
+		return err
+	})
+	return user, err
+}

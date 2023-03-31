@@ -1,6 +1,6 @@
 
 CREATE TABLE "users" (
-  "id" uuid PRIMARY KEY NOT NULL,
+  "id" uuid PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
   "email" VARCHAR(255) UNIQUE NOT NULL,
   "username" VARCHAR(255) UNIQUE NOT NULL,
   "password" VARCHAR(255) NOT NULL,
@@ -8,8 +8,8 @@ CREATE TABLE "users" (
   "lastname" VARCHAR(255) NOT NULL DEFAULT '',
   "verified" BOOL NOT NULL DEFAULT false,
   "blocked" BOOL NOT NULL DEFAULT false,
-  "created_at" TIMESTAMPTZ DEFAULT 'now()',
-  "updated_at" TIMESTAMPTZ DEFAULT 'now()'
+  "created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
+  "updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()'
 );
 
 CREATE INDEX ON "users" ("firstname");

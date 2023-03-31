@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-03-31T05:18:16.230Z
+-- Generated at: 2023-03-31T07:01:35.393Z
 
 CREATE TABLE "users" (
   "id" uuid PRIMARY KEY NOT NULL,
@@ -11,8 +11,8 @@ CREATE TABLE "users" (
   "lastname" VARCHAR(255) NOT NULL DEFAULT '',
   "verified" BOOL NOT NULL DEFAULT false,
   "blocked" BOOL NOT NULL DEFAULT false,
-  "created_at" TIMESTAMPTZ DEFAULT 'now()',
-  "updated_at" TIMESTAMPTZ DEFAULT 'now()'
+  "created_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()',
+  "updated_at" TIMESTAMPTZ NOT NULL DEFAULT 'now()'
 );
 
 CREATE INDEX ON "users" ("firstname");
