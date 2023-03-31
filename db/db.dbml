@@ -45,7 +45,7 @@ Table sessions as S {
 
 
 Table iprecords as IP {
-  id UUID [pk, not null, note:'user uuid']
+  id UUID [pk, ref: > U.id, not null, note:'user uuid']
   allowed_ips TEXT[] [note: 'list of all allowed ip address for this user']
   blocked_ips TEXT[] [note: 'list of all blocked ip address for this user']
   code TEXT [not null, default: '', note: 'confirmation code sent to email for allowing new ips']

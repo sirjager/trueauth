@@ -11,7 +11,7 @@ import (
 	rpc "github.com/sirjager/rpcs/trueauth/go"
 	"github.com/sirjager/trueauth/db/sqlc"
 	"github.com/sirjager/trueauth/utils"
-	"github.com/sirjager/trueauth/validator/validator"
+	"github.com/sirjager/trueauth/validator"
 	"github.com/sirjager/trueauth/worker"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"

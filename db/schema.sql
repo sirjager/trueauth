@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-03-31T11:33:57.208Z
+-- Generated at: 2023-03-31T11:43:02.071Z
 
 CREATE TABLE "users" (
   "id" UUID PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
@@ -128,5 +128,7 @@ COMMENT ON COLUMN "emailrecords"."created_at" IS 'created at timestamp';
 COMMENT ON COLUMN "emailrecords"."updated_at" IS 'last updated at timestamp';
 
 ALTER TABLE "sessions" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+
+ALTER TABLE "iprecords" ADD FOREIGN KEY ("id") REFERENCES "users" ("id");
 
 ALTER TABLE "emailrecords" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
