@@ -13,7 +13,7 @@ const (
 	StatusUP = "UP"
 )
 
-func (s *TrueAuthService) Health(context.Context, *rpc.HealthRequest) (*rpc.HealthResponse, error) {
+func (s *TrueAuthService) Health(ctx context.Context, req *rpc.HealthRequest) (*rpc.HealthResponse, error) {
 	return &rpc.HealthResponse{
 		Status:    StatusUP,
 		Timestamp: timestamppb.Now(),
