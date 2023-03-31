@@ -53,7 +53,7 @@ func (processor *RedisTaskProcessor) ProcessTaskSendVerifyEmail(ctx context.Cont
 	// generate a random code
 	sixDigitCode := utils.RandomNumberAsString(6)
 	codeExpiresAt := time.Now().Add(time.Minute * 10)
-	emailEntryParams := sqlc.CreateEmailEntryParams{
+	emailRecordParams := sqlc.CreateEmailRecordParams{
 		UserID:        user.ID,
 		Email:         user.Email,
 		Verified:      user.Verified,
@@ -62,7 +62,7 @@ func (processor *RedisTaskProcessor) ProcessTaskSendVerifyEmail(ctx context.Cont
 	}
 
 	// send email
-	emailEntry, err := processor.store.CreateEmailEntry(ctx, emailEntryParams)
+	emailEntry, err := processor.store.CreateEmailRecord(ctx, emailRecordParams)
 	if err != nil {
 		return fmt.Errorf("failed to create email entry: %w", err)
 	}

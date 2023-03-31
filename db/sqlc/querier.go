@@ -11,21 +11,21 @@ import (
 )
 
 type Querier interface {
-	CreateEmailEntry(ctx context.Context, arg CreateEmailEntryParams) (Emailentry, error)
-	CreateIPEntry(ctx context.Context, arg CreateIPEntryParams) error
+	CreateEmailRecord(ctx context.Context, arg CreateEmailRecordParams) (Emailrecord, error)
+	CreateIPRecord(ctx context.Context, arg CreateIPRecordParams) error
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteUser(ctx context.Context, id uuid.UUID) error
-	GetEmailEntry(ctx context.Context, id uuid.UUID) (Emailentry, error)
-	GetIPEntry(ctx context.Context, id uuid.UUID) (Ipentry, error)
+	GetEmailRecord(ctx context.Context, id uuid.UUID) (Emailrecord, error)
+	GetIPRecord(ctx context.Context, id uuid.UUID) (Iprecord, error)
 	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	ListSessionsByUser(ctx context.Context, arg ListSessionsByUserParams) ([]Session, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
-	UpdateEmailEntry(ctx context.Context, arg UpdateEmailEntryParams) (Emailentry, error)
-	UpdateIPEntry(ctx context.Context, arg UpdateIPEntryParams) (Ipentry, error)
+	UpdateEmailRecord(ctx context.Context, arg UpdateEmailRecordParams) (Emailrecord, error)
+	UpdateIPRecord(ctx context.Context, arg UpdateIPRecordParams) (Iprecord, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 }
 

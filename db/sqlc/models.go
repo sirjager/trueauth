@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Emailentry struct {
+type Emailrecord struct {
 	// email uuid
 	ID uuid.UUID `json:"id"`
 	// email address
@@ -29,7 +29,7 @@ type Emailentry struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type Ipentry struct {
+type Iprecord struct {
 	// user uuid
 	ID uuid.UUID `json:"id"`
 	// list of all allowed ip address for this user

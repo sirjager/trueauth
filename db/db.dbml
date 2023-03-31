@@ -44,7 +44,7 @@ Table sessions as S {
 
 
 
-Table ipentries as IP {
+Table iprecords as IP {
   id UUID [pk, not null, note:'user uuid']
   allowed_ips TEXT[] [note: 'list of all allowed ip address for this user']
   blocked_ips TEXT[] [note: 'list of all blocked ip address for this user']
@@ -55,7 +55,7 @@ Table ipentries as IP {
 }
 
 
-Table emailentries as E {
+Table emailrecords as E {
   id UUID [pk, not null, note:'email uuid', default: `uuid_generate_v4()`]
   email VARCHAR(255) [unique, not null, note: 'email address']
   user_id UUID [ref: > U.id, not null, note: 'user id']

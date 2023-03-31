@@ -42,14 +42,14 @@ func (s *TrueAuthService) Register(ctx context.Context, req *rpc.RegisterRequest
 		},
 		AfterCreate: func(user sqlc.User) error {
 			// #1. store ip address
-			_ipEntryParams := sqlc.CreateIPEntryParams{ID: user.ID, AllowedIps: []string{meta.ClientIp}}
-			if err = s.store.CreateIPEntry(ctx, _ipEntryParams); err != nil {
+			_recordParams := sqlc.CreateIPRecordParams{ID: user.ID, AllowedIps: []string{meta.ClientIp}}
+			if err = s.store.CreateIPRecord(ctx, _recordParams); err != nil {
 				return err
 			}
 
 			// #2. send email verification
 			opts := []asynq.Option{
-				asynq.MaxRetry(10),
+				asynq.MaxRetry(3),
 				asynq.ProcessIn(10 * time.Second),
 				asynq.Queue(worker.QUEUE_CRITICAL),
 			}
