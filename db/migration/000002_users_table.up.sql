@@ -37,5 +37,5 @@ COMMENT ON COLUMN "users"."created_at" IS 'created at timestamp';
 COMMENT ON COLUMN "users"."updated_at" IS 'last updated at timestamp';
 
 
-CREATE TRIGGER trg_update_updated_at BEFORE UPDATE ON users
+CREATE TRIGGER trg_update_updated_at BEFORE UPDATE ON "users"
 FOR EACH ROW WHEN (OLD.id = NEW.id) EXECUTE FUNCTION fn_update_timestamp();

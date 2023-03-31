@@ -10,6 +10,65 @@ import (
 	"github.com/google/uuid"
 )
 
+type Email struct {
+	// email uuid
+	ID uuid.UUID `json:"id"`
+	// email address
+	Email string `json:"email"`
+	// username of the user
+	Username string `json:"username"`
+	// email verified or not
+	Verified bool `json:"verified"`
+	// confirmation code sent to email for email verification
+	Code string `json:"code"`
+	// email confirmation code expires at
+	CodeExpiresAt time.Time `json:"code_expires_at"`
+	// created at timestamp
+	CreatedAt time.Time `json:"created_at"`
+	// last updated at timestamp
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type Ipentry struct {
+	// user id
+	ID uuid.UUID `json:"id"`
+	// list of all allowed ip address for this user
+	AllowedIps []string `json:"allowed_ips"`
+	// list of all blocked ip address for this user
+	BlockedIps []string `json:"blocked_ips"`
+	// confirmation code sent to email for allowing new ips
+	Code string `json:"code"`
+	// confirmation code expires at
+	CodeExpiresAt time.Time `json:"code_expires_at"`
+	// created at timestamp of this session
+	CreatedAt time.Time `json:"created_at"`
+	// last updated at timestamp of this session
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type Session struct {
+	// refresh token id
+	ID uuid.UUID `json:"id"`
+	// refresh token
+	RefreshToken string `json:"refresh_token"`
+	// access token id
+	AccessTokenID uuid.UUID `json:"access_token_id"`
+	// short life access token
+	AccessToken string `json:"access_token"`
+	// user id to whom this session is assigned to
+	UserID uuid.UUID `json:"user_id"`
+	// session is blocked or not
+	Blocked bool `json:"blocked"`
+	// expiration time of access token
+	AccessTokenExpiresAt time.Time `json:"access_token_expires_at"`
+	// expiration time of a refresh token
+	RefreshTokenExpiresAt time.Time `json:"refresh_token_expires_at"`
+	// created at timestamp of this session
+	CreatedAt time.Time `json:"created_at"`
+	// last updated at timestamp of this session
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 type User struct {
 	// user id
 	ID uuid.UUID `json:"id"`
