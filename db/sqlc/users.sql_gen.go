@@ -57,6 +57,72 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT id, email, username, password, firstname, lastname, verified, blocked, created_at, updated_at FROM users WHERE email = $1 LIMIT 1
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.Password,
+		&i.Firstname,
+		&i.Lastname,
+		&i.Verified,
+		&i.Blocked,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserByID = `-- name: GetUserByID :one
+SELECT id, email, username, password, firstname, lastname, verified, blocked, created_at, updated_at FROM users WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByID, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.Password,
+		&i.Firstname,
+		&i.Lastname,
+		&i.Verified,
+		&i.Blocked,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserByUsername = `-- name: GetUserByUsername :one
+SELECT id, email, username, password, firstname, lastname, verified, blocked, created_at, updated_at FROM users WHERE username = $1 LIMIT 1
+`
+
+func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByUsername, username)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.Password,
+		&i.Firstname,
+		&i.Lastname,
+		&i.Verified,
+		&i.Blocked,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const listUsers = `-- name: ListUsers :many
 SELECT id, email, username, password, firstname, lastname, verified, blocked, created_at, updated_at FROM users LIMIT $2 OFFSET $1
 `

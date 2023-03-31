@@ -45,8 +45,7 @@ Table sessions as S {
 
 
 Table ipentries as IP {
-  id UUID [pk, not null, default: `uuid_generate_v4()`, note:'entry uuid']
-  user_id UUID [unique, ref: > U.id, not null, note:'user id']
+  id UUID [pk, not null, note:'user uuid']
   allowed_ips TEXT[] [note: 'list of all allowed ip address for this user']
   blocked_ips TEXT[] [note: 'list of all blocked ip address for this user']
   code TEXT [not null, default: '', note: 'confirmation code sent to email for allowing new ips']
@@ -56,11 +55,10 @@ Table ipentries as IP {
 }
 
 
-
-Table emails as E {
-  id UUID [pk,not null, note: 'email uuid', default: `uuid_generate_v4()`]
-  email VARCHAR(255) [not null, note: 'email address']
-  username VARCHAR(255) [ref: > U.username, not null, note: 'username of the user']
+Table emailentries as E {
+  id UUID [pk, not null, note:'email uuid', default: `uuid_generate_v4()`]
+  email VARCHAR(255) [unique, not null, note: 'email address']
+  user_id UUID [ref: > U.id, not null, note: 'user id']
   verified BOOL [not null, default: FALSE, note: 'email verified or not']
   code TEXT [not null, default: '', note: 'confirmation code sent to email for email verification']
   code_expires_at TIMESTAMPTZ [not null, note: 'email confirmation code expires at']

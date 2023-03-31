@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-03-31T08:00:27.463Z
+-- Generated at: 2023-03-31T09:39:59.732Z
 
 CREATE TABLE "users" (
   "id" UUID PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
@@ -29,8 +29,7 @@ CREATE TABLE "sessions" (
 );
 
 CREATE TABLE "ipentries" (
-  "id" UUID PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
-  "user_id" UUID UNIQUE NOT NULL,
+  "id" UUID PRIMARY KEY NOT NULL,
   "allowed_ips" TEXT[],
   "blocked_ips" TEXT[],
   "code" TEXT NOT NULL DEFAULT '',
@@ -39,10 +38,10 @@ CREATE TABLE "ipentries" (
   "updated_at" TIMESTAMPTZ NOT NULL DEFAULT (now())
 );
 
-CREATE TABLE "emails" (
+CREATE TABLE "emailentries" (
   "id" UUID PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
-  "email" VARCHAR(255) NOT NULL,
-  "username" VARCHAR(255) NOT NULL,
+  "email" VARCHAR(255) UNIQUE NOT NULL,
+  "user_id" UUID NOT NULL,
   "verified" BOOL NOT NULL DEFAULT FALSE,
   "code" TEXT NOT NULL DEFAULT '',
   "code_expires_at" TIMESTAMPTZ NOT NULL,
@@ -98,9 +97,7 @@ COMMENT ON COLUMN "sessions"."created_at" IS 'created at timestamp of this sessi
 
 COMMENT ON COLUMN "sessions"."updated_at" IS 'last updated at timestamp of this session';
 
-COMMENT ON COLUMN "ipentries"."id" IS 'entry uuid';
-
-COMMENT ON COLUMN "ipentries"."user_id" IS 'user id';
+COMMENT ON COLUMN "ipentries"."id" IS 'user uuid';
 
 COMMENT ON COLUMN "ipentries"."allowed_ips" IS 'list of all allowed ip address for this user';
 
@@ -114,24 +111,22 @@ COMMENT ON COLUMN "ipentries"."created_at" IS 'created at timestamp of this sess
 
 COMMENT ON COLUMN "ipentries"."updated_at" IS 'last updated at timestamp of this session';
 
-COMMENT ON COLUMN "emails"."id" IS 'email uuid';
+COMMENT ON COLUMN "emailentries"."id" IS 'email uuid';
 
-COMMENT ON COLUMN "emails"."email" IS 'email address';
+COMMENT ON COLUMN "emailentries"."email" IS 'email address';
 
-COMMENT ON COLUMN "emails"."username" IS 'username of the user';
+COMMENT ON COLUMN "emailentries"."user_id" IS 'user id';
 
-COMMENT ON COLUMN "emails"."verified" IS 'email verified or not';
+COMMENT ON COLUMN "emailentries"."verified" IS 'email verified or not';
 
-COMMENT ON COLUMN "emails"."code" IS 'confirmation code sent to email for email verification';
+COMMENT ON COLUMN "emailentries"."code" IS 'confirmation code sent to email for email verification';
 
-COMMENT ON COLUMN "emails"."code_expires_at" IS 'email confirmation code expires at';
+COMMENT ON COLUMN "emailentries"."code_expires_at" IS 'email confirmation code expires at';
 
-COMMENT ON COLUMN "emails"."created_at" IS 'created at timestamp';
+COMMENT ON COLUMN "emailentries"."created_at" IS 'created at timestamp';
 
-COMMENT ON COLUMN "emails"."updated_at" IS 'last updated at timestamp';
+COMMENT ON COLUMN "emailentries"."updated_at" IS 'last updated at timestamp';
 
 ALTER TABLE "sessions" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
 
-ALTER TABLE "ipentries" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
-
-ALTER TABLE "emails" ADD FOREIGN KEY ("username") REFERENCES "users" ("username");
+ALTER TABLE "emailentries" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");

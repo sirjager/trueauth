@@ -9,12 +9,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
 	"github.com/sirjager/trueauth/cfg"
 	"github.com/sirjager/trueauth/cmd/server"
 	"github.com/sirjager/trueauth/db"
 	"github.com/sirjager/trueauth/db/sqlc"
 	"github.com/sirjager/trueauth/service"
+	"github.com/sirjager/trueauth/worker"
 )
 
 var logger zerolog.Logger
@@ -48,11 +50,14 @@ func main() {
 	}
 
 	store := sqlc.NewStore(conn)
+	redisOpt := asynq.RedisClientOpt{Addr: config.DBConfig.RedisAddr}
+	taskDistributor := worker.NewRedisTaskDistributor(logger, redisOpt)
+	go server.RunTaskProcessor(logger, store, redisOpt)
 
 	errs := make(chan error)
 	go handleSignals(errs)
 
-	srvic, err := service.NewTrueAuthService(logger, config, store)
+	srvic, err := service.NewTrueAuthService(logger, config, store, taskDistributor)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to create service")
 	}

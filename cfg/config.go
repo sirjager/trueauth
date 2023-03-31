@@ -18,6 +18,7 @@ type Config struct {
 }
 
 type DBConfig struct {
+	RedisAddr string `mapstructure:"REDIS_ADDR"` //? Redis connection string for caching
 	DBName    string `mapstructure:"DB_NAME"`    //? database name
 	DBHost    string `mapstructure:"DB_HOST"`    //? database host
 	DBPort    string `mapstructure:"DB_PORT"`    //? database port

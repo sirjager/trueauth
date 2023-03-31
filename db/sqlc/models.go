@@ -10,13 +10,13 @@ import (
 	"github.com/google/uuid"
 )
 
-type Email struct {
+type Emailentry struct {
 	// email uuid
 	ID uuid.UUID `json:"id"`
 	// email address
 	Email string `json:"email"`
-	// username of the user
-	Username string `json:"username"`
+	// user id
+	UserID uuid.UUID `json:"user_id"`
 	// email verified or not
 	Verified bool `json:"verified"`
 	// confirmation code sent to email for email verification
@@ -30,7 +30,7 @@ type Email struct {
 }
 
 type Ipentry struct {
-	// user id
+	// user uuid
 	ID uuid.UUID `json:"id"`
 	// list of all allowed ip address for this user
 	AllowedIps []string `json:"allowed_ips"`

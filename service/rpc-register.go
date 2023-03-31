@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/hibiken/asynq"
 	"github.com/lib/pq"
 	rpc "github.com/sirjager/rpcs/trueauth/go"
 	"github.com/sirjager/trueauth/db/sqlc"
 	"github.com/sirjager/trueauth/utils"
 	"github.com/sirjager/trueauth/validator/validator"
+	"github.com/sirjager/trueauth/worker"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -26,6 +29,9 @@ func (s *TrueAuthService) Register(ctx context.Context, req *rpc.RegisterRequest
 		return nil, status.Errorf(codes.Internal, "failed to hash password: %s", err.Error())
 	}
 
+	// extract metadata like client-ip and user-agent
+	meta := s.extractMetadata(ctx)
+
 	params := sqlc.CreateUserTxParams{
 		CreateUserParams: sqlc.CreateUserParams{
 			Email:     req.GetEmail(),
@@ -33,6 +39,22 @@ func (s *TrueAuthService) Register(ctx context.Context, req *rpc.RegisterRequest
 			Password:  hashedPassword,
 			Firstname: req.GetFirstname(),
 			Lastname:  req.GetLastname(),
+		},
+		AfterCreate: func(user sqlc.User) error {
+			// #1. store ip address
+			_ipEntryParams := sqlc.CreateIPEntryParams{ID: user.ID, AllowedIps: []string{meta.ClientIp}}
+			if err = s.store.CreateIPEntry(ctx, _ipEntryParams); err != nil {
+				return err
+			}
+
+			// #2. send email verification
+			opts := []asynq.Option{
+				asynq.MaxRetry(10),
+				asynq.ProcessIn(10 * time.Second),
+				asynq.Queue(worker.QUEUE_CRITICAL),
+			}
+			_sendVerifyEmailParams := &worker.PayloadSendVerifyEmail{Username: user.Username}
+			return s.taskDistributor.DistributeTaskSendVerifyEmail(ctx, _sendVerifyEmailParams, opts...)
 		},
 	}
 
