@@ -1,1 +1,3 @@
-# TrueAuth a standalone authentication server
+# TrueAuth
+
+## A standalone authentication server
