@@ -1,16 +1,16 @@
+
 CREATE TABLE "users" (
   "id" uuid PRIMARY KEY NOT NULL,
-  "email" varchar UNIQUE NOT NULL,
-  "username" varchar UNIQUE NOT NULL,
-  "password" varchar NOT NULL,
-  "firstname" varchar NOT NULL DEFAULT '',
-  "lastname" varchar NOT NULL DEFAULT '',
-  "verified" bool NOT NULL DEFAULT false,
-  "blocked" bool NOT NULL DEFAULT false,
-  "created_at" timestampz DEFAULT 'now()',
-  "updated_at" timestampz DEFAULT 'now()'
+  "email" VARCHAR(255) UNIQUE NOT NULL,
+  "username" VARCHAR(255) UNIQUE NOT NULL,
+  "password" VARCHAR(255) NOT NULL,
+  "firstname" VARCHAR(255) NOT NULL DEFAULT '',
+  "lastname" VARCHAR(255) NOT NULL DEFAULT '',
+  "verified" BOOL NOT NULL DEFAULT false,
+  "blocked" BOOL NOT NULL DEFAULT false,
+  "created_at" TIMESTAMPTZ DEFAULT 'now()',
+  "updated_at" TIMESTAMPTZ DEFAULT 'now()'
 );
-
 
 CREATE INDEX ON "users" ("firstname");
 

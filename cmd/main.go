@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"os/signal"
@@ -11,6 +12,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/sirjager/trueauth/cfg"
 	"github.com/sirjager/trueauth/cmd/server"
+	"github.com/sirjager/trueauth/db"
+	"github.com/sirjager/trueauth/db/sqlc"
 	"github.com/sirjager/trueauth/service"
 )
 
@@ -34,12 +37,24 @@ func main() {
 	config.StartTime = startTime
 	config.ServiceName = serviceName
 
+	conn, err := sql.Open(config.DBConfig.DBDriver, config.DBConfig.DBUrl)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to make database connection")
+	}
+	defer conn.Close()
+
+	if err = db.Migrate(logger, conn, config.DBConfig); err != nil {
+		logger.Fatal().Err(err).Msg("failed to migrate database")
+	}
+
+	store := sqlc.NewStore(conn)
+
 	errs := make(chan error)
 	go handleSignals(errs)
 
-	srvic, err := service.NewTrueAuthService(logger, config)
+	srvic, err := service.NewTrueAuthService(logger, config, store)
 	if err != nil {
-		logger.Fatal().Err(err).Msgf("error while creating %s service", serviceName)
+		logger.Fatal().Err(err).Msg("failed to create service")
 	}
 
 	if config.RestPort != "" {
