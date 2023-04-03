@@ -14,6 +14,14 @@ type Config struct {
 	RestPort string `mapstructure:"REST_PORT"` //? port for serving "Rest" requests
 	GrpcPort string `mapstructure:"GRPC_PORT"` //? port for serving "Grpc" requests
 
+	TokenSecret         string        `mapstructure:"TOKEN_SECRET"`          //? access token time to live
+	AccessTokenTTL      time.Duration `mapstructure:"ACCESS_TOKEN_TTL"`      //? access token time to live
+	RefreshTokenTTL     time.Duration `mapstructure:"REFRESH_TOKEN_TTL"`     //? refres token time to live
+	VerifyTokenTTL      time.Duration `mapstructure:"VERIFY_TOKEN_TTL"`      //? verification token time to live
+	VerifyTokenCooldown time.Duration `mapstructure:"VERIFY_TOKEN_COOLDOWN"` //? verification token request cooldown
+	ResetTokenTTL       time.Duration `mapstructure:"RESET_TOKEN_TTL"`       //? reset token time to live
+	ResetTokenCooldown  time.Duration `mapstructure:"RESET_TOKEN_COOLDOWN"`  //? reset token request cooldown
+
 	DBConfig DBConfig //? database configs
 
 	GmailSMTP GmailSMTP //? Gmail Stmp server configs

@@ -3,6 +3,8 @@ module github.com/sirjager/trueauth
 go 1.20
 
 require (
+	github.com/aead/chacha20poly1305 v0.0.0-20201124145622-1a5aba2a8b29
+	github.com/go-redis/redis/v8 v8.11.2
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/google/uuid v1.3.0
@@ -11,10 +13,11 @@ require (
 	github.com/hibiken/asynq v0.24.0
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/lib/pq v1.10.7
+	github.com/o1egl/paseto v1.0.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rakyll/statik v0.1.7
 	github.com/rs/zerolog v1.29.0
-	github.com/sirjager/rpcs v0.0.0-20230330133733-05d863821ee7
+	github.com/sirjager/rpcs v0.0.0-20230403112852-1e14a18cba2f
 	github.com/spf13/viper v1.15.0
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4
@@ -23,11 +26,12 @@ require (
 )
 
 require (
+	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
+	github.com/aead/poly1305 v0.0.0-20180717145839-3fee0db0b635 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
-	github.com/go-redis/redis/v8 v8.11.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -38,6 +42,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect

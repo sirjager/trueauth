@@ -9,6 +9,7 @@ import "rpc-welcome.proto";
 import "rpc-health.proto"; 
 import "rpc-register.proto"; 
 import "rpc-login.proto"; 
+import "rpc-verify.proto"; 
 
  
 option go_package = "github.com/sirjager/rpcs/trueauth";
@@ -58,7 +59,8 @@ service TrueAuth {
 
     rpc Register(RegisterRequest) returns (RegisterResponse) {
         option (google.api.http) = {
-            get: "/v1/register"
+            post: "/v1/register"
+            body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             description: "Register User";
@@ -67,14 +69,36 @@ service TrueAuth {
         };
     }
 
-
     rpc Login(LoginRequest) returns (LoginResponse) {
         option (google.api.http) = {
-            get: "/v1/login"
+            post: "/v1/login"
+            body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             description: "Login User";
             summary: "Login User";
+            tags: "Auth";
+        };
+    }
+
+    rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse) {
+        option (google.api.http) = {
+            post: "/v1/verify-email"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description: "Request and verify email";
+            summary: "Request and verify email";
+            tags: "Auth";
+        };
+    }
+
+    rpc AllowIPAddress(AllowIPAddressRequest) returns (AllowIPAddressResponse) {
+        option (google.api.http) = {
+            post: "/v1/allow-ip"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description: "Allow ip address";
+            summary: "Allow ip address";
             tags: "Auth";
         };
     }

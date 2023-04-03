@@ -13,7 +13,7 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (email,username,password,firstname,lastname) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, username, password, firstname, lastname, verified, blocked, created_at, updated_at
+INSERT INTO users (email,username,password,firstname,lastname) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, username, password, firstname, lastname, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -40,8 +40,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Password,
 		&i.Firstname,
 		&i.Lastname,
-		&i.Verified,
-		&i.Blocked,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -58,7 +56,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, username, password, firstname, lastname, verified, blocked, created_at, updated_at FROM users WHERE email = $1 LIMIT 1
+SELECT id, email, username, password, firstname, lastname, created_at, updated_at FROM users WHERE email = $1 LIMIT 1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -71,8 +69,6 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Password,
 		&i.Firstname,
 		&i.Lastname,
-		&i.Verified,
-		&i.Blocked,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -80,7 +76,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, username, password, firstname, lastname, verified, blocked, created_at, updated_at FROM users WHERE id = $1 LIMIT 1
+SELECT id, email, username, password, firstname, lastname, created_at, updated_at FROM users WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
@@ -93,8 +89,6 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.Password,
 		&i.Firstname,
 		&i.Lastname,
-		&i.Verified,
-		&i.Blocked,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -102,7 +96,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, email, username, password, firstname, lastname, verified, blocked, created_at, updated_at FROM users WHERE username = $1 LIMIT 1
+SELECT id, email, username, password, firstname, lastname, created_at, updated_at FROM users WHERE username = $1 LIMIT 1
 `
 
 func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
@@ -115,8 +109,6 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.Password,
 		&i.Firstname,
 		&i.Lastname,
-		&i.Verified,
-		&i.Blocked,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -124,7 +116,7 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, email, username, password, firstname, lastname, verified, blocked, created_at, updated_at FROM users LIMIT $2 OFFSET $1
+SELECT id, email, username, password, firstname, lastname, created_at, updated_at FROM users LIMIT $2 OFFSET $1
 `
 
 type ListUsersParams struct {
@@ -148,8 +140,6 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 			&i.Password,
 			&i.Firstname,
 			&i.Lastname,
-			&i.Verified,
-			&i.Blocked,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -172,7 +162,7 @@ UPDATE users SET
  lastname = coalesce($3, lastname),
  username = coalesce($4, username),
  password = coalesce($5, password)
-WHERE id = $1 RETURNING id, email, username, password, firstname, lastname, verified, blocked, created_at, updated_at
+WHERE id = $1 RETURNING id, email, username, password, firstname, lastname, created_at, updated_at
 `
 
 type UpdateUserParams struct {
@@ -199,8 +189,6 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.Password,
 		&i.Firstname,
 		&i.Lastname,
-		&i.Verified,
-		&i.Blocked,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

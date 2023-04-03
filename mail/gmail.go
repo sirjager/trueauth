@@ -55,10 +55,11 @@ func (gmail *GmailSender) SendMail(mail Mail) error {
 
 	email := email.NewEmail()
 	email.From = fmt.Sprintf("%s <%s>", gmail.senderName, gmail.senderEmail)
-	email.Subject = mail.Subject
 	email.To = mail.To
 	email.Cc = mail.Cc
 	email.Bcc = mail.Bcc
+	email.Subject = mail.Subject
+	email.HTML = []byte(mail.Body)
 
 	for _, f := range mail.Files {
 		if _, err := email.AttachFile(f); err != nil {

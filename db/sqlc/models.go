@@ -15,14 +15,12 @@ type Emailrecord struct {
 	ID uuid.UUID `json:"id"`
 	// email address
 	Email string `json:"email"`
-	// user id
-	UserID uuid.UUID `json:"user_id"`
 	// email verified or not
 	Verified bool `json:"verified"`
-	// confirmation code sent to email for email verification
-	Code string `json:"code"`
-	// email confirmation code expires at
-	CodeExpiresAt time.Time `json:"code_expires_at"`
+	// confirmation token
+	Token string `json:"token"`
+	// last time verification requested
+	LastTokenSentAt time.Time `json:"last_token_sent_at"`
 	// created at timestamp
 	CreatedAt time.Time `json:"created_at"`
 	// last updated at timestamp
@@ -30,16 +28,16 @@ type Emailrecord struct {
 }
 
 type Iprecord struct {
-	// user uuid
+	// record uuid
 	ID uuid.UUID `json:"id"`
+	// user uuid
+	UserID uuid.UUID `json:"user_id"`
 	// list of all allowed ip address for this user
 	AllowedIps []string `json:"allowed_ips"`
 	// list of all blocked ip address for this user
 	BlockedIps []string `json:"blocked_ips"`
-	// confirmation code sent to email for allowing new ips
-	Code string `json:"code"`
-	// confirmation code expires at
-	CodeExpiresAt time.Time `json:"code_expires_at"`
+	// confirmation token
+	Token string `json:"token"`
 	// created at timestamp of this session
 	CreatedAt time.Time `json:"created_at"`
 	// last updated at timestamp of this session
@@ -55,6 +53,10 @@ type Session struct {
 	AccessTokenID uuid.UUID `json:"access_token_id"`
 	// short life access token
 	AccessToken string `json:"access_token"`
+	// client ip address
+	ClientIp string `json:"client_ip"`
+	// client user agent
+	UserAgent string `json:"user_agent"`
 	// user id to whom this session is assigned to
 	UserID uuid.UUID `json:"user_id"`
 	// session is blocked or not
@@ -82,10 +84,6 @@ type User struct {
 	Firstname string `json:"firstname"`
 	// last name can be empty
 	Lastname string `json:"lastname"`
-	// email verified or not
-	Verified bool `json:"verified"`
-	// user blocked or not
-	Blocked bool `json:"blocked"`
 	// created at timestamp
 	CreatedAt time.Time `json:"created_at"`
 	// last updated at timestamp

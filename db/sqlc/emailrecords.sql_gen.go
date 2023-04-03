@@ -13,55 +13,68 @@ import (
 )
 
 const createEmailRecord = `-- name: CreateEmailRecord :one
-INSERT INTO emailrecords (
-    email, user_id, verified, code, code_expires_at
-) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, user_id, verified, code, code_expires_at, created_at, updated_at
+INSERT INTO emailrecords (email,verified,token,last_token_sent_at) VALUES ($1, $2, $3, $4) RETURNING id, email, verified, token, last_token_sent_at, created_at, updated_at
 `
 
 type CreateEmailRecordParams struct {
-	Email         string    `json:"email"`
-	UserID        uuid.UUID `json:"user_id"`
-	Verified      bool      `json:"verified"`
-	Code          string    `json:"code"`
-	CodeExpiresAt time.Time `json:"code_expires_at"`
+	Email           string    `json:"email"`
+	Verified        bool      `json:"verified"`
+	Token           string    `json:"token"`
+	LastTokenSentAt time.Time `json:"last_token_sent_at"`
 }
 
 func (q *Queries) CreateEmailRecord(ctx context.Context, arg CreateEmailRecordParams) (Emailrecord, error) {
 	row := q.db.QueryRowContext(ctx, createEmailRecord,
 		arg.Email,
-		arg.UserID,
 		arg.Verified,
-		arg.Code,
-		arg.CodeExpiresAt,
+		arg.Token,
+		arg.LastTokenSentAt,
 	)
 	var i Emailrecord
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
-		&i.UserID,
 		&i.Verified,
-		&i.Code,
-		&i.CodeExpiresAt,
+		&i.Token,
+		&i.LastTokenSentAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
 }
 
-const getEmailRecord = `-- name: GetEmailRecord :one
-SELECT id, email, user_id, verified, code, code_expires_at, created_at, updated_at FROM emailrecords WHERE id = $1 LIMIT 1
+const getEmailRecordByEmail = `-- name: GetEmailRecordByEmail :one
+SELECT id, email, verified, token, last_token_sent_at, created_at, updated_at FROM emailrecords WHERE email = $1 LIMIT 1
 `
 
-func (q *Queries) GetEmailRecord(ctx context.Context, id uuid.UUID) (Emailrecord, error) {
-	row := q.db.QueryRowContext(ctx, getEmailRecord, id)
+func (q *Queries) GetEmailRecordByEmail(ctx context.Context, email string) (Emailrecord, error) {
+	row := q.db.QueryRowContext(ctx, getEmailRecordByEmail, email)
 	var i Emailrecord
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
-		&i.UserID,
 		&i.Verified,
-		&i.Code,
-		&i.CodeExpiresAt,
+		&i.Token,
+		&i.LastTokenSentAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getEmailRecordByID = `-- name: GetEmailRecordByID :one
+SELECT id, email, verified, token, last_token_sent_at, created_at, updated_at FROM emailrecords WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetEmailRecordByID(ctx context.Context, id uuid.UUID) (Emailrecord, error) {
+	row := q.db.QueryRowContext(ctx, getEmailRecordByID, id)
+	var i Emailrecord
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Verified,
+		&i.Token,
+		&i.LastTokenSentAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -71,33 +84,32 @@ func (q *Queries) GetEmailRecord(ctx context.Context, id uuid.UUID) (Emailrecord
 const updateEmailRecord = `-- name: UpdateEmailRecord :one
 UPDATE emailrecords SET
  verified = $1,
- code = $2,
- code_expires_at = $3
-WHERE id = $4 RETURNING id, email, user_id, verified, code, code_expires_at, created_at, updated_at
+ token = $2,
+ last_token_sent_at = $3
+WHERE id = $4 RETURNING id, email, verified, token, last_token_sent_at, created_at, updated_at
 `
 
 type UpdateEmailRecordParams struct {
-	Verified      bool      `json:"verified"`
-	Code          string    `json:"code"`
-	CodeExpiresAt time.Time `json:"code_expires_at"`
-	ID            uuid.UUID `json:"id"`
+	Verified        bool      `json:"verified"`
+	Token           string    `json:"token"`
+	LastTokenSentAt time.Time `json:"last_token_sent_at"`
+	ID              uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateEmailRecord(ctx context.Context, arg UpdateEmailRecordParams) (Emailrecord, error) {
 	row := q.db.QueryRowContext(ctx, updateEmailRecord,
 		arg.Verified,
-		arg.Code,
-		arg.CodeExpiresAt,
+		arg.Token,
+		arg.LastTokenSentAt,
 		arg.ID,
 	)
 	var i Emailrecord
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
-		&i.UserID,
 		&i.Verified,
-		&i.Code,
-		&i.CodeExpiresAt,
+		&i.Token,
+		&i.LastTokenSentAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

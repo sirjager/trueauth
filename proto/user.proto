@@ -13,8 +13,7 @@ message User {
   string password = 4; 
   string firstname = 5; 
   string lastname = 6; 
-  bool verified = 7; 
-  bool blocked = 8; 
-  google.protobuf.Timestamp created_at = 9; 
-  google.protobuf.Timestamp updated_at = 10; 
+  bool verified = 7;
+  google.protobuf.Timestamp created_at = 8; 
+  google.protobuf.Timestamp updated_at = 9; 
 }

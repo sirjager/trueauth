@@ -16,9 +16,12 @@ type Querier interface {
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteUser(ctx context.Context, id uuid.UUID) error
-	GetEmailRecord(ctx context.Context, id uuid.UUID) (Emailrecord, error)
-	GetIPRecord(ctx context.Context, id uuid.UUID) (Iprecord, error)
-	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
+	GetEmailRecordByEmail(ctx context.Context, email string) (Emailrecord, error)
+	GetEmailRecordByID(ctx context.Context, id uuid.UUID) (Emailrecord, error)
+	GetIPRecordByID(ctx context.Context, id uuid.UUID) (Iprecord, error)
+	GetIPRecordByUserID(ctx context.Context, userID uuid.UUID) (Iprecord, error)
+	GetSessionByAccessTokenID(ctx context.Context, accessTokenID uuid.UUID) (Session, error)
+	GetSessionByID(ctx context.Context, id uuid.UUID) (Session, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
@@ -26,6 +29,7 @@ type Querier interface {
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
 	UpdateEmailRecord(ctx context.Context, arg UpdateEmailRecordParams) (Emailrecord, error)
 	UpdateIPRecord(ctx context.Context, arg UpdateIPRecordParams) (Iprecord, error)
+	UpdateIPRecordTokenByUserID(ctx context.Context, arg UpdateIPRecordTokenByUserIDParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 }
 

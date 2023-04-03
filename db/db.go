@@ -1,9 +1,11 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog"
 	"github.com/sirjager/trueauth/cfg"
 
@@ -47,4 +49,10 @@ func Migrate(logger zerolog.Logger, conn *sql.DB, config cfg.DBConfig) (err erro
 	}
 
 	return nil
+}
+
+func PingRedis(address string, logger zerolog.Logger) error {
+	client := redis.NewClient(&redis.Options{Addr: address})
+	defer client.Close()
+	return client.Ping(context.Background()).Err()
 }

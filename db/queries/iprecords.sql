@@ -1,15 +1,20 @@
 -- name: CreateIPRecord :exec
-INSERT INTO iprecords (id, allowed_ips, blocked_ips, code, code_expires_at) VALUES ($1, $2, $3, $4, $5);
+INSERT INTO iprecords (user_id, allowed_ips, blocked_ips, token) VALUES ($1, $2, $3, $4);
 
--- name: GetIPRecord :one
+-- name: GetIPRecordByID :one
 SELECT * FROM iprecords WHERE id = $1 LIMIT 1;
+
+-- name: GetIPRecordByUserID :one
+SELECT * FROM iprecords WHERE user_id = $1 LIMIT 1;
+
 
 -- name: UpdateIPRecord :one
 UPDATE iprecords SET
  allowed_ips = $1,
  blocked_ips = $2,
- code = $3,
- code_expires_at = $4
-WHERE id = $5 RETURNING *;
+ token = $3
+WHERE id = $4 RETURNING *;
 
 
+-- name: UpdateIPRecordTokenByUserID :exec
+UPDATE iprecords SET token = $1 WHERE user_id = $2;

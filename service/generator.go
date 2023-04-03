@@ -15,8 +15,6 @@ func publicProfile(user sqlc.User) *rpc.User {
 		Username:  user.Username,
 		Firstname: user.Firstname,
 		Lastname:  user.Lastname,
-		Verified:  user.Verified,
-		Blocked:   user.Blocked,
 		CreatedAt: timestamppb.New(user.CreatedAt),
 		UpdatedAt: timestamppb.New(user.UpdatedAt),
 	}

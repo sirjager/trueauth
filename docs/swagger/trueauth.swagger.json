@@ -49,6 +49,39 @@
         ]
       }
     },
+    "/v1/allow-ip": {
+      "post": {
+        "summary": "Allow ip address",
+        "description": "Allow ip address",
+        "operationId": "TrueAuth_AllowIPAddress",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/trueauthAllowIPAddressResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "code",
+            "description": "By default this will send email verification token to registered email\nif user has already requested email verification and has verification code then email is verified",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/v1/health": {
       "get": {
         "summary": "Api Health",
@@ -74,7 +107,7 @@
       }
     },
     "/v1/login": {
-      "get": {
+      "post": {
         "summary": "Login User",
         "description": "Login User",
         "operationId": "TrueAuth_Login",
@@ -94,16 +127,12 @@
         },
         "parameters": [
           {
-            "name": "identity",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "password",
-            "in": "query",
-            "required": false,
-            "type": "string"
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/trueauthLoginRequest"
+            }
           }
         ],
         "tags": [
@@ -112,7 +141,7 @@
       }
     },
     "/v1/register": {
-      "get": {
+      "post": {
         "summary": "Register User",
         "description": "Register User",
         "operationId": "TrueAuth_Register",
@@ -132,31 +161,42 @@
         },
         "parameters": [
           {
-            "name": "email",
-            "in": "query",
-            "required": false,
-            "type": "string"
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/trueauthRegisterRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/verify-email": {
+      "post": {
+        "summary": "Request and verify email",
+        "description": "Request and verify email",
+        "operationId": "TrueAuth_VerifyEmail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/trueauthVerifyEmailResponse"
+            }
           },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
           {
-            "name": "username",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "password",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "firstname",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "lastname",
+            "name": "code",
+            "description": "By default this will send email verification token to registered email\nif user has already requested email verification and has verification code then email is verified",
             "in": "query",
             "required": false,
             "type": "string"
@@ -197,6 +237,15 @@
         }
       }
     },
+    "trueauthAllowIPAddressResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "title": "successful response"
+        }
+      }
+    },
     "trueauthHealthResponse": {
       "type": "object",
       "properties": {
@@ -216,11 +265,59 @@
         }
       }
     },
+    "trueauthLoginRequest": {
+      "type": "object",
+      "properties": {
+        "identity": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
     "trueauthLoginResponse": {
       "type": "object",
       "properties": {
         "user": {
           "$ref": "#/definitions/trueauthUser"
+        },
+        "sessionId": {
+          "type": "string"
+        },
+        "accessToken": {
+          "type": "string"
+        },
+        "refreshToken": {
+          "type": "string"
+        },
+        "accessTokenExpiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "refreshTokenExpiresAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "trueauthRegisterRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "firstname": {
+          "type": "string"
+        },
+        "lastname": {
+          "type": "string"
         }
       }
     },
@@ -256,9 +353,6 @@
         "verified": {
           "type": "boolean"
         },
-        "blocked": {
-          "type": "boolean"
-        },
         "createdAt": {
           "type": "string",
           "format": "date-time"
@@ -266,6 +360,15 @@
         "updatedAt": {
           "type": "string",
           "format": "date-time"
+        }
+      }
+    },
+    "trueauthVerifyEmailResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "title": "successful response"
         }
       }
     },

@@ -1,16 +1,24 @@
 CREATE TABLE "sessions" (
-  "id" uuid PRIMARY KEY NOT NULL,
+  "id" UUID PRIMARY KEY NOT NULL,
   "refresh_token" TEXT NOT NULL,
-  "access_token_id" uuid UNIQUE NOT NULL,
+  "access_token_id" UUID UNIQUE NOT NULL,
   "access_token" TEXT NOT NULL,
-  "user_id" uuid NOT NULL,
+  "client_ip" TEXT NOT NULL,
+  "user_agent" TEXT NOT NULL,
+  "user_id" UUID NOT NULL,
   "blocked" BOOL NOT NULL DEFAULT 'false',
-  "access_token_expires_at" timestamptz NOT NULL,
-  "refresh_token_expires_at" timestamptz NOT NULL,
-  "created_at" timestamptz NOT NULL DEFAULT 'now()',
-  "updated_at" timestamptz NOT NULL DEFAULT 'now()'
+  "access_token_expires_at" TIMESTAMPTZ NOT NULL,
+  "refresh_token_expires_at" TIMESTAMPTZ NOT NULL,
+  "created_at" TIMESTAMPTZ NOT NULL DEFAULT (now()),
+  "updated_at" TIMESTAMPTZ NOT NULL DEFAULT (now())
 );
 
+
+
+
+CREATE INDEX ON "sessions" ("user_id");
+
+CREATE INDEX ON "sessions" ("access_token_id");
 
 
 COMMENT ON COLUMN "sessions"."id" IS 'refresh token id';
@@ -20,6 +28,10 @@ COMMENT ON COLUMN "sessions"."refresh_token" IS 'refresh token';
 COMMENT ON COLUMN "sessions"."access_token_id" IS 'access token id';
 
 COMMENT ON COLUMN "sessions"."access_token" IS 'short life access token';
+
+COMMENT ON COLUMN "sessions"."client_ip" IS 'client ip address';
+
+COMMENT ON COLUMN "sessions"."user_agent" IS 'client user agent';
 
 COMMENT ON COLUMN "sessions"."user_id" IS 'user id to whom this session is assigned to';
 

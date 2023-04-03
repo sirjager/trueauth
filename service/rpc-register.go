@@ -6,13 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hibiken/asynq"
 	"github.com/lib/pq"
 	rpc "github.com/sirjager/rpcs/trueauth/go"
 	"github.com/sirjager/trueauth/db/sqlc"
 	"github.com/sirjager/trueauth/utils"
 	"github.com/sirjager/trueauth/validator"
-	"github.com/sirjager/trueauth/worker"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -24,7 +22,7 @@ func (s *TrueAuthService) Register(ctx context.Context, req *rpc.RegisterRequest
 		return nil, invalidArgumentsError(violations)
 	}
 
-	hashedPassword, err := utils.HashString(req.GetPassword())
+	hashedPassword, err := utils.HashPassword(req.GetPassword())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to hash password: %s", err.Error())
 	}
@@ -40,21 +38,16 @@ func (s *TrueAuthService) Register(ctx context.Context, req *rpc.RegisterRequest
 			Firstname: req.GetFirstname(),
 			Lastname:  req.GetLastname(),
 		},
-		AfterCreate: func(user sqlc.User) error {
-			// #1. store ip address
-			_recordParams := sqlc.CreateIPRecordParams{ID: user.ID, AllowedIps: []string{meta.ClientIp}}
-			if err = s.store.CreateIPRecord(ctx, _recordParams); err != nil {
+		AfterCreate: func(user sqlc.User) (err error) {
+			ipParams := sqlc.CreateIPRecordParams{UserID: user.ID, BlockedIps: []string{}, Token: "", AllowedIps: []string{meta.ClientIp}}
+			if err = s.store.CreateIPRecord(ctx, ipParams); err != nil {
 				return err
 			}
-
-			// #2. send email verification
-			opts := []asynq.Option{
-				asynq.MaxRetry(3),
-				asynq.ProcessIn(10 * time.Second),
-				asynq.Queue(worker.QUEUE_CRITICAL),
+			emailParams := sqlc.CreateEmailRecordParams{Email: user.Email, Verified: false, Token: "", LastTokenSentAt: time.Time{}}
+			if _, err = s.store.CreateEmailRecord(ctx, emailParams); err != nil {
+				return err
 			}
-			_sendVerifyEmailParams := &worker.PayloadSendVerifyEmail{Username: user.Username}
-			return s.taskDistributor.DistributeTaskSendVerifyEmail(ctx, _sendVerifyEmailParams, opts...)
+			return err
 		},
 	}
 

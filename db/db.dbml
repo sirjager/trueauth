@@ -13,8 +13,6 @@ Table users as U {
   password VARCHAR(255) [not null, note: 'hashed password']
   firstname VARCHAR(255) [default: '', not null, note: 'first name can be empty']
   lastname VARCHAR(255) [default:'', not null, note: 'last name can be empty']
-  verified BOOL [not null, default: false, note: 'email verified or not']
-  blocked BOOL [not null, default: false, note: 'user blocked or not']
   created_at TIMESTAMPTZ [not null, default: `now()`, note:'created at timestamp']
   updated_at TIMESTAMPTZ [not null, default: `now()`, note: 'last updated at timestamp']
 
@@ -29,6 +27,8 @@ Table sessions as S {
   refresh_token TEXT [not null, note: 'refresh token']
   access_token_id UUID [unique, not null, note:'access token id']
   access_token TEXT [not null, note:'short life access token']
+  client_ip TEXT [not null, note: 'client ip address']
+  user_agent TEXT [not null, note: 'client user agent']
   user_id UUID [ref: > U.id, not null, note: 'user id to whom this session is assigned to']
   blocked BOOL [not null, default: 'false', note:'session is blocked or not']
   access_token_expires_at TIMESTAMPTZ [not null, note: 'expiration time of access token']
@@ -45,11 +45,11 @@ Table sessions as S {
 
 
 Table iprecords as IP {
-  id UUID [pk, ref: > U.id, not null, note:'user uuid']
+  id UUID [pk, not null, note:'record uuid']
+  user_id UUID [unique, not null, note: 'user uuid']
   allowed_ips TEXT[] [note: 'list of all allowed ip address for this user']
   blocked_ips TEXT[] [note: 'list of all blocked ip address for this user']
-  code TEXT [not null, default: '', note: 'confirmation code sent to email for allowing new ips']
-  code_expires_at TIMESTAMPTZ [not null, note: 'confirmation code expires at']
+  token TEXT [not null, default: '', note: 'confirmation token']
   created_at TIMESTAMPTZ [not null, default: `now()`, note: 'created at timestamp of this session']
   updated_at TIMESTAMPTZ [not null, default: `now()`, note: 'last updated at timestamp of this session']
 }
@@ -58,10 +58,9 @@ Table iprecords as IP {
 Table emailrecords as E {
   id UUID [pk, not null, note:'email uuid', default: `uuid_generate_v4()`]
   email VARCHAR(255) [unique, not null, note: 'email address']
-  user_id UUID [ref: > U.id, not null, note: 'user id']
   verified BOOL [not null, default: FALSE, note: 'email verified or not']
-  code TEXT [not null, default: '', note: 'confirmation code sent to email for email verification']
-  code_expires_at TIMESTAMPTZ [not null, note: 'email confirmation code expires at']
+  token TEXT [not null, default: '', note: 'confirmation token']
+  last_token_sent_at TIMESTAMPTZ [not null, note: 'last time verification requested']
   created_at TIMESTAMPTZ [not null, default: `now()`, note: 'created at timestamp']
   updated_at TIMESTAMPTZ [not null, default: `now()`, note: 'last updated at timestamp']
 }

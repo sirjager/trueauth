@@ -33,7 +33,7 @@ func init() {
 }
 
 func main() {
-	config, err := cfg.LoadConfigs(".", "example")
+	config, err := cfg.LoadConfigs(".", "remote")
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to load configurations")
 	}
@@ -46,6 +46,10 @@ func main() {
 	}
 	defer conn.Close()
 
+	if err = db.PingRedis(config.DBConfig.RedisAddr, logger); err != nil {
+		logger.Fatal().Err(err).Msg("failed to ping redis")
+	}
+
 	if err = db.Migrate(logger, conn, config.DBConfig); err != nil {
 		logger.Fatal().Err(err).Msg("failed to migrate database")
 	}
@@ -56,14 +60,15 @@ func main() {
 	}
 
 	store := sqlc.NewStore(conn)
+
 	redisOpt := asynq.RedisClientOpt{Addr: config.DBConfig.RedisAddr}
 	taskDistributor := worker.NewRedisTaskDistributor(logger, redisOpt)
-	go server.RunTaskProcessor(logger, store, mailer, redisOpt)
+	go server.RunTaskProcessor(logger, store, mailer, config, redisOpt)
 
 	errs := make(chan error)
 	go handleSignals(errs)
 
-	srvic, err := service.NewTrueAuthService(logger, config, store, taskDistributor)
+	srvic, err := service.NewTrueAuthService(logger, config, store, mailer, taskDistributor)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to create service")
 	}

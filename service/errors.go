@@ -7,7 +7,15 @@ import (
 )
 
 func unAuthenticatedError(err error) error {
-	return status.Errorf(codes.Unauthenticated, "unauthorized: %s", err)
+	return status.Errorf(codes.Unauthenticated, "unauthorized: %w", err)
+}
+
+func unknownIPError() error {
+	return status.Error(codes.PermissionDenied, "unknown ip address %s. ip address is not in whitelist")
+}
+
+func blockedIPError() error {
+	return status.Error(codes.PermissionDenied, "ip address is blocked")
 }
 
 func fieldViolation(field string, err error) *errdetails.BadRequest_FieldViolation {

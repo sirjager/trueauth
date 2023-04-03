@@ -66,10 +66,15 @@ migrateup:
 	migrate -source file://$(DB_MIGRATIONS) -database $(DB_URL) -verbose up
 
 migratedown:
-	migrate -source file://$(DB_MIGRATIONS) -database $(DB_URL) -verbose down
+	migrate -source file://$(DB_MIGRATIONS) -database $(DB_URL) -verbose down --all
 
 sqlc:
 	sqlc generate
 
-.PHONY: proto tidy test run dbdocs dbschema migratenew migrateup migratedown sqlc
+
+gen:
+	- make dbschema
+	- make sqlc
+
+.PHONY: proto tidy test run dbdocs dbschema migratenew migrateup migratedown sqlc gen
 

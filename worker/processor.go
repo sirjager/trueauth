@@ -6,8 +6,10 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
 
+	"github.com/sirjager/trueauth/cfg"
 	"github.com/sirjager/trueauth/db/sqlc"
 	"github.com/sirjager/trueauth/mail"
+	"github.com/sirjager/trueauth/tokens"
 )
 
 const (
@@ -18,7 +20,7 @@ const (
 
 type TaskProcessor interface {
 	Start() error
-	ProcessTaskSendVerifyEmail(ctx context.Context, task *asynq.Task) error
+	ProcessTaskSendEmailVerified(ctx context.Context, task *asynq.Task) error
 }
 
 type RedisTaskProcessor struct {
@@ -26,9 +28,11 @@ type RedisTaskProcessor struct {
 	logger zerolog.Logger
 	store  sqlc.Store
 	mailer mail.MailSender
+	config cfg.Config
+	tokens tokens.TokenBuilder
 }
 
-func NewRedisTaskProcessor(logger zerolog.Logger, store sqlc.Store, mailer mail.MailSender, redisOpts asynq.RedisClientOpt) TaskProcessor {
+func NewRedisTaskProcessor(logger zerolog.Logger, store sqlc.Store, mailer mail.MailSender, config cfg.Config, redisOpts asynq.RedisClientOpt) (TaskProcessor, error) {
 	clientConfig := asynq.Config{
 		Queues: map[string]int{
 			QUEUE_CRITICAL: 10,
@@ -43,14 +47,29 @@ func NewRedisTaskProcessor(logger zerolog.Logger, store sqlc.Store, mailer mail.
 		}),
 		Logger: NewLogger(logger),
 	}
+
+	builder, err := tokens.NewPasetoBuilder(config.TokenSecret)
+	if err != nil {
+		logger.Error().Err(err).Msg("failed to create token builder")
+		return nil, err
+	}
+
 	server := asynq.NewServer(redisOpts, clientConfig)
-	return &RedisTaskProcessor{server, logger, store, mailer}
+
+	return &RedisTaskProcessor{
+		server: server,
+		logger: logger,
+		store:  store,
+		mailer: mailer,
+		config: config,
+		tokens: builder,
+	}, nil
 }
 
 func (processor *RedisTaskProcessor) Start() error {
 	mux := asynq.NewServeMux()
 
-	mux.HandleFunc(TASK_SEND_VERIFY_EMAIL, processor.ProcessTaskSendVerifyEmail)
+	mux.HandleFunc(TASK_SEND_EMAIL_VERIFIED, processor.ProcessTaskSendEmailVerified)
 
 	return processor.server.Start(mux)
 }

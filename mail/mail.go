@@ -1,7 +1,6 @@
 package mail
 
 type Mail struct {
-	From    string
 	To      []string
 	Cc      []string
 	Bcc     []string
