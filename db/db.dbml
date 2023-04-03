@@ -6,8 +6,8 @@ Project trueauth {
 }
 
 
-Table users as U {
-  id UUID [pk, not null, note: 'user id', default: `uuid_generate_v4()`]
+Table accounts as A {
+  id UUID [pk, not null, note: 'account id', default: `uuid_generate_v4()`]
   email VARCHAR(255) [unique, not null, note: 'unique email']
   username VARCHAR(255) [unique, not null, note: 'unique username']
   password VARCHAR(255) [not null, note: 'hashed password']
@@ -29,7 +29,7 @@ Table sessions as S {
   access_token TEXT [not null, note:'short life access token']
   client_ip TEXT [not null, note: 'client ip address']
   user_agent TEXT [not null, note: 'client user agent']
-  user_id UUID [ref: > U.id, not null, note: 'user id to whom this session is assigned to']
+  account_id UUID [ref: > A.id, not null, note: 'id of the account assigned to this session']
   blocked BOOL [not null, default: 'false', note:'session is blocked or not']
   access_token_expires_at TIMESTAMPTZ [not null, note: 'expiration time of access token']
   refresh_token_expires_at TIMESTAMPTZ [not null, note: 'expiration time of a refresh token']
@@ -37,26 +37,26 @@ Table sessions as S {
   updated_at TIMESTAMPTZ [not null, default: `now()`, note: 'last updated at timestamp of this session']
   
   Indexes {
-    user_id
+    account_id
     access_token_id
   }
 }
 
 
 
-Table iprecords as IP {
-  id UUID [pk, not null, note:'record uuid']
-  user_id UUID [unique, not null, note: 'user uuid']
-  allowed_ips TEXT[] [note: 'list of all allowed ip address for this user']
-  blocked_ips TEXT[] [note: 'list of all blocked ip address for this user']
+Table ips as IP {
+  id UUID [pk, not null, default:`uuid_generate_v4()`, note:'record uuid']
+  account_id UUID [unique, not null, note: 'account id']
+  allowed_ips TEXT[] [note: 'list of all allowed ip address']
+  blocked_ips TEXT[] [note: 'list of all blocked ip address']
   token TEXT [not null, default: '', note: 'confirmation token']
-  created_at TIMESTAMPTZ [not null, default: `now()`, note: 'created at timestamp of this session']
-  updated_at TIMESTAMPTZ [not null, default: `now()`, note: 'last updated at timestamp of this session']
+  created_at TIMESTAMPTZ [not null, default: `now()`, note: 'created at timestamp']
+  updated_at TIMESTAMPTZ [not null, default: `now()`, note: 'last updated at timestamp']
 }
 
 
-Table emailrecords as E {
-  id UUID [pk, not null, note:'email uuid', default: `uuid_generate_v4()`]
+Table emails as E {
+  id UUID [pk, not null, default: `uuid_generate_v4()`, note:'email uuid']
   email VARCHAR(255) [unique, not null, note: 'email address']
   verified BOOL [not null, default: FALSE, note: 'email verified or not']
   token TEXT [not null, default: '', note: 'confirmation token']

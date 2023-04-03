@@ -12,11 +12,11 @@ import (
 )
 
 func (s *TrueAuthService) AllowIPAddress(ctx context.Context, req *rpc.AllowIPAddressRequest) (*rpc.AllowIPAddressResponse, error) {
-	user, iprecords, err := s.authorize(ctx)
+	account, ip, err := s.authorize(ctx)
 	if err != nil {
 		return nil, unAuthenticatedError(err)
 	}
-	if s.isKnownIP(iprecords, ctx) {
+	if s.isKnownIP(ip, ctx) {
 		return &rpc.AllowIPAddressResponse{Message: "ip address is already in whitelist"}, nil
 	}
 
@@ -24,16 +24,16 @@ func (s *TrueAuthService) AllowIPAddress(ctx context.Context, req *rpc.AllowIPAd
 	if violations != nil {
 		return nil, invalidArgumentsError(violations)
 	}
-	tokenPayload, err := s.tokens.VerifyToken(iprecords.Token)
+	tokenPayload, err := s.tokens.VerifyToken(ip.Token)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "invalid allow ip address verification code")
 	}
 
-	if tokenPayload.Payload.UserEmail != user.Email {
+	if tokenPayload.Payload.AccountEmail != account.Email {
 		return nil, status.Errorf(codes.Internal, "invalid allow ip address verification code")
 	}
 
-	if tokenPayload.Payload.UserID.String() != user.ID.String() {
+	if tokenPayload.Payload.AccountID.String() != account.ID.String() {
 		return nil, status.Errorf(codes.Internal, "invalid allow ip address verification code")
 	}
 
@@ -42,12 +42,12 @@ func (s *TrueAuthService) AllowIPAddress(ctx context.Context, req *rpc.AllowIPAd
 	}
 
 	meta := s.extractMetadata(ctx)
-	iprecords.AllowedIps = append(iprecords.AllowedIps, meta.ClientIp)
+	ip.AllowedIps = append(ip.AllowedIps, meta.ClientIp)
 
-	_, err = s.store.UpdateIPRecord(ctx, sqlc.UpdateIPRecordParams{
-		ID:         iprecords.ID,
-		AllowedIps: iprecords.AllowedIps,
-		BlockedIps: iprecords.BlockedIps,
+	_, err = s.store.UpdateIP(ctx, sqlc.UpdateIPParams{
+		ID:         ip.ID,
+		AllowedIps: ip.AllowedIps,
+		BlockedIps: ip.BlockedIps,
 		Token:      "null",
 	})
 	if err != nil {

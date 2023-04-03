@@ -25,14 +25,14 @@ func (s *TrueAuthService) Login(ctx context.Context, req *rpc.LoginRequest) (*rp
 		return nil, invalidArgumentsError(violations)
 	}
 
-	var user sqlc.User
+	var account sqlc.Account
 	var err error
 
 	switch strings.ToLower(findBy) {
 	case "email":
-		user, err = s.store.GetUserByEmail(ctx, req.GetIdentity())
+		account, err = s.store.GetAccountByEmail(ctx, req.GetIdentity())
 	default:
-		user, err = s.store.GetUserByUsername(ctx, req.GetIdentity())
+		account, err = s.store.GetAccountByUsername(ctx, req.GetIdentity())
 	}
 
 	if err != nil {
@@ -43,41 +43,26 @@ func (s *TrueAuthService) Login(ctx context.Context, req *rpc.LoginRequest) (*rp
 	}
 
 	// verify password
-	if err := utils.VerifyPassword(req.GetPassword(), user.Password); err != nil {
+	if err := utils.VerifyPassword(req.GetPassword(), account.Password); err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "invalid %s or password", findBy)
 	}
 
 	// extract metadata like client-ip and user-agent
 	meta := s.extractMetadata(ctx)
 
-	ipRecord, err := s.store.GetIPRecordByUserID(ctx, user.ID)
+	ip, err := s.store.GetIPByAccountID(ctx, account.ID)
 	if err != nil {
 		// no need to handle no rows error:  first record is created when creating user
 		return nil, status.Errorf(codes.Internal, "something went wrong, please try again")
 	}
 
-	isBlockedIP := false
-	for _, i := range ipRecord.BlockedIps {
-		if i == meta.ClientIp {
-			isBlockedIP = true
-			break
-		}
-	}
-	if isBlockedIP {
+	if s.isBlockedIP(ip, ctx) {
 		return nil, status.Errorf(codes.PermissionDenied, "your ip address is in your blacklist.", findBy)
 	}
 
-	isNewIP := true
-	for _, ip := range ipRecord.AllowedIps {
-		if ip == meta.ClientIp {
-			isNewIP = false
-			break
-		}
-	}
+	if !s.isKnownIP(ip, ctx) {
 
-	if isNewIP {
-
-		emailRecord, err := s.store.GetEmailRecordByEmail(ctx, user.Email)
+		emailRecord, err := s.store.GetEmailByEmail(ctx, account.Email)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "failed to fetch email record: %s ", err.Error())
 		}
@@ -90,12 +75,12 @@ func (s *TrueAuthService) Login(ctx context.Context, req *rpc.LoginRequest) (*rp
 		sixDigitCode := utils.RandomNumberAsString(6)
 		durationTTL := s.config.VerifyTokenTTL
 
-		token, _, err := s.tokens.CreateToken(tokens.PayloadData{UserEmail: user.Email, AllowIPCode: sixDigitCode}, durationTTL)
+		token, _, err := s.tokens.CreateToken(tokens.PayloadData{AccountEmail: account.Email, AllowIPCode: sixDigitCode}, durationTTL)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "failed to create code: %s", err.Error())
 		}
 
-		email := mail.Mail{To: []string{user.Email}}
+		email := mail.Mail{To: []string{account.Email}}
 		email.Subject = "Thank you for joining us. Please confirm your email"
 		email.Body = fmt.Sprintf(`
 		Hello <br/>
@@ -104,9 +89,9 @@ func (s *TrueAuthService) Login(ctx context.Context, req *rpc.LoginRequest) (*rp
 		This code is only valid for %s <br/> <br/>
 		Thank You`, meta.ClientIp, sixDigitCode, durationTTL.String())
 
-		_, err = s.store.UpdateIPRecordTokenTx(ctx, sqlc.UpdateIPRecordTokenTxParams{
-			UserID: user.ID,
-			Token:  token,
+		_, err = s.store.UpdateIPTokenTx(ctx, sqlc.UpdateIPTokenTxParams{
+			AccountID: account.ID,
+			Token:     token,
 			BeforeUpdate: func() error {
 				return s.mailer.SendMail(email)
 			},
@@ -119,13 +104,13 @@ func (s *TrueAuthService) Login(ctx context.Context, req *rpc.LoginRequest) (*rp
 	}
 
 	// Generate tokens, Create sessions and return
-	access_token, access_payload, err := s.tokens.CreateToken(tokens.PayloadData{UserID: user.ID}, s.config.AccessTokenTTL)
+	access_token, access_payload, err := s.tokens.CreateToken(tokens.PayloadData{AccountID: account.ID}, s.config.AccessTokenTTL)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	// generate refresh token
-	refresh_token, refresh_payload, err := s.tokens.CreateToken(tokens.PayloadData{UserID: user.ID}, s.config.RefreshTokenTTL)
+	refresh_token, refresh_payload, err := s.tokens.CreateToken(tokens.PayloadData{AccountID: account.ID}, s.config.RefreshTokenTTL)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
@@ -140,7 +125,7 @@ func (s *TrueAuthService) Login(ctx context.Context, req *rpc.LoginRequest) (*rp
 		AccessTokenID:         access_payload.Id,
 		AccessToken:           access_token,
 		AccessTokenExpiresAt:  access_payload.ExpiresAt,
-		UserID:                user.ID,
+		AccountID:             account.ID,
 		Blocked:               false,
 	}
 
@@ -150,7 +135,7 @@ func (s *TrueAuthService) Login(ctx context.Context, req *rpc.LoginRequest) (*rp
 	}
 
 	return &rpc.LoginResponse{
-		User:                  publicProfile(user),
+		Account:               publicProfile(account),
 		SessionId:             session.ID.String(),
 		AccessToken:           access_token,
 		RefreshToken:          refresh_token,

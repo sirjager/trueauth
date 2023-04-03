@@ -15,9 +15,9 @@ import (
 
 const createSession = `-- name: CreateSession :one
 INSERT INTO sessions (
-    id, refresh_token, access_token_id, access_token, user_id, client_ip, user_agent,
+    id, refresh_token, access_token_id, access_token, account_id, client_ip, user_agent,
     blocked, access_token_expires_at, refresh_token_expires_at
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, refresh_token, access_token_id, access_token, client_ip, user_agent, user_id, blocked, access_token_expires_at, refresh_token_expires_at, created_at, updated_at
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, refresh_token, access_token_id, access_token, client_ip, user_agent, account_id, blocked, access_token_expires_at, refresh_token_expires_at, created_at, updated_at
 `
 
 type CreateSessionParams struct {
@@ -25,7 +25,7 @@ type CreateSessionParams struct {
 	RefreshToken          string    `json:"refresh_token"`
 	AccessTokenID         uuid.UUID `json:"access_token_id"`
 	AccessToken           string    `json:"access_token"`
-	UserID                uuid.UUID `json:"user_id"`
+	AccountID             uuid.UUID `json:"account_id"`
 	ClientIp              string    `json:"client_ip"`
 	UserAgent             string    `json:"user_agent"`
 	Blocked               bool      `json:"blocked"`
@@ -39,7 +39,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 		arg.RefreshToken,
 		arg.AccessTokenID,
 		arg.AccessToken,
-		arg.UserID,
+		arg.AccountID,
 		arg.ClientIp,
 		arg.UserAgent,
 		arg.Blocked,
@@ -54,7 +54,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 		&i.AccessToken,
 		&i.ClientIp,
 		&i.UserAgent,
-		&i.UserID,
+		&i.AccountID,
 		&i.Blocked,
 		&i.AccessTokenExpiresAt,
 		&i.RefreshTokenExpiresAt,
@@ -65,7 +65,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 }
 
 const getSessionByAccessTokenID = `-- name: GetSessionByAccessTokenID :one
-SELECT id, refresh_token, access_token_id, access_token, client_ip, user_agent, user_id, blocked, access_token_expires_at, refresh_token_expires_at, created_at, updated_at FROM sessions WHERE access_token_id = $1 LIMIT 1
+SELECT id, refresh_token, access_token_id, access_token, client_ip, user_agent, account_id, blocked, access_token_expires_at, refresh_token_expires_at, created_at, updated_at FROM sessions WHERE access_token_id = $1 LIMIT 1
 `
 
 func (q *Queries) GetSessionByAccessTokenID(ctx context.Context, accessTokenID uuid.UUID) (Session, error) {
@@ -78,7 +78,7 @@ func (q *Queries) GetSessionByAccessTokenID(ctx context.Context, accessTokenID u
 		&i.AccessToken,
 		&i.ClientIp,
 		&i.UserAgent,
-		&i.UserID,
+		&i.AccountID,
 		&i.Blocked,
 		&i.AccessTokenExpiresAt,
 		&i.RefreshTokenExpiresAt,
@@ -89,7 +89,7 @@ func (q *Queries) GetSessionByAccessTokenID(ctx context.Context, accessTokenID u
 }
 
 const getSessionByID = `-- name: GetSessionByID :one
-SELECT id, refresh_token, access_token_id, access_token, client_ip, user_agent, user_id, blocked, access_token_expires_at, refresh_token_expires_at, created_at, updated_at FROM sessions WHERE id = $1 LIMIT 1
+SELECT id, refresh_token, access_token_id, access_token, client_ip, user_agent, account_id, blocked, access_token_expires_at, refresh_token_expires_at, created_at, updated_at FROM sessions WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetSessionByID(ctx context.Context, id uuid.UUID) (Session, error) {
@@ -102,7 +102,7 @@ func (q *Queries) GetSessionByID(ctx context.Context, id uuid.UUID) (Session, er
 		&i.AccessToken,
 		&i.ClientIp,
 		&i.UserAgent,
-		&i.UserID,
+		&i.AccountID,
 		&i.Blocked,
 		&i.AccessTokenExpiresAt,
 		&i.RefreshTokenExpiresAt,
@@ -113,17 +113,17 @@ func (q *Queries) GetSessionByID(ctx context.Context, id uuid.UUID) (Session, er
 }
 
 const listSessionsByUser = `-- name: ListSessionsByUser :many
-SELECT id, refresh_token, access_token_id, access_token, client_ip, user_agent, user_id, blocked, access_token_expires_at, refresh_token_expires_at, created_at, updated_at FROM sessions WHERE user_id = $1 LIMIT $3 OFFSET $2
+SELECT id, refresh_token, access_token_id, access_token, client_ip, user_agent, account_id, blocked, access_token_expires_at, refresh_token_expires_at, created_at, updated_at FROM sessions WHERE account_id = $1 LIMIT $3 OFFSET $2
 `
 
 type ListSessionsByUserParams struct {
-	UserID uuid.UUID     `json:"user_id"`
-	Offset sql.NullInt32 `json:"offset"`
-	Limit  sql.NullInt32 `json:"limit"`
+	AccountID uuid.UUID     `json:"account_id"`
+	Offset    sql.NullInt32 `json:"offset"`
+	Limit     sql.NullInt32 `json:"limit"`
 }
 
 func (q *Queries) ListSessionsByUser(ctx context.Context, arg ListSessionsByUserParams) ([]Session, error) {
-	rows, err := q.db.QueryContext(ctx, listSessionsByUser, arg.UserID, arg.Offset, arg.Limit)
+	rows, err := q.db.QueryContext(ctx, listSessionsByUser, arg.AccountID, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (q *Queries) ListSessionsByUser(ctx context.Context, arg ListSessionsByUser
 			&i.AccessToken,
 			&i.ClientIp,
 			&i.UserAgent,
-			&i.UserID,
+			&i.AccountID,
 			&i.Blocked,
 			&i.AccessTokenExpiresAt,
 			&i.RefreshTokenExpiresAt,

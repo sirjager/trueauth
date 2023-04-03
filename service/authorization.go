@@ -14,15 +14,15 @@ import (
 const authorizationHeader = "authorization"
 const authorizationBearer = "bearer"
 
-// Checks Authorization header. returns token, payload, user and error
-func (s *TrueAuthService) authorize(ctx context.Context) (user sqlc.User, ipRecord sqlc.Iprecord, err error) {
+// Checks Authorization header. returns token, payload, account and error
+func (s *TrueAuthService) authorize(ctx context.Context) (account sqlc.Account, ip sqlc.Ip, err error) {
 	meta, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return sqlc.User{}, sqlc.Iprecord{}, fmt.Errorf("missing metadata")
+		return account, ip, fmt.Errorf("missing metadata")
 	}
 	values := meta.Get(authorizationHeader)
 	if len(values) == 0 {
-		return sqlc.User{}, sqlc.Iprecord{}, fmt.Errorf("missing authorization header")
+		return account, ip, fmt.Errorf("missing authorization header")
 	}
 
 	// authheader will look like:    <token-type> <token>
@@ -30,53 +30,53 @@ func (s *TrueAuthService) authorize(ctx context.Context) (user sqlc.User, ipReco
 	authHeader := values[0]
 	fields := strings.Fields(authHeader)
 	if len(fields) < 2 {
-		return sqlc.User{}, sqlc.Iprecord{}, fmt.Errorf("invalid authorization header format")
+		return account, ip, fmt.Errorf("invalid authorization header format")
 	}
 	authType := fields[0]
 	if strings.ToLower(authType) != authorizationBearer {
-		return sqlc.User{}, sqlc.Iprecord{}, fmt.Errorf("unsupported authorization type: %s", authType)
+		return account, ip, fmt.Errorf("unsupported authorization type: %s", authType)
 	}
 
 	tokenString := fields[1]
 	tokenPayload, err := s.tokens.VerifyToken(tokenString)
 	if err != nil {
-		return sqlc.User{}, sqlc.Iprecord{}, fmt.Errorf("invalid access token: %s", err.Error())
+		return account, ip, fmt.Errorf("invalid access token: %s", err.Error())
 	}
 
 	//? We will also check if token is stored or not
 	session, err := s.store.GetSessionByAccessTokenID(ctx, tokenPayload.Id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return sqlc.User{}, sqlc.Iprecord{}, fmt.Errorf("invalid access token: %s", err.Error())
+			return account, ip, fmt.Errorf("invalid access token: %s", err.Error())
 		}
-		return sqlc.User{}, sqlc.Iprecord{}, fmt.Errorf("failed to fetch session: %s", err.Error())
+		return account, ip, fmt.Errorf("failed to fetch session: %s", err.Error())
 	}
 
 	if session.AccessToken != tokenString {
-		return sqlc.User{}, sqlc.Iprecord{}, fmt.Errorf("invalid access token: %s", err.Error())
+		return account, ip, fmt.Errorf("invalid access token: %s", err.Error())
 	}
 
-	if session.UserID.String() != tokenPayload.Payload.UserID.String() {
-		return sqlc.User{}, sqlc.Iprecord{}, fmt.Errorf("invalid access token: %s", err.Error())
+	if session.AccountID.String() != tokenPayload.Payload.AccountID.String() {
+		return account, ip, fmt.Errorf("invalid access token: %s", err.Error())
 	}
 
 	//
-	ipRecord, err = s.store.GetIPRecordByUserID(ctx, session.UserID)
+	ip, err = s.store.GetIPByAccountID(ctx, session.AccountID)
 	if err != nil {
-		return sqlc.User{}, sqlc.Iprecord{}, fmt.Errorf("failed to fetch ip records: %s", err.Error())
+		return account, sqlc.Ip{}, fmt.Errorf("failed to fetch ip records: %s", err.Error())
 	}
 
-	if s.isBlockedIP(ipRecord, ctx) {
-		return sqlc.User{}, sqlc.Iprecord{}, fmt.Errorf("ip address is blocked")
+	if s.isBlockedIP(ip, ctx) {
+		return account, sqlc.Ip{}, fmt.Errorf("ip address is blocked")
 	}
 
-	user, err = s.store.GetUserByID(ctx, session.UserID)
+	account, err = s.store.GetAccountByID(ctx, session.AccountID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return sqlc.User{}, sqlc.Iprecord{}, fmt.Errorf("user does not exists: %s", err.Error())
+			return sqlc.Account{}, sqlc.Ip{}, fmt.Errorf("account does not exists: %s", err.Error())
 		}
-		return sqlc.User{}, sqlc.Iprecord{}, fmt.Errorf("failed to fetch user: %s", err.Error())
+		return sqlc.Account{}, sqlc.Ip{}, fmt.Errorf("failed to fetch account: %s", err.Error())
 	}
 
-	return user, ipRecord, err
+	return account, ip, err
 }

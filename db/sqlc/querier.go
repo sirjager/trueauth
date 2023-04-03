@@ -11,26 +11,26 @@ import (
 )
 
 type Querier interface {
-	CreateEmailRecord(ctx context.Context, arg CreateEmailRecordParams) (Emailrecord, error)
-	CreateIPRecord(ctx context.Context, arg CreateIPRecordParams) error
+	CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error)
+	CreateEmail(ctx context.Context, arg CreateEmailParams) (Email, error)
+	CreateIP(ctx context.Context, arg CreateIPParams) error
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
-	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	DeleteUser(ctx context.Context, id uuid.UUID) error
-	GetEmailRecordByEmail(ctx context.Context, email string) (Emailrecord, error)
-	GetEmailRecordByID(ctx context.Context, id uuid.UUID) (Emailrecord, error)
-	GetIPRecordByID(ctx context.Context, id uuid.UUID) (Iprecord, error)
-	GetIPRecordByUserID(ctx context.Context, userID uuid.UUID) (Iprecord, error)
+	DeleteAccount(ctx context.Context, id uuid.UUID) error
+	GetAccountByEmail(ctx context.Context, email string) (Account, error)
+	GetAccountByID(ctx context.Context, id uuid.UUID) (Account, error)
+	GetAccountByUsername(ctx context.Context, username string) (Account, error)
+	GetEmailByEmail(ctx context.Context, email string) (Email, error)
+	GetEmailByID(ctx context.Context, id uuid.UUID) (Email, error)
+	GetIPByAccountID(ctx context.Context, accountID uuid.UUID) (Ip, error)
+	GetIPByID(ctx context.Context, id uuid.UUID) (Ip, error)
 	GetSessionByAccessTokenID(ctx context.Context, accessTokenID uuid.UUID) (Session, error)
 	GetSessionByID(ctx context.Context, id uuid.UUID) (Session, error)
-	GetUserByEmail(ctx context.Context, email string) (User, error)
-	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
-	GetUserByUsername(ctx context.Context, username string) (User, error)
+	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]Account, error)
 	ListSessionsByUser(ctx context.Context, arg ListSessionsByUserParams) ([]Session, error)
-	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
-	UpdateEmailRecord(ctx context.Context, arg UpdateEmailRecordParams) (Emailrecord, error)
-	UpdateIPRecord(ctx context.Context, arg UpdateIPRecordParams) (Iprecord, error)
-	UpdateIPRecordTokenByUserID(ctx context.Context, arg UpdateIPRecordTokenByUserIDParams) error
-	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
+	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error)
+	UpdateEmail(ctx context.Context, arg UpdateEmailParams) (Email, error)
+	UpdateIP(ctx context.Context, arg UpdateIPParams) (Ip, error)
+	UpdateIPTokenByAccountID(ctx context.Context, arg UpdateIPTokenByAccountIDParams) (Ip, error)
 }
 
 var _ Querier = (*Queries)(nil)

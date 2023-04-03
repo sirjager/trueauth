@@ -13,14 +13,3 @@ message VerifyEmailRequest {
 message VerifyEmailResponse { 
     string message = 1;  // successful response
 }
-
-message AllowIPAddressRequest {
-  // By default this will send email verification token to registered email
-  // if user has already requested email verification and has verification code then email is verified
-  string code = 1;
-}
-
-message AllowIPAddressResponse { 
-    string message = 1;  // successful response
-}
-

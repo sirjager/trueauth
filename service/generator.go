@@ -8,8 +8,8 @@ import (
 	rpc "github.com/sirjager/rpcs/trueauth/go"
 )
 
-func publicProfile(user sqlc.User) *rpc.User {
-	_user := &rpc.User{
+func publicProfile(user sqlc.Account) *rpc.Account {
+	_user := &rpc.Account{
 		Id:        user.ID.String(),
 		Email:     user.Email,
 		Username:  user.Username,

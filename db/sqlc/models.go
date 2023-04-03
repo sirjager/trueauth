@@ -10,7 +10,26 @@ import (
 	"github.com/google/uuid"
 )
 
-type Emailrecord struct {
+type Account struct {
+	// account id
+	ID uuid.UUID `json:"id"`
+	// unique email
+	Email string `json:"email"`
+	// unique username
+	Username string `json:"username"`
+	// hashed password
+	Password string `json:"password"`
+	// first name can be empty
+	Firstname string `json:"firstname"`
+	// last name can be empty
+	Lastname string `json:"lastname"`
+	// created at timestamp
+	CreatedAt time.Time `json:"created_at"`
+	// last updated at timestamp
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type Email struct {
 	// email uuid
 	ID uuid.UUID `json:"id"`
 	// email address
@@ -27,20 +46,20 @@ type Emailrecord struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type Iprecord struct {
+type Ip struct {
 	// record uuid
 	ID uuid.UUID `json:"id"`
-	// user uuid
-	UserID uuid.UUID `json:"user_id"`
-	// list of all allowed ip address for this user
+	// account id
+	AccountID uuid.UUID `json:"account_id"`
+	// list of all allowed ip address
 	AllowedIps []string `json:"allowed_ips"`
-	// list of all blocked ip address for this user
+	// list of all blocked ip address
 	BlockedIps []string `json:"blocked_ips"`
 	// confirmation token
 	Token string `json:"token"`
-	// created at timestamp of this session
+	// created at timestamp
 	CreatedAt time.Time `json:"created_at"`
-	// last updated at timestamp of this session
+	// last updated at timestamp
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
@@ -57,8 +76,8 @@ type Session struct {
 	ClientIp string `json:"client_ip"`
 	// client user agent
 	UserAgent string `json:"user_agent"`
-	// user id to whom this session is assigned to
-	UserID uuid.UUID `json:"user_id"`
+	// id of the account assigned to this session
+	AccountID uuid.UUID `json:"account_id"`
 	// session is blocked or not
 	Blocked bool `json:"blocked"`
 	// expiration time of access token
@@ -68,24 +87,5 @@ type Session struct {
 	// created at timestamp of this session
 	CreatedAt time.Time `json:"created_at"`
 	// last updated at timestamp of this session
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
-type User struct {
-	// user id
-	ID uuid.UUID `json:"id"`
-	// unique email
-	Email string `json:"email"`
-	// unique username
-	Username string `json:"username"`
-	// hashed password
-	Password string `json:"password"`
-	// first name can be empty
-	Firstname string `json:"firstname"`
-	// last name can be empty
-	Lastname string `json:"lastname"`
-	// created at timestamp
-	CreatedAt time.Time `json:"created_at"`
-	// last updated at timestamp
 	UpdatedAt time.Time `json:"updated_at"`
 }

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package trueauth;
 
-import "user.proto";
+import "account.proto";
 
 option go_package = "github.com/sirjager/rpcs/trueauth";
 
@@ -14,4 +14,4 @@ message RegisterRequest {
   string lastname = 5;
 }
 
-message RegisterResponse { User user = 1; }
+message RegisterResponse { Account account = 1; }

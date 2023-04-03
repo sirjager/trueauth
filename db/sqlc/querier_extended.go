@@ -3,11 +3,11 @@ package sqlc
 import "context"
 
 type QuerierExtended interface {
-	CreateUserTx(ctx context.Context, arg CreateUserTxParams) (User, error)
+	CreateAccountTx(ctx context.Context, arg CreateAccountTxParams) (Account, error)
 
-	UpdateIPRecordTx(ctx context.Context, arg UpdateIPRecordTxParams) (Iprecord, error)
-	UpdateIPRecordTokenTx(ctx context.Context, arg UpdateIPRecordTokenTxParams) (Iprecord, error)
+	CreateEmailTx(ctx context.Context, arg CreateEmailTxParams) (Email, error)
+	UpdateEmailTx(ctx context.Context, arg UpdateEmailTxParams) (Email, error)
 
-	CreateEmailRecordTx(ctx context.Context, arg CreateEmailRecordTxParams) (Emailrecord, error)
-	UpdateEmailRecordTx(ctx context.Context, arg UpdateEmailRecordTxParams) (Emailrecord, error)
+	UpdateIPTx(ctx context.Context, arg UpdateIPTxParams) (Ip, error)
+	UpdateIPTokenTx(ctx context.Context, arg UpdateIPTokenTxParams) (Ip, error)
 }

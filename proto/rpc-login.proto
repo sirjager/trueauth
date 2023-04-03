@@ -4,7 +4,7 @@ package trueauth;
 
 import "google/protobuf/timestamp.proto";
 
-import "user.proto";
+import "account.proto";
 
 option go_package = "github.com/sirjager/rpcs/trueauth";
 
@@ -15,7 +15,7 @@ message LoginRequest {
 }
 
 message LoginResponse {
-  User user = 1;
+  Account account = 1;
   string session_id = 2;
   string access_token = 3; 
   string refresh_token = 4; 

@@ -30,28 +30,38 @@ func (s *TrueAuthService) Register(ctx context.Context, req *rpc.RegisterRequest
 	// extract metadata like client-ip and user-agent
 	meta := s.extractMetadata(ctx)
 
-	params := sqlc.CreateUserTxParams{
-		CreateUserParams: sqlc.CreateUserParams{
+	params := sqlc.CreateAccountTxParams{
+		CreateAccountParams: sqlc.CreateAccountParams{
 			Email:     req.GetEmail(),
 			Username:  req.GetUsername(),
 			Password:  hashedPassword,
 			Firstname: req.GetFirstname(),
 			Lastname:  req.GetLastname(),
 		},
-		AfterCreate: func(user sqlc.User) (err error) {
-			ipParams := sqlc.CreateIPRecordParams{UserID: user.ID, BlockedIps: []string{}, Token: "", AllowedIps: []string{meta.ClientIp}}
-			if err = s.store.CreateIPRecord(ctx, ipParams); err != nil {
+		AfterCreate: func(account sqlc.Account) (err error) {
+			ipParams := sqlc.CreateIPParams{
+				AccountID:  account.ID,
+				BlockedIps: []string{},
+				Token:      "null",
+				AllowedIps: []string{meta.ClientIp},
+			}
+			if err = s.store.CreateIP(ctx, ipParams); err != nil {
 				return err
 			}
-			emailParams := sqlc.CreateEmailRecordParams{Email: user.Email, Verified: false, Token: "", LastTokenSentAt: time.Time{}}
-			if _, err = s.store.CreateEmailRecord(ctx, emailParams); err != nil {
+			emailParams := sqlc.CreateEmailParams{
+				Email:           account.Email,
+				Verified:        false,
+				Token:           "null",
+				LastTokenSentAt: time.Time{},
+			}
+			if _, err = s.store.CreateEmail(ctx, emailParams); err != nil {
 				return err
 			}
 			return err
 		},
 	}
 
-	user, err := s.store.CreateUserTx(ctx, params)
+	account, err := s.store.CreateAccountTx(ctx, params)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
@@ -62,7 +72,7 @@ func (s *TrueAuthService) Register(ctx context.Context, req *rpc.RegisterRequest
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	return &rpc.RegisterResponse{User: publicProfile(user)}, nil
+	return &rpc.RegisterResponse{Account: publicProfile(account)}, nil
 }
 
 func validateRegisterRequest(req *rpc.RegisterRequest) (violations []*errdetails.BadRequest_FieldViolation) {

@@ -10,6 +10,12 @@ import "rpc-health.proto";
 import "rpc-register.proto"; 
 import "rpc-login.proto"; 
 import "rpc-verify.proto"; 
+import "rpc-logout.proto"; 
+import "rpc-refresh.proto"; 
+import "rpc-delete.proto"; 
+import "rpc-forgot.proto"; 
+import "rpc-ip.proto"; 
+
 
  
 option go_package = "github.com/sirjager/rpcs/trueauth";
@@ -92,6 +98,65 @@ service TrueAuth {
         };
     }
 
+    rpc Logout(LogoutRequest) returns (LogoutResponse) {
+        option (google.api.http) = {
+            post: "/v1/logout"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description: "Logout active sessions";
+            summary: "Logout";
+            tags: "Auth";
+        };
+    }
+    
+    rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse) {
+        option (google.api.http) = {
+            post: "/v1/refresh"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description: "Refresh access token";
+            summary: "Refresh access token";
+            tags: "Auth";
+        };
+    }
+
+    rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse) {
+        option (google.api.http) = {
+            post: "/v1/forgot"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description: "Get a password reset code";
+            summary: "Forgot password";
+            tags: "Auth";
+        };
+    }
+
+    rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse) {
+        option (google.api.http) = {
+            post: "/v1/reset"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description: "Reset password";
+            summary: "Reset password";
+            tags: "Auth";
+        };
+    }
+
+    rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse) {
+        option (google.api.http) = {
+            delete: "/v1/account"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description: "Request account deletion";
+            summary: "Delete account";
+            tags: "Auth";
+        };
+    }
+
     rpc AllowIPAddress(AllowIPAddressRequest) returns (AllowIPAddressResponse) {
         option (google.api.http) = {
             post: "/v1/allow-ip"
@@ -102,6 +167,5 @@ service TrueAuth {
             tags: "Auth";
         };
     }
-
 
 }
