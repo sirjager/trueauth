@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/lib/pq"
 	rpc "github.com/sirjager/rpcs/trueauth/go"
@@ -30,38 +29,15 @@ func (s *TrueAuthService) Register(ctx context.Context, req *rpc.RegisterRequest
 	// extract metadata like client-ip and user-agent
 	meta := s.extractMetadata(ctx)
 
-	params := sqlc.CreateAccountTxParams{
-		CreateAccountParams: sqlc.CreateAccountParams{
-			Email:     req.GetEmail(),
-			Username:  req.GetUsername(),
-			Password:  hashedPassword,
-			Firstname: req.GetFirstname(),
-			Lastname:  req.GetLastname(),
-		},
-		AfterCreate: func(account sqlc.Account) (err error) {
-			ipParams := sqlc.CreateIPParams{
-				AccountID:  account.ID,
-				BlockedIps: []string{},
-				Token:      "null",
-				AllowedIps: []string{meta.ClientIp},
-			}
-			if err = s.store.CreateIP(ctx, ipParams); err != nil {
-				return err
-			}
-			emailParams := sqlc.CreateEmailParams{
-				Email:           account.Email,
-				Verified:        false,
-				Token:           "null",
-				LastTokenSentAt: time.Time{},
-			}
-			if _, err = s.store.CreateEmail(ctx, emailParams); err != nil {
-				return err
-			}
-			return err
-		},
+	params := sqlc.CreateAccountParams{
+		Email:      req.GetEmail(),
+		Username:   req.GetUsername(),
+		Password:   hashedPassword,
+		Firstname:  req.GetFirstname(),
+		Lastname:   req.GetLastname(),
+		AllowedIps: []string{meta.ClientIp},
 	}
-
-	account, err := s.store.CreateAccountTx(ctx, params)
+	account, err := s.store.CreateAccount(ctx, params)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {

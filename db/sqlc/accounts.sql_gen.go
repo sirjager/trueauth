@@ -8,20 +8,27 @@ package sqlc
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 const createAccount = `-- name: CreateAccount :one
-INSERT INTO accounts (email,username,password,firstname,lastname) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, username, password, firstname, lastname, created_at, updated_at
+INSERT INTO accounts (email,username,password,firstname,lastname,allowed_ips,last_confirmation_sent_at,last_recovery_sent_at,last_email_change_sent_at) 
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, email, username, password, firstname, lastname, email_verified, confirmation_token, last_confirmation_sent_at, recovery_token, last_recovery_sent_at, email_change_token, last_email_change_sent_at, allowed_ips, allow_ip_token, created_at, updated_at
 `
 
 type CreateAccountParams struct {
-	Email     string `json:"email"`
-	Username  string `json:"username"`
-	Password  string `json:"password"`
-	Firstname string `json:"firstname"`
-	Lastname  string `json:"lastname"`
+	Email                  string    `json:"email"`
+	Username               string    `json:"username"`
+	Password               string    `json:"password"`
+	Firstname              string    `json:"firstname"`
+	Lastname               string    `json:"lastname"`
+	AllowedIps             []string  `json:"allowed_ips"`
+	LastConfirmationSentAt time.Time `json:"last_confirmation_sent_at"`
+	LastRecoverySentAt     time.Time `json:"last_recovery_sent_at"`
+	LastEmailChangeSentAt  time.Time `json:"last_email_change_sent_at"`
 }
 
 func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error) {
@@ -31,6 +38,10 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 		arg.Password,
 		arg.Firstname,
 		arg.Lastname,
+		pq.Array(arg.AllowedIps),
+		arg.LastConfirmationSentAt,
+		arg.LastRecoverySentAt,
+		arg.LastEmailChangeSentAt,
 	)
 	var i Account
 	err := row.Scan(
@@ -40,6 +51,15 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 		&i.Password,
 		&i.Firstname,
 		&i.Lastname,
+		&i.EmailVerified,
+		&i.ConfirmationToken,
+		&i.LastConfirmationSentAt,
+		&i.RecoveryToken,
+		&i.LastRecoverySentAt,
+		&i.EmailChangeToken,
+		&i.LastEmailChangeSentAt,
+		pq.Array(&i.AllowedIps),
+		&i.AllowIpToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -56,7 +76,7 @@ func (q *Queries) DeleteAccount(ctx context.Context, id uuid.UUID) error {
 }
 
 const getAccountByEmail = `-- name: GetAccountByEmail :one
-SELECT id, email, username, password, firstname, lastname, created_at, updated_at FROM accounts WHERE email = $1 LIMIT 1
+SELECT id, email, username, password, firstname, lastname, email_verified, confirmation_token, last_confirmation_sent_at, recovery_token, last_recovery_sent_at, email_change_token, last_email_change_sent_at, allowed_ips, allow_ip_token, created_at, updated_at FROM accounts WHERE email = $1 LIMIT 1
 `
 
 func (q *Queries) GetAccountByEmail(ctx context.Context, email string) (Account, error) {
@@ -69,6 +89,15 @@ func (q *Queries) GetAccountByEmail(ctx context.Context, email string) (Account,
 		&i.Password,
 		&i.Firstname,
 		&i.Lastname,
+		&i.EmailVerified,
+		&i.ConfirmationToken,
+		&i.LastConfirmationSentAt,
+		&i.RecoveryToken,
+		&i.LastRecoverySentAt,
+		&i.EmailChangeToken,
+		&i.LastEmailChangeSentAt,
+		pq.Array(&i.AllowedIps),
+		&i.AllowIpToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -76,7 +105,7 @@ func (q *Queries) GetAccountByEmail(ctx context.Context, email string) (Account,
 }
 
 const getAccountByID = `-- name: GetAccountByID :one
-SELECT id, email, username, password, firstname, lastname, created_at, updated_at FROM accounts WHERE id = $1 LIMIT 1
+SELECT id, email, username, password, firstname, lastname, email_verified, confirmation_token, last_confirmation_sent_at, recovery_token, last_recovery_sent_at, email_change_token, last_email_change_sent_at, allowed_ips, allow_ip_token, created_at, updated_at FROM accounts WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetAccountByID(ctx context.Context, id uuid.UUID) (Account, error) {
@@ -89,6 +118,15 @@ func (q *Queries) GetAccountByID(ctx context.Context, id uuid.UUID) (Account, er
 		&i.Password,
 		&i.Firstname,
 		&i.Lastname,
+		&i.EmailVerified,
+		&i.ConfirmationToken,
+		&i.LastConfirmationSentAt,
+		&i.RecoveryToken,
+		&i.LastRecoverySentAt,
+		&i.EmailChangeToken,
+		&i.LastEmailChangeSentAt,
+		pq.Array(&i.AllowedIps),
+		&i.AllowIpToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -96,7 +134,7 @@ func (q *Queries) GetAccountByID(ctx context.Context, id uuid.UUID) (Account, er
 }
 
 const getAccountByUsername = `-- name: GetAccountByUsername :one
-SELECT id, email, username, password, firstname, lastname, created_at, updated_at FROM accounts WHERE username = $1 LIMIT 1
+SELECT id, email, username, password, firstname, lastname, email_verified, confirmation_token, last_confirmation_sent_at, recovery_token, last_recovery_sent_at, email_change_token, last_email_change_sent_at, allowed_ips, allow_ip_token, created_at, updated_at FROM accounts WHERE username = $1 LIMIT 1
 `
 
 func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Account, error) {
@@ -109,6 +147,15 @@ func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Ac
 		&i.Password,
 		&i.Firstname,
 		&i.Lastname,
+		&i.EmailVerified,
+		&i.ConfirmationToken,
+		&i.LastConfirmationSentAt,
+		&i.RecoveryToken,
+		&i.LastRecoverySentAt,
+		&i.EmailChangeToken,
+		&i.LastEmailChangeSentAt,
+		pq.Array(&i.AllowedIps),
+		&i.AllowIpToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -116,7 +163,7 @@ func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Ac
 }
 
 const listAccounts = `-- name: ListAccounts :many
-SELECT id, email, username, password, firstname, lastname, created_at, updated_at FROM accounts LIMIT $2 OFFSET $1
+SELECT id, email, username, password, firstname, lastname, email_verified, confirmation_token, last_confirmation_sent_at, recovery_token, last_recovery_sent_at, email_change_token, last_email_change_sent_at, allowed_ips, allow_ip_token, created_at, updated_at FROM accounts LIMIT $2 OFFSET $1
 `
 
 type ListAccountsParams struct {
@@ -140,6 +187,15 @@ func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]A
 			&i.Password,
 			&i.Firstname,
 			&i.Lastname,
+			&i.EmailVerified,
+			&i.ConfirmationToken,
+			&i.LastConfirmationSentAt,
+			&i.RecoveryToken,
+			&i.LastRecoverySentAt,
+			&i.EmailChangeToken,
+			&i.LastEmailChangeSentAt,
+			pq.Array(&i.AllowedIps),
+			&i.AllowIpToken,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -156,41 +212,140 @@ func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]A
 	return items, nil
 }
 
-const updateAccount = `-- name: UpdateAccount :one
-UPDATE accounts SET
- firstname = coalesce($2, firstname),
- lastname = coalesce($3, lastname),
- username = coalesce($4, username),
- password = coalesce($5, password)
-WHERE id = $1 RETURNING id, email, username, password, firstname, lastname, created_at, updated_at
+const updateAccountAllowIP = `-- name: UpdateAccountAllowIP :exec
+UPDATE accounts SET 
+allowed_ips = $1,
+allow_ip_token = $2
+WHERE id = $3
 `
 
-type UpdateAccountParams struct {
-	ID        uuid.UUID      `json:"id"`
-	Firstname sql.NullString `json:"firstname"`
-	Lastname  sql.NullString `json:"lastname"`
-	Username  sql.NullString `json:"username"`
-	Password  sql.NullString `json:"password"`
+type UpdateAccountAllowIPParams struct {
+	AllowedIps   []string  `json:"allowed_ips"`
+	AllowIpToken string    `json:"allow_ip_token"`
+	ID           uuid.UUID `json:"id"`
 }
 
-func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error) {
-	row := q.db.QueryRowContext(ctx, updateAccount,
-		arg.ID,
-		arg.Firstname,
-		arg.Lastname,
-		arg.Username,
-		arg.Password,
-	)
-	var i Account
-	err := row.Scan(
-		&i.ID,
-		&i.Email,
-		&i.Username,
-		&i.Password,
-		&i.Firstname,
-		&i.Lastname,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+func (q *Queries) UpdateAccountAllowIP(ctx context.Context, arg UpdateAccountAllowIPParams) error {
+	_, err := q.db.ExecContext(ctx, updateAccountAllowIP, pq.Array(arg.AllowedIps), arg.AllowIpToken, arg.ID)
+	return err
+}
+
+const updateAccountAllowIPToken = `-- name: UpdateAccountAllowIPToken :exec
+UPDATE accounts SET 
+allow_ip_token = $1
+WHERE id = $2
+`
+
+type UpdateAccountAllowIPTokenParams struct {
+	AllowIpToken string    `json:"allow_ip_token"`
+	ID           uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateAccountAllowIPToken(ctx context.Context, arg UpdateAccountAllowIPTokenParams) error {
+	_, err := q.db.ExecContext(ctx, updateAccountAllowIPToken, arg.AllowIpToken, arg.ID)
+	return err
+}
+
+const updateAccountEmail = `-- name: UpdateAccountEmail :exec
+UPDATE accounts SET 
+email = $1 
+WHERE id = $2
+`
+
+type UpdateAccountEmailParams struct {
+	Email string    `json:"email"`
+	ID    uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateAccountEmail(ctx context.Context, arg UpdateAccountEmailParams) error {
+	_, err := q.db.ExecContext(ctx, updateAccountEmail, arg.Email, arg.ID)
+	return err
+}
+
+const updateAccountEmailChangeToken = `-- name: UpdateAccountEmailChangeToken :exec
+UPDATE accounts SET 
+email_change_token = $1, 
+last_email_change_sent_at = $2 
+WHERE id = $3
+`
+
+type UpdateAccountEmailChangeTokenParams struct {
+	EmailChangeToken      string    `json:"email_change_token"`
+	LastEmailChangeSentAt time.Time `json:"last_email_change_sent_at"`
+	ID                    uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateAccountEmailChangeToken(ctx context.Context, arg UpdateAccountEmailChangeTokenParams) error {
+	_, err := q.db.ExecContext(ctx, updateAccountEmailChangeToken, arg.EmailChangeToken, arg.LastEmailChangeSentAt, arg.ID)
+	return err
+}
+
+const updateAccountEmailConfirmationToken = `-- name: UpdateAccountEmailConfirmationToken :exec
+UPDATE accounts SET 
+ confirmation_token = $1,
+ last_confirmation_sent_at = $2
+WHERE id = $3
+`
+
+type UpdateAccountEmailConfirmationTokenParams struct {
+	ConfirmationToken      string    `json:"confirmation_token"`
+	LastConfirmationSentAt time.Time `json:"last_confirmation_sent_at"`
+	ID                     uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateAccountEmailConfirmationToken(ctx context.Context, arg UpdateAccountEmailConfirmationTokenParams) error {
+	_, err := q.db.ExecContext(ctx, updateAccountEmailConfirmationToken, arg.ConfirmationToken, arg.LastConfirmationSentAt, arg.ID)
+	return err
+}
+
+const updateAccountEmailVerified = `-- name: UpdateAccountEmailVerified :exec
+UPDATE accounts SET 
+ email_verified = $1,
+ confirmation_token = $2
+WHERE id = $3
+`
+
+type UpdateAccountEmailVerifiedParams struct {
+	EmailVerified     bool      `json:"email_verified"`
+	ConfirmationToken string    `json:"confirmation_token"`
+	ID                uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateAccountEmailVerified(ctx context.Context, arg UpdateAccountEmailVerifiedParams) error {
+	_, err := q.db.ExecContext(ctx, updateAccountEmailVerified, arg.EmailVerified, arg.ConfirmationToken, arg.ID)
+	return err
+}
+
+const updateAccountPassword = `-- name: UpdateAccountPassword :exec
+UPDATE accounts SET 
+password = $1 
+WHERE id = $2
+`
+
+type UpdateAccountPasswordParams struct {
+	Password string    `json:"password"`
+	ID       uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateAccountPassword(ctx context.Context, arg UpdateAccountPasswordParams) error {
+	_, err := q.db.ExecContext(ctx, updateAccountPassword, arg.Password, arg.ID)
+	return err
+}
+
+const updateAccountRecoveryToken = `-- name: UpdateAccountRecoveryToken :exec
+UPDATE accounts SET 
+recovery_token = $1, 
+last_recovery_sent_at = $2 
+WHERE id = $3
+`
+
+type UpdateAccountRecoveryTokenParams struct {
+	RecoveryToken      string    `json:"recovery_token"`
+	LastRecoverySentAt time.Time `json:"last_recovery_sent_at"`
+	ID                 uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateAccountRecoveryToken(ctx context.Context, arg UpdateAccountRecoveryTokenParams) error {
+	_, err := q.db.ExecContext(ctx, updateAccountRecoveryToken, arg.RecoveryToken, arg.LastRecoverySentAt, arg.ID)
+	return err
 }

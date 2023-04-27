@@ -23,40 +23,24 @@ type Account struct {
 	Firstname string `json:"firstname"`
 	// last name can be empty
 	Lastname string `json:"lastname"`
-	// created at timestamp
-	CreatedAt time.Time `json:"created_at"`
-	// last updated at timestamp
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
-type Email struct {
-	// email uuid
-	ID uuid.UUID `json:"id"`
-	// email address
-	Email string `json:"email"`
-	// email verified or not
-	Verified bool `json:"verified"`
-	// confirmation token
-	Token string `json:"token"`
-	// last time verification requested
-	LastTokenSentAt time.Time `json:"last_token_sent_at"`
-	// created at timestamp
-	CreatedAt time.Time `json:"created_at"`
-	// last updated at timestamp
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
-type Ip struct {
-	// record uuid
-	ID uuid.UUID `json:"id"`
-	// account id
-	AccountID uuid.UUID `json:"account_id"`
+	// email verified status
+	EmailVerified bool `json:"email_verified"`
+	// email confirmation token
+	ConfirmationToken string `json:"confirmation_token"`
+	// last email confirmation token sent at
+	LastConfirmationSentAt time.Time `json:"last_confirmation_sent_at"`
+	// password recovery token
+	RecoveryToken string `json:"recovery_token"`
+	// last password recovery token sent at
+	LastRecoverySentAt time.Time `json:"last_recovery_sent_at"`
+	// email change token
+	EmailChangeToken string `json:"email_change_token"`
+	// last email change token sent at
+	LastEmailChangeSentAt time.Time `json:"last_email_change_sent_at"`
 	// list of all allowed ip address
 	AllowedIps []string `json:"allowed_ips"`
-	// list of all blocked ip address
-	BlockedIps []string `json:"blocked_ips"`
-	// confirmation token
-	Token string `json:"token"`
+	// allow logins from ip address
+	AllowIpToken string `json:"allow_ip_token"`
 	// created at timestamp
 	CreatedAt time.Time `json:"created_at"`
 	// last updated at timestamp

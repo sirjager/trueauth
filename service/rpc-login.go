@@ -24,10 +24,8 @@ func (s *TrueAuthService) Login(ctx context.Context, req *rpc.LoginRequest) (*rp
 	if violations != nil {
 		return nil, invalidArgumentsError(violations)
 	}
-
 	var account sqlc.Account
 	var err error
-
 	switch strings.ToLower(findBy) {
 	case "email":
 		account, err = s.store.GetAccountByEmail(ctx, req.GetIdentity())
@@ -50,24 +48,9 @@ func (s *TrueAuthService) Login(ctx context.Context, req *rpc.LoginRequest) (*rp
 	// extract metadata like client-ip and user-agent
 	meta := s.extractMetadata(ctx)
 
-	ip, err := s.store.GetIPByAccountID(ctx, account.ID)
-	if err != nil {
-		// no need to handle no rows error:  first record is created when creating user
-		return nil, status.Errorf(codes.Internal, "something went wrong, please try again")
-	}
+	if s.isUnKnownIP(ctx, account) {
 
-	if s.isBlockedIP(ip, ctx) {
-		return nil, status.Errorf(codes.PermissionDenied, "your ip address is in your blacklist.", findBy)
-	}
-
-	if !s.isKnownIP(ip, ctx) {
-
-		emailRecord, err := s.store.GetEmailByEmail(ctx, account.Email)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to fetch email record: %s ", err.Error())
-		}
-
-		if !emailRecord.Verified {
+		if !account.EmailVerified {
 			return nil, status.Errorf(codes.Unauthenticated, "login from unknown ip address with unverified email is not allowed, either login from same ip from where account was created or verify your email address", err.Error())
 		}
 
@@ -89,15 +72,13 @@ func (s *TrueAuthService) Login(ctx context.Context, req *rpc.LoginRequest) (*rp
 		This code is only valid for %s <br/> <br/>
 		Thank You`, meta.ClientIp, sixDigitCode, durationTTL.String())
 
-		_, err = s.store.UpdateIPTokenTx(ctx, sqlc.UpdateIPTokenTxParams{
-			AccountID: account.ID,
-			Token:     token,
-			BeforeUpdate: func() error {
-				return s.mailer.SendMail(email)
-			},
-		})
+		err = s.mailer.SendMail(email)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to update ip record: %s", err.Error())
+			return nil, status.Errorf(codes.Internal, "failed to send email: %s", err.Error())
+		}
+		err = s.store.UpdateAccountAllowIPToken(ctx, sqlc.UpdateAccountAllowIPTokenParams{ID: account.ID, AllowIpToken: token})
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to update allow ip token: %s", err.Error())
 		}
 
 		return nil, status.Errorf(codes.Unauthenticated, "mail has been sent to your email address to allow login from your ip address")

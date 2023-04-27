@@ -64,6 +64,48 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 	return i, err
 }
 
+const deleteSession = `-- name: DeleteSession :exec
+DELETE FROM sessions WHERE id = $1
+`
+
+func (q *Queries) DeleteSession(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteSession, id)
+	return err
+}
+
+const deleteSessionByAccount = `-- name: DeleteSessionByAccount :exec
+DELETE FROM sessions WHERE account_id = $1
+`
+
+func (q *Queries) DeleteSessionByAccount(ctx context.Context, accountID uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteSessionByAccount, accountID)
+	return err
+}
+
+const getSession = `-- name: GetSession :one
+SELECT id, refresh_token, access_token_id, access_token, client_ip, user_agent, account_id, blocked, access_token_expires_at, refresh_token_expires_at, created_at, updated_at FROM sessions WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetSession(ctx context.Context, id uuid.UUID) (Session, error) {
+	row := q.db.QueryRowContext(ctx, getSession, id)
+	var i Session
+	err := row.Scan(
+		&i.ID,
+		&i.RefreshToken,
+		&i.AccessTokenID,
+		&i.AccessToken,
+		&i.ClientIp,
+		&i.UserAgent,
+		&i.AccountID,
+		&i.Blocked,
+		&i.AccessTokenExpiresAt,
+		&i.RefreshTokenExpiresAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getSessionByAccessTokenID = `-- name: GetSessionByAccessTokenID :one
 SELECT id, refresh_token, access_token_id, access_token, client_ip, user_agent, account_id, blocked, access_token_expires_at, refresh_token_expires_at, created_at, updated_at FROM sessions WHERE access_token_id = $1 LIMIT 1
 `
@@ -88,42 +130,18 @@ func (q *Queries) GetSessionByAccessTokenID(ctx context.Context, accessTokenID u
 	return i, err
 }
 
-const getSessionByID = `-- name: GetSessionByID :one
-SELECT id, refresh_token, access_token_id, access_token, client_ip, user_agent, account_id, blocked, access_token_expires_at, refresh_token_expires_at, created_at, updated_at FROM sessions WHERE id = $1 LIMIT 1
-`
-
-func (q *Queries) GetSessionByID(ctx context.Context, id uuid.UUID) (Session, error) {
-	row := q.db.QueryRowContext(ctx, getSessionByID, id)
-	var i Session
-	err := row.Scan(
-		&i.ID,
-		&i.RefreshToken,
-		&i.AccessTokenID,
-		&i.AccessToken,
-		&i.ClientIp,
-		&i.UserAgent,
-		&i.AccountID,
-		&i.Blocked,
-		&i.AccessTokenExpiresAt,
-		&i.RefreshTokenExpiresAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const listSessionsByUser = `-- name: ListSessionsByUser :many
+const listSessionsByAccount = `-- name: ListSessionsByAccount :many
 SELECT id, refresh_token, access_token_id, access_token, client_ip, user_agent, account_id, blocked, access_token_expires_at, refresh_token_expires_at, created_at, updated_at FROM sessions WHERE account_id = $1 LIMIT $3 OFFSET $2
 `
 
-type ListSessionsByUserParams struct {
+type ListSessionsByAccountParams struct {
 	AccountID uuid.UUID     `json:"account_id"`
 	Offset    sql.NullInt32 `json:"offset"`
 	Limit     sql.NullInt32 `json:"limit"`
 }
 
-func (q *Queries) ListSessionsByUser(ctx context.Context, arg ListSessionsByUserParams) ([]Session, error) {
-	rows, err := q.db.QueryContext(ctx, listSessionsByUser, arg.AccountID, arg.Offset, arg.Limit)
+func (q *Queries) ListSessionsByAccount(ctx context.Context, arg ListSessionsByAccountParams) ([]Session, error) {
+	rows, err := q.db.QueryContext(ctx, listSessionsByAccount, arg.AccountID, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}

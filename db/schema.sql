@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-04-03T13:10:07.579Z
+-- Generated at: 2023-04-05T08:42:10.573Z
 
 CREATE TABLE "accounts" (
   "id" UUID PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
@@ -9,6 +9,15 @@ CREATE TABLE "accounts" (
   "password" VARCHAR(255) NOT NULL,
   "firstname" VARCHAR(255) NOT NULL DEFAULT '',
   "lastname" VARCHAR(255) NOT NULL DEFAULT '',
+  "email_verified" BOOL NOT NULL DEFAULT false,
+  "confirmation_token" TEXT NOT NULL DEFAULT '',
+  "last_confirmation_sent_at" TIMESTAMPTZ NOT NULL,
+  "recovery_token" TEXT NOT NULL DEFAULT '',
+  "last_recovery_sent_at" TIMESTAMPTZ NOT NULL,
+  "email_change_token" TEXT NOT NULL DEFAULT '',
+  "last_email_change_sent_at" TIMESTAMPTZ NOT NULL,
+  "allowed_ips" TEXT[],
+  "allow_ip_token" TEXT NOT NULL DEFAULT '',
   "created_at" TIMESTAMPTZ NOT NULL DEFAULT (now()),
   "updated_at" TIMESTAMPTZ NOT NULL DEFAULT (now())
 );
@@ -24,26 +33,6 @@ CREATE TABLE "sessions" (
   "blocked" BOOL NOT NULL DEFAULT 'false',
   "access_token_expires_at" TIMESTAMPTZ NOT NULL,
   "refresh_token_expires_at" TIMESTAMPTZ NOT NULL,
-  "created_at" TIMESTAMPTZ NOT NULL DEFAULT (now()),
-  "updated_at" TIMESTAMPTZ NOT NULL DEFAULT (now())
-);
-
-CREATE TABLE "ips" (
-  "id" UUID PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
-  "account_id" UUID UNIQUE NOT NULL,
-  "allowed_ips" TEXT[],
-  "blocked_ips" TEXT[],
-  "token" TEXT NOT NULL DEFAULT '',
-  "created_at" TIMESTAMPTZ NOT NULL DEFAULT (now()),
-  "updated_at" TIMESTAMPTZ NOT NULL DEFAULT (now())
-);
-
-CREATE TABLE "emails" (
-  "id" UUID PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
-  "email" VARCHAR(255) UNIQUE NOT NULL,
-  "verified" BOOL NOT NULL DEFAULT FALSE,
-  "token" TEXT NOT NULL DEFAULT '',
-  "last_token_sent_at" TIMESTAMPTZ NOT NULL,
   "created_at" TIMESTAMPTZ NOT NULL DEFAULT (now()),
   "updated_at" TIMESTAMPTZ NOT NULL DEFAULT (now())
 );
@@ -67,6 +56,24 @@ COMMENT ON COLUMN "accounts"."password" IS 'hashed password';
 COMMENT ON COLUMN "accounts"."firstname" IS 'first name can be empty';
 
 COMMENT ON COLUMN "accounts"."lastname" IS 'last name can be empty';
+
+COMMENT ON COLUMN "accounts"."email_verified" IS 'email verified status';
+
+COMMENT ON COLUMN "accounts"."confirmation_token" IS 'email confirmation token';
+
+COMMENT ON COLUMN "accounts"."last_confirmation_sent_at" IS 'last email confirmation token sent at';
+
+COMMENT ON COLUMN "accounts"."recovery_token" IS 'password recovery token';
+
+COMMENT ON COLUMN "accounts"."last_recovery_sent_at" IS 'last password recovery token sent at';
+
+COMMENT ON COLUMN "accounts"."email_change_token" IS 'email change token';
+
+COMMENT ON COLUMN "accounts"."last_email_change_sent_at" IS 'last email change token sent at';
+
+COMMENT ON COLUMN "accounts"."allowed_ips" IS 'list of all allowed ip address';
+
+COMMENT ON COLUMN "accounts"."allow_ip_token" IS 'allow logins from ip address';
 
 COMMENT ON COLUMN "accounts"."created_at" IS 'created at timestamp';
 
@@ -95,33 +102,5 @@ COMMENT ON COLUMN "sessions"."refresh_token_expires_at" IS 'expiration time of a
 COMMENT ON COLUMN "sessions"."created_at" IS 'created at timestamp of this session';
 
 COMMENT ON COLUMN "sessions"."updated_at" IS 'last updated at timestamp of this session';
-
-COMMENT ON COLUMN "ips"."id" IS 'record uuid';
-
-COMMENT ON COLUMN "ips"."account_id" IS 'account id';
-
-COMMENT ON COLUMN "ips"."allowed_ips" IS 'list of all allowed ip address';
-
-COMMENT ON COLUMN "ips"."blocked_ips" IS 'list of all blocked ip address';
-
-COMMENT ON COLUMN "ips"."token" IS 'confirmation token';
-
-COMMENT ON COLUMN "ips"."created_at" IS 'created at timestamp';
-
-COMMENT ON COLUMN "ips"."updated_at" IS 'last updated at timestamp';
-
-COMMENT ON COLUMN "emails"."id" IS 'email uuid';
-
-COMMENT ON COLUMN "emails"."email" IS 'email address';
-
-COMMENT ON COLUMN "emails"."verified" IS 'email verified or not';
-
-COMMENT ON COLUMN "emails"."token" IS 'confirmation token';
-
-COMMENT ON COLUMN "emails"."last_token_sent_at" IS 'last time verification requested';
-
-COMMENT ON COLUMN "emails"."created_at" IS 'created at timestamp';
-
-COMMENT ON COLUMN "emails"."updated_at" IS 'last updated at timestamp';
 
 ALTER TABLE "sessions" ADD FOREIGN KEY ("account_id") REFERENCES "accounts" ("id");

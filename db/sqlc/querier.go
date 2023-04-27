@@ -12,25 +12,25 @@ import (
 
 type Querier interface {
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error)
-	CreateEmail(ctx context.Context, arg CreateEmailParams) (Email, error)
-	CreateIP(ctx context.Context, arg CreateIPParams) error
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	DeleteAccount(ctx context.Context, id uuid.UUID) error
+	DeleteSession(ctx context.Context, id uuid.UUID) error
+	DeleteSessionByAccount(ctx context.Context, accountID uuid.UUID) error
 	GetAccountByEmail(ctx context.Context, email string) (Account, error)
 	GetAccountByID(ctx context.Context, id uuid.UUID) (Account, error)
 	GetAccountByUsername(ctx context.Context, username string) (Account, error)
-	GetEmailByEmail(ctx context.Context, email string) (Email, error)
-	GetEmailByID(ctx context.Context, id uuid.UUID) (Email, error)
-	GetIPByAccountID(ctx context.Context, accountID uuid.UUID) (Ip, error)
-	GetIPByID(ctx context.Context, id uuid.UUID) (Ip, error)
+	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 	GetSessionByAccessTokenID(ctx context.Context, accessTokenID uuid.UUID) (Session, error)
-	GetSessionByID(ctx context.Context, id uuid.UUID) (Session, error)
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]Account, error)
-	ListSessionsByUser(ctx context.Context, arg ListSessionsByUserParams) ([]Session, error)
-	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error)
-	UpdateEmail(ctx context.Context, arg UpdateEmailParams) (Email, error)
-	UpdateIP(ctx context.Context, arg UpdateIPParams) (Ip, error)
-	UpdateIPTokenByAccountID(ctx context.Context, arg UpdateIPTokenByAccountIDParams) (Ip, error)
+	ListSessionsByAccount(ctx context.Context, arg ListSessionsByAccountParams) ([]Session, error)
+	UpdateAccountAllowIP(ctx context.Context, arg UpdateAccountAllowIPParams) error
+	UpdateAccountAllowIPToken(ctx context.Context, arg UpdateAccountAllowIPTokenParams) error
+	UpdateAccountEmail(ctx context.Context, arg UpdateAccountEmailParams) error
+	UpdateAccountEmailChangeToken(ctx context.Context, arg UpdateAccountEmailChangeTokenParams) error
+	UpdateAccountEmailConfirmationToken(ctx context.Context, arg UpdateAccountEmailConfirmationTokenParams) error
+	UpdateAccountEmailVerified(ctx context.Context, arg UpdateAccountEmailVerifiedParams) error
+	UpdateAccountPassword(ctx context.Context, arg UpdateAccountPasswordParams) error
+	UpdateAccountRecoveryToken(ctx context.Context, arg UpdateAccountRecoveryTokenParams) error
 }
 
 var _ Querier = (*Queries)(nil)

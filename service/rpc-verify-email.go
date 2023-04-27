@@ -19,29 +19,24 @@ import (
 
 // Request email verification and verify email
 //
-// #1. if CODE is provided then verify code
-// #2. If NO CODE then send email verification code
+// 1. if CODE is provided then verify code
+// 2. If NO CODE then send email verification code
 func (s *TrueAuthService) VerifyEmail(ctx context.Context, req *rpc.VerifyEmailRequest) (*rpc.VerifyEmailResponse, error) {
-	account, _, err := s.authorize(ctx)
+	authorized, err := s.authorize(ctx)
 	if err != nil {
 		return nil, unAuthenticatedError(err)
 	}
 
-	email, err := s.store.GetEmailByEmail(ctx, account.Email)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+	if authorized.Account.EmailVerified {
+		return &rpc.VerifyEmailResponse{Message: fmt.Sprintf("email %s is already verified", authorized.Account.Email)}, nil
 	}
 
-	if email.Verified {
-		return &rpc.VerifyEmailResponse{Message: fmt.Sprintf("email %s is already verified", account.Email)}, nil
-	}
-
-	// if no code is provided means, account is requesting email verification code
+	//? if no code is provided means, account is requesting email verification code
 	if req.GetCode() == "" {
 
 		// If verification code is sent recently then wait for verification request cooldown
-		if time.Since(email.LastTokenSentAt) < s.config.VerifyTokenCooldown {
-			tryAfter := time.Until(email.LastTokenSentAt.Add(s.config.VerifyTokenCooldown))
+		if time.Since(authorized.Account.LastConfirmationSentAt) < s.config.VerifyTokenCooldown {
+			tryAfter := time.Until(authorized.Account.LastConfirmationSentAt.Add(s.config.VerifyTokenCooldown))
 			return &rpc.VerifyEmailResponse{
 				Message: fmt.Sprintf("email verification has been requested recently, please try again after %s", tryAfter),
 			}, nil
@@ -52,15 +47,15 @@ func (s *TrueAuthService) VerifyEmail(ctx context.Context, req *rpc.VerifyEmailR
 		durationTTL := s.config.VerifyTokenTTL
 
 		token, _, err := s.tokens.CreateToken(tokens.PayloadData{
-			AccountID:             account.ID,
-			AccountEmail:          account.Email,
+			AccountID:             authorized.Account.ID,
+			AccountEmail:          authorized.Account.Email,
 			EmailVerificationCode: sixDigitCode,
 		}, durationTTL)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "failed to create code: %s", err.Error())
 		}
 
-		mail := mail.Mail{To: []string{account.Email}}
+		mail := mail.Mail{To: []string{authorized.Account.Email}}
 		mail.Subject = "Thank you for joining us. Please confirm your mail"
 		mail.Body = fmt.Sprintf(`
 		Hello <br/>
@@ -69,64 +64,66 @@ func (s *TrueAuthService) VerifyEmail(ctx context.Context, req *rpc.VerifyEmailR
 		If you didn't request this, simply ignore this message. <br/> <br/>
 		Thank You`, sixDigitCode, durationTTL.String())
 
-		updated, err := s.store.UpdateEmailTx(ctx, sqlc.UpdateEmailTxParams{
-			UpdateEmailParams: sqlc.UpdateEmailParams{
-				ID:              email.ID,
-				Token:           token,
-				LastTokenSentAt: time.Now(),
+		if err = s.store.UpdateAccountEmailConfirmationTokenTx(ctx, sqlc.UpdateAccountEmailConfirmationTokenTxParams{
+			UpdateAccountEmailConfirmationTokenParams: sqlc.UpdateAccountEmailConfirmationTokenParams{
+				ID:                     authorized.Account.ID,
+				ConfirmationToken:      token,
+				LastConfirmationSentAt: time.Now(),
 			},
 			BeforeUpdate: func() error {
 				return s.mailer.SendMail(mail)
 			},
-		})
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to update email record: %s", err.Error())
+		}); err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to update email confirmation token: %s", err.Error())
 		}
 
-		return &rpc.VerifyEmailResponse{Message: fmt.Sprintf("email verification code sent to your email %s", updated.Email)}, nil
+		return &rpc.VerifyEmailResponse{Message: fmt.Sprintf("email verification code sent to your email %s", authorized.Account.Email)}, nil
 	}
 
-	// if code is provided means account is submiting email verification code
+	//? if code is provided means account is submiting email verification code
 
 	violations := validateVerifyEmailRequest(req)
 	if violations != nil {
 		return nil, invalidArgumentsError(violations)
 	}
 
-	tokenPayload, err := s.tokens.VerifyToken(email.Token)
+	tokenPayload, err := s.tokens.VerifyToken(authorized.Account.ConfirmationToken)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "invalid email verification code")
+		return nil, status.Errorf(codes.Internal, "invalid email verification code: %s", err.Error())
 	}
 
-	if tokenPayload.Payload.AccountEmail != account.Email {
-		return nil, status.Errorf(codes.Internal, "invalid email verification code")
+	if tokenPayload.Payload.AccountEmail != authorized.Account.Email {
+		return nil, status.Errorf(codes.Internal, "invalid code: mismatched email")
 	}
 
-	if tokenPayload.Payload.AccountID.String() != account.ID.String() {
-		return nil, status.Errorf(codes.Internal, "invalid email verification code")
+	if tokenPayload.Payload.AccountID.String() != authorized.Account.ID.String() {
+		return nil, status.Errorf(codes.Internal, "invalid code: mismatched account id")
 	}
 
 	if tokenPayload.Payload.EmailVerificationCode != req.GetCode() {
-		return nil, status.Errorf(codes.Internal, "invalid email verification code")
+		return nil, status.Errorf(codes.Internal, "invalid code: mismatched code")
 	}
 
-	updated, err := s.store.UpdateEmailTx(ctx, sqlc.UpdateEmailTxParams{
-		UpdateEmailParams: sqlc.UpdateEmailParams{ID: email.ID, Verified: true, Token: ""},
-		AfterUpdate: func(email sqlc.Email) error {
+	if err = s.store.UpdateAccountEmailVerifiedTx(ctx, sqlc.UpdateAccountEmailVerifiedTxParams{
+		UpdateAccountEmailVerifiedParams: sqlc.UpdateAccountEmailVerifiedParams{
+			EmailVerified:     true,
+			ConfirmationToken: "null",
+			ID:                authorized.Account.ID,
+		},
+		AfterUpdate: func() error {
 			opts := []asynq.Option{
 				asynq.MaxRetry(5),
 				asynq.Group(worker.QUEUE_LOW),
 				asynq.ProcessIn(time.Second * 10),
 			}
-			// send email: email id successfully verified
-			return s.taskDistributor.DistributeTaskSendEmailVerified(ctx, worker.PayloadSendEmailVerified{Email: email.Email}, opts...)
+			return s.taskDistributor.DistributeTaskSendEmailVerified(ctx,
+				worker.PayloadSendEmailVerified{Email: authorized.Account.Email}, opts...)
 		},
-	})
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to update email verified status: %w", err)
+	}); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to set email verified: %s", err.Error())
 	}
 
-	return &rpc.VerifyEmailResponse{Message: fmt.Sprintf("email %s successfully verified", updated.Email)}, nil
+	return &rpc.VerifyEmailResponse{Message: fmt.Sprintf("email %s successfully verified", authorized.Account.Email)}, nil
 }
 
 func validateVerifyEmailRequest(req *rpc.VerifyEmailRequest) (violations []*errdetails.BadRequest_FieldViolation) {

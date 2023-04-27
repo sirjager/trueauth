@@ -355,11 +355,12 @@
         },
         "parameters": [
           {
-            "name": "code",
-            "description": "By default this will send email verification token to registered email\nif user has already requested email verification and has verification code then email is verified",
-            "in": "query",
-            "required": false,
-            "type": "string"
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/trueauthVerifyEmailRequest"
+            }
           }
         ],
         "tags": [
@@ -612,6 +613,15 @@
       "properties": {
         "message": {
           "type": "string"
+        }
+      }
+    },
+    "trueauthVerifyEmailRequest": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "title": "By default this will send email verification token to registered email\nif user has already requested email verification and has verification code then email is verified"
         }
       }
     },

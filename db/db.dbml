@@ -10,9 +10,25 @@ Table accounts as A {
   id UUID [pk, not null, note: 'account id', default: `uuid_generate_v4()`]
   email VARCHAR(255) [unique, not null, note: 'unique email']
   username VARCHAR(255) [unique, not null, note: 'unique username']
+
   password VARCHAR(255) [not null, note: 'hashed password']
+
   firstname VARCHAR(255) [default: '', not null, note: 'first name can be empty']
   lastname VARCHAR(255) [default:'', not null, note: 'last name can be empty']
+
+  email_verified BOOL [not null, default: false, note: 'email verified status']
+  confirmation_token TEXT [not null, default: '', note: 'email confirmation token']
+  last_confirmation_sent_at TIMESTAMPTZ [not null, note: 'last email confirmation token sent at']
+
+  recovery_token TEXT [not null, default: '', note: 'password recovery token']
+  last_recovery_sent_at TIMESTAMPTZ [not null, note: 'last password recovery token sent at']
+
+  email_change_token TEXT [not null, default: '', note: 'email change token']
+  last_email_change_sent_at TIMESTAMPTZ [not null, note: 'last email change token sent at']
+
+  allowed_ips TEXT[] [note: 'list of all allowed ip address']
+  allow_ip_token TEXT [not null, default: '', note: 'allow logins from ip address']
+
   created_at TIMESTAMPTZ [not null, default: `now()`, note:'created at timestamp']
   updated_at TIMESTAMPTZ [not null, default: `now()`, note: 'last updated at timestamp']
 
@@ -42,25 +58,3 @@ Table sessions as S {
   }
 }
 
-
-
-Table ips as IP {
-  id UUID [pk, not null, default:`uuid_generate_v4()`, note:'record uuid']
-  account_id UUID [unique, not null, note: 'account id']
-  allowed_ips TEXT[] [note: 'list of all allowed ip address']
-  blocked_ips TEXT[] [note: 'list of all blocked ip address']
-  token TEXT [not null, default: '', note: 'confirmation token']
-  created_at TIMESTAMPTZ [not null, default: `now()`, note: 'created at timestamp']
-  updated_at TIMESTAMPTZ [not null, default: `now()`, note: 'last updated at timestamp']
-}
-
-
-Table emails as E {
-  id UUID [pk, not null, default: `uuid_generate_v4()`, note:'email uuid']
-  email VARCHAR(255) [unique, not null, note: 'email address']
-  verified BOOL [not null, default: FALSE, note: 'email verified or not']
-  token TEXT [not null, default: '', note: 'confirmation token']
-  last_token_sent_at TIMESTAMPTZ [not null, note: 'last time verification requested']
-  created_at TIMESTAMPTZ [not null, default: `now()`, note: 'created at timestamp']
-  updated_at TIMESTAMPTZ [not null, default: `now()`, note: 'last updated at timestamp']
-}

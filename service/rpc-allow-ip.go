@@ -12,11 +12,11 @@ import (
 )
 
 func (s *TrueAuthService) AllowIPAddress(ctx context.Context, req *rpc.AllowIPAddressRequest) (*rpc.AllowIPAddressResponse, error) {
-	account, ip, err := s.authorize(ctx)
+	authorized, err := s.authorize(ctx)
 	if err != nil {
 		return nil, unAuthenticatedError(err)
 	}
-	if s.isKnownIP(ip, ctx) {
+	if !s.isUnKnownIP(ctx, authorized.Account) {
 		return &rpc.AllowIPAddressResponse{Message: "ip address is already in whitelist"}, nil
 	}
 
@@ -24,35 +24,35 @@ func (s *TrueAuthService) AllowIPAddress(ctx context.Context, req *rpc.AllowIPAd
 	if violations != nil {
 		return nil, invalidArgumentsError(violations)
 	}
-	tokenPayload, err := s.tokens.VerifyToken(ip.Token)
+	tokenPayload, err := s.tokens.VerifyToken(authorized.Account.AllowIpToken)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "invalid allow ip address verification code")
+		return nil, status.Errorf(codes.Internal, "invalid code: %s", err.Error())
 	}
 
-	if tokenPayload.Payload.AccountEmail != account.Email {
-		return nil, status.Errorf(codes.Internal, "invalid allow ip address verification code")
+	if tokenPayload.Payload.AccountEmail != authorized.Account.Email {
+		return nil, status.Errorf(codes.Internal, "invalid code: mismatched email")
 	}
 
-	if tokenPayload.Payload.AccountID.String() != account.ID.String() {
-		return nil, status.Errorf(codes.Internal, "invalid allow ip address verification code")
+	if tokenPayload.Payload.AccountID.String() != authorized.Account.ID.String() {
+		return nil, status.Errorf(codes.Internal, "invalid code: mismatched account id")
 	}
 
-	if tokenPayload.Payload.AllowIPCode != req.GetCode() {
-		return nil, status.Errorf(codes.Internal, "invalid allow ip address verification code")
+	if tokenPayload.Payload.EmailVerificationCode != req.GetCode() {
+		return nil, status.Errorf(codes.Internal, "invalid code: mismatched code")
 	}
 
 	meta := s.extractMetadata(ctx)
-	ip.AllowedIps = append(ip.AllowedIps, meta.ClientIp)
+	authorized.Account.AllowedIps = append(authorized.Account.AllowedIps, meta.ClientIp)
 
-	_, err = s.store.UpdateIP(ctx, sqlc.UpdateIPParams{
-		ID:         ip.ID,
-		AllowedIps: ip.AllowedIps,
-		BlockedIps: ip.BlockedIps,
-		Token:      "null",
+	err = s.store.UpdateAccountAllowIP(ctx, sqlc.UpdateAccountAllowIPParams{
+		ID:           authorized.Account.ID,
+		AllowIpToken: "null",
+		AllowedIps:   authorized.Account.AllowedIps,
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to update ip record: %s", err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to update allow ip list: %s", err.Error())
 	}
+
 	return &rpc.AllowIPAddressResponse{Message: fmt.Sprintf("your ip address %s has been successfully added to whitelist", meta.ClientIp)}, nil
 }
 

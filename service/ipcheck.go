@@ -6,26 +6,14 @@ import (
 	"github.com/sirjager/trueauth/db/sqlc"
 )
 
-func (s *TrueAuthService) isBlockedIP(iprecord sqlc.Ip, ctx context.Context) bool {
+func (s *TrueAuthService) isUnKnownIP(ctx context.Context, account sqlc.Account) bool {
 	meta := s.extractMetadata(ctx)
-	isBlockedIP := false
-	for _, r := range iprecord.BlockedIps {
+	isUnknown := true
+	for _, r := range account.AllowedIps {
 		if r == meta.ClientIp {
-			isBlockedIP = true
+			isUnknown = false
 			break
 		}
 	}
-	return isBlockedIP
-}
-
-func (s *TrueAuthService) isKnownIP(iprecord sqlc.Ip, ctx context.Context) bool {
-	meta := s.extractMetadata(ctx)
-	isNewIP := false
-	for _, r := range iprecord.AllowedIps {
-		if r == meta.ClientIp {
-			isNewIP = true
-			break
-		}
-	}
-	return isNewIP
+	return isUnknown
 }

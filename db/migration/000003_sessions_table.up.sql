@@ -14,12 +14,10 @@ CREATE TABLE "sessions" (
   "updated_at" TIMESTAMPTZ NOT NULL DEFAULT (now())
 );
 
+
 CREATE INDEX ON "sessions" ("account_id");
 
 CREATE INDEX ON "sessions" ("access_token_id");
-
-
-
 
 
 COMMENT ON COLUMN "sessions"."id" IS 'refresh token id';
@@ -48,7 +46,6 @@ COMMENT ON COLUMN "sessions"."updated_at" IS 'last updated at timestamp of this 
 
 
 ALTER TABLE "sessions" ADD FOREIGN KEY ("account_id") REFERENCES "accounts" ("id");
-
 
 
 CREATE TRIGGER trg_update_updated_at BEFORE UPDATE ON "sessions"
