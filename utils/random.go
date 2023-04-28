@@ -1,10 +1,12 @@
 package utils
 
 import (
-	"math/rand"
+	_rand "math/rand"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const alphabets = "abcdefghijklmnopqrstuvwxyz"
@@ -12,8 +14,14 @@ const numbers = "0123456789"
 
 const symbols = "_%#:>,<@!`$*()"
 
+var rand *_rand.Rand
+
 func init() {
-	rand.Seed(time.Now().UnixNano())
+	rand = _rand.New(_rand.NewSource(time.Now().UnixNano()))
+}
+
+func RandomUUID() uuid.UUID {
+	return uuid.New()
 }
 
 // Generate a random number between min and max
