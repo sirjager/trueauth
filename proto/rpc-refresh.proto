@@ -7,11 +7,11 @@ import "google/protobuf/timestamp.proto";
 option go_package = "github.com/sirjager/rpcs/trueauth";
 
 
-message RefreshTokenRequest {
+message RefreshRequest {
     string refresh_token = 1;  // Refresh Token
 }
 
-message RefreshTokenResponse {
+message RefreshResponse {
     string access_token = 1;                                // Access Token
     google.protobuf.Timestamp access_token_expires_at = 2;  // Access Token Expiration
 }

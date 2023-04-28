@@ -10,11 +10,12 @@ import "rpc-health.proto";
 import "rpc-register.proto"; 
 import "rpc-login.proto"; 
 import "rpc-verify.proto"; 
-import "rpc-logout.proto"; 
 import "rpc-refresh.proto"; 
+import "rpc-logout.proto"; 
+import "rpc-recovery.proto"; 
+import "rpc-update.proto"; 
 import "rpc-delete.proto"; 
-import "rpc-forgot.proto"; 
-import "rpc-ip.proto"; 
+import "rpc-allowip.proto"; 
 
 
  
@@ -87,10 +88,9 @@ service TrueAuth {
         };
     }
 
-    rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse) {
+    rpc Verify(VerifyRequest) returns (VerifyResponse) {
         option (google.api.http) = {
-            post: "/v1/verify-email"
-            body: "*"
+            post: "/v1/verify"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             description: "Request and verify email";
@@ -102,7 +102,6 @@ service TrueAuth {
     rpc Logout(LogoutRequest) returns (LogoutResponse) {
         option (google.api.http) = {
             post: "/v1/logout"
-            body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             description: "Logout active sessions";
@@ -111,7 +110,7 @@ service TrueAuth {
         };
     }
     
-    rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse) {
+    rpc Refresh(RefreshRequest) returns (RefreshResponse) {
         option (google.api.http) = {
             post: "/v1/refresh"
             body: "*"
@@ -123,31 +122,31 @@ service TrueAuth {
         };
     }
 
-    rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse) {
+    rpc Recovery(RecoveryRequest) returns (RecoveryResponse) {
         option (google.api.http) = {
-            post: "/v1/forgot"
+            post: "/v1/recover"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-            description: "Get a password reset code";
-            summary: "Forgot password";
+            description: "Get a password recovery code";
+            summary: "Password recovery";
             tags: "Auth";
         };
     }
 
-    rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse) {
+    rpc Update(UpdateRequest) returns (UpdateResponse) {
         option (google.api.http) = {
-            post: "/v1/reset"
+            patch: "/v1/account"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-            description: "Reset password";
-            summary: "Reset password";
+            description: "Update account details";
+            summary: "Update account";
             tags: "Auth";
         };
     }
 
-    rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse) {
+    rpc Delete(DeleteRequest) returns (DeleteResponse) {
         option (google.api.http) = {
             delete: "/v1/account"
         };
@@ -158,9 +157,10 @@ service TrueAuth {
         };
     }
 
-    rpc AllowIPAddress(AllowIPAddressRequest) returns (AllowIPAddressResponse) {
+
+    rpc AllowIP(AllowIPRequest) returns (AllowIPResponse) {
         option (google.api.http) = {
-            post: "/v1/allow-ip"
+            get: "/v1/allowip"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             description: "Allow ip address";

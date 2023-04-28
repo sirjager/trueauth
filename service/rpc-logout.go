@@ -29,13 +29,13 @@ func (s *TrueAuthService) Logout(ctx context.Context, req *rpc.LogoutRequest) (*
 			if err != nil {
 				return nil, status.Errorf(codes.Internal, err.Error())
 			}
-			err = s.store.DeleteSession(ctx, sessionID)
+			err = s.store.Delete_Session(ctx, sessionID)
 			if err != nil {
 				return nil, status.Errorf(codes.Internal, err.Error())
 			}
 		}
 	} else {
-		err = s.store.DeleteSessionByAccount(ctx, authorized.Account.ID)
+		err = s.store.Delete_Session_ByUserID(ctx, authorized.User.ID)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, err.Error())
 		}

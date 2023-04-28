@@ -15,15 +15,15 @@ import (
 const authorizationHeader = "authorization"
 const authorizationBearer = "bearer"
 
-type AuthorizedAccount struct {
-	Account      sqlc.Account
-	Session      sqlc.Session
-	Token        string
-	TokenPayload *tokens.Payload
+type AuthorizedUser struct {
+	User    sqlc.User
+	Session sqlc.Session
+	Token   string
+	Payload *tokens.Payload
 }
 
 // Checks Authorization header. returns token, payload, account and error
-func (s *TrueAuthService) authorize(ctx context.Context) (authorized AuthorizedAccount, err error) {
+func (s *TrueAuthService) authorize(ctx context.Context) (authorized AuthorizedUser, err error) {
 	meta, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return authorized, fmt.Errorf("missing metadata")
@@ -46,13 +46,13 @@ func (s *TrueAuthService) authorize(ctx context.Context) (authorized AuthorizedA
 	}
 
 	authorized.Token = fields[1]
-	authorized.TokenPayload, err = s.tokens.VerifyToken(authorized.Token)
+	authorized.Payload, err = s.tokens.VerifyToken(authorized.Token)
 	if err != nil {
 		return authorized, fmt.Errorf("invalid access token: %s", err.Error())
 	}
 
 	//? We will also check if token is stored or not
-	authorized.Session, err = s.store.GetSessionByAccessTokenID(ctx, authorized.TokenPayload.Id)
+	authorized.Session, err = s.store.Read_Session_ByAccessTokenID(ctx, authorized.Payload.Id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return authorized, fmt.Errorf("invalid access token")
@@ -64,11 +64,11 @@ func (s *TrueAuthService) authorize(ctx context.Context) (authorized AuthorizedA
 		return authorized, fmt.Errorf("invalid access token: %s", err.Error())
 	}
 
-	if authorized.Session.AccountID.String() != authorized.TokenPayload.Payload.AccountID.String() {
+	if authorized.Session.UserID.String() != authorized.Payload.Payload.UserID.String() {
 		return authorized, fmt.Errorf("invalid access token: %s", err.Error())
 	}
 
-	authorized.Account, err = s.store.GetAccountByID(ctx, authorized.Session.AccountID)
+	authorized.User, err = s.store.Read_User_ByID(ctx, authorized.Session.UserID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return authorized, fmt.Errorf("account does not exists: %s", err.Error())
@@ -76,7 +76,7 @@ func (s *TrueAuthService) authorize(ctx context.Context) (authorized AuthorizedA
 		return authorized, fmt.Errorf("failed to fetch account: %s", err.Error())
 	}
 
-	if s.isUnKnownIP(ctx, authorized.Account) {
+	if s.isUnKnownIP(ctx, authorized.User) {
 		return authorized, unknownIPError()
 	}
 

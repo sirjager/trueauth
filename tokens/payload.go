@@ -11,11 +11,15 @@ var ErrExpiredToken = errors.New("token has expired")
 var ErrInvalidToken = errors.New("token is invalid")
 
 type PayloadData struct {
-	AccountID             uuid.UUID `json:"account_id,omitempty"`
-	AccountEmail          string    `json:"account_email,omitempty"`
-	EmailVerificationCode string    `json:"email_verification_code,omitempty"`
-	AllowIP               string    `json:"allow_ip,omitempty"`
-	AllowIPCode           string    `json:"allow_ip_code,omitempty"`
+	UserID    uuid.UUID `json:"user_id,omitempty"`
+	UserEmail string    `json:"user_email,omitempty"`
+
+	RecoveryCode     string `json:"recovery_code,omitempty"`
+	DeletionCode     string `json:"deletion_code,omitempty"`
+	VerificationCode string `json:"email_verification_code,omitempty"`
+
+	AllowIP     string `json:"allow_ip,omitempty"`
+	AllowIPCode string `json:"allow_ip_code,omitempty"`
 }
 
 type Payload struct {

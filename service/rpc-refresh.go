@@ -12,12 +12,12 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (s *TrueAuthService) RefreshToken(ctx context.Context, req *rpc.RefreshTokenRequest) (*rpc.RefreshTokenResponse, error) {
+func (s *TrueAuthService) Refresh(ctx context.Context, req *rpc.RefreshRequest) (*rpc.RefreshResponse, error) {
 	payload, err := s.tokens.VerifyToken(req.GetRefreshToken())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "invalid refresh token: %s", err.Error())
 	}
-	session, err := s.store.GetSession(ctx, payload.Id)
+	session, err := s.store.Read_Session_ByID(ctx, payload.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, status.Errorf(codes.Internal, "invalid refresh token")
@@ -27,15 +27,16 @@ func (s *TrueAuthService) RefreshToken(ctx context.Context, req *rpc.RefreshToke
 	if session.RefreshToken != req.GetRefreshToken() {
 		return nil, status.Errorf(codes.Internal, "invalid refresh token")
 	}
-	if session.AccountID != payload.Payload.AccountID {
+	if session.UserID != payload.Payload.UserID {
 		return nil, status.Errorf(codes.Internal, "invalid refresh token")
 	}
+
 	// Generate access tokens
-	access, payload, err := s.tokens.CreateToken(tokens.PayloadData{AccountID: session.AccountID}, s.config.AccessTokenTTL)
+	access, payload, err := s.tokens.CreateToken(tokens.PayloadData{UserID: session.UserID}, s.config.AccessTokenTTL)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create access token: %s", err.Error())
 	}
-	return &rpc.RefreshTokenResponse{
+	return &rpc.RefreshResponse{
 		AccessToken:          access,
 		AccessTokenExpiresAt: timestamppb.New(payload.ExpiresAt),
 	}, nil

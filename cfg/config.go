@@ -21,6 +21,8 @@ type Config struct {
 	VerifyTokenCooldown time.Duration `mapstructure:"VERIFY_TOKEN_COOLDOWN"` //? verification token request cooldown
 	ResetTokenTTL       time.Duration `mapstructure:"RESET_TOKEN_TTL"`       //? reset token time to live
 	ResetTokenCooldown  time.Duration `mapstructure:"RESET_TOKEN_COOLDOWN"`  //? reset token request cooldown
+	DeleteTokenTTL      time.Duration `mapstructure:"DELETE_TOKEN_TTL"`      //? reset token time to live
+	DeleteTokenCooldown time.Duration `mapstructure:"DELETE_TOKEN_COOLDOWN"` //? reset token request cooldown
 
 	DBConfig DBConfig //? database configs
 

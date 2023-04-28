@@ -24,13 +24,13 @@ func (s *TrueAuthService) Login(ctx context.Context, req *rpc.LoginRequest) (*rp
 	if violations != nil {
 		return nil, invalidArgumentsError(violations)
 	}
-	var account sqlc.Account
+	var user sqlc.User
 	var err error
 	switch strings.ToLower(findBy) {
 	case "email":
-		account, err = s.store.GetAccountByEmail(ctx, req.GetIdentity())
+		user, err = s.store.Read_User_ByEmail(ctx, req.GetIdentity())
 	default:
-		account, err = s.store.GetAccountByUsername(ctx, req.GetIdentity())
+		user, err = s.store.Read_User_ByUsername(ctx, req.GetIdentity())
 	}
 
 	if err != nil {
@@ -41,42 +41,48 @@ func (s *TrueAuthService) Login(ctx context.Context, req *rpc.LoginRequest) (*rp
 	}
 
 	// verify password
-	if err := utils.VerifyPassword(req.GetPassword(), account.Password); err != nil {
+	if err := utils.VerifyPassword(req.GetPassword(), user.Password); err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "invalid %s or password", findBy)
 	}
 
 	// extract metadata like client-ip and user-agent
 	meta := s.extractMetadata(ctx)
 
-	if s.isUnKnownIP(ctx, account) {
+	if s.isUnKnownIP(ctx, user) {
 
-		if !account.EmailVerified {
-			return nil, status.Errorf(codes.Unauthenticated, "login from unknown ip address with unverified email is not allowed, either login from same ip from where account was created or verify your email address", err.Error())
+		if !user.EmailVerified {
+			return nil, status.Errorf(codes.Unauthenticated, "login from unknown ip address with unverified email is not allowed, either login from same ip from where user was created or verify your email address", err.Error())
 		}
 
 		// generate a random code
-		sixDigitCode := utils.RandomNumberAsString(6)
+		allowIPCode := utils.RandomNumberAsString(6)
 		durationTTL := s.config.VerifyTokenTTL
 
-		token, _, err := s.tokens.CreateToken(tokens.PayloadData{AccountEmail: account.Email, AllowIPCode: sixDigitCode}, durationTTL)
+		allowIPToken, _, err := s.tokens.CreateToken(
+			tokens.PayloadData{
+				UserID:      user.ID,
+				UserEmail:   user.Email,
+				AllowIPCode: allowIPCode,
+			}, durationTTL,
+		)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "failed to create code: %s", err.Error())
 		}
 
-		email := mail.Mail{To: []string{account.Email}}
+		email := mail.Mail{To: []string{user.Email}}
 		email.Subject = "Thank you for joining us. Please confirm your email"
 		email.Body = fmt.Sprintf(`
 		Hello <br/>
 		Login request from unknown ip address : <b>%s</b> <br/>
 		To allow login from this ip adress use this code : <b>%s</b> <br/>
 		This code is only valid for %s <br/> <br/>
-		Thank You`, meta.ClientIp, sixDigitCode, durationTTL.String())
+		Thank You`, meta.ClientIp, allowIPCode, durationTTL.String())
 
 		err = s.mailer.SendMail(email)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "failed to send email: %s", err.Error())
 		}
-		err = s.store.UpdateAccountAllowIPToken(ctx, sqlc.UpdateAccountAllowIPTokenParams{ID: account.ID, AllowIpToken: token})
+		err = s.store.Update_User_AllowIPToken(ctx, sqlc.Update_User_AllowIPTokenParams{ID: user.ID, AllowipToken: allowIPToken})
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "failed to update allow ip token: %s", err.Error())
 		}
@@ -85,19 +91,19 @@ func (s *TrueAuthService) Login(ctx context.Context, req *rpc.LoginRequest) (*rp
 	}
 
 	// Generate tokens, Create sessions and return
-	access_token, access_payload, err := s.tokens.CreateToken(tokens.PayloadData{AccountID: account.ID}, s.config.AccessTokenTTL)
+	access_token, access_payload, err := s.tokens.CreateToken(tokens.PayloadData{UserID: user.ID}, s.config.AccessTokenTTL)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	// generate refresh token
-	refresh_token, refresh_payload, err := s.tokens.CreateToken(tokens.PayloadData{AccountID: account.ID}, s.config.RefreshTokenTTL)
+	refresh_token, refresh_payload, err := s.tokens.CreateToken(tokens.PayloadData{UserID: user.ID}, s.config.RefreshTokenTTL)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	// create new session
-	createSessionParams := sqlc.CreateSessionParams{
+	createSessionParams := sqlc.Create_SessionParams{
 		ID:                    refresh_payload.Id,
 		ClientIp:              meta.ClientIp,
 		UserAgent:             meta.UserAgent,
@@ -106,17 +112,17 @@ func (s *TrueAuthService) Login(ctx context.Context, req *rpc.LoginRequest) (*rp
 		AccessTokenID:         access_payload.Id,
 		AccessToken:           access_token,
 		AccessTokenExpiresAt:  access_payload.ExpiresAt,
-		AccountID:             account.ID,
+		UserID:                user.ID,
 		Blocked:               false,
 	}
 
-	session, err := s.store.CreateSession(ctx, createSessionParams)
+	session, err := s.store.Create_Session(ctx, createSessionParams)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	return &rpc.LoginResponse{
-		Account:               publicProfile(account),
+		Account:               publicProfile(user),
 		SessionId:             session.ID.String(),
 		AccessToken:           access_token,
 		RefreshToken:          refresh_token,

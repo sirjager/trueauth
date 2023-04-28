@@ -4,12 +4,12 @@ package trueauth;
 
 option go_package = "github.com/sirjager/rpcs/trueauth";
 
-message VerifyEmailRequest {
+message VerifyRequest {
   // By default this will send email verification token to registered email
   // if user has already requested email verification and has verification code then email is verified
   string code = 1;
 }
 
-message VerifyEmailResponse { 
+message VerifyResponse { 
     string message = 1;  // successful response
 }

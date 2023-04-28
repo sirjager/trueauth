@@ -29,7 +29,7 @@ func (s *TrueAuthService) Register(ctx context.Context, req *rpc.RegisterRequest
 	// extract metadata like client-ip and user-agent
 	meta := s.extractMetadata(ctx)
 
-	params := sqlc.CreateAccountParams{
+	params := sqlc.Create_UserParams{
 		Email:      req.GetEmail(),
 		Username:   req.GetUsername(),
 		Password:   hashedPassword,
@@ -37,7 +37,7 @@ func (s *TrueAuthService) Register(ctx context.Context, req *rpc.RegisterRequest
 		Lastname:   req.GetLastname(),
 		AllowedIps: []string{meta.ClientIp},
 	}
-	account, err := s.store.CreateAccount(ctx, params)
+	account, err := s.store.Create_User(ctx, params)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {

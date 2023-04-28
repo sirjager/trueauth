@@ -11,26 +11,27 @@ import (
 )
 
 type Querier interface {
-	CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error)
-	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
-	DeleteAccount(ctx context.Context, id uuid.UUID) error
-	DeleteSession(ctx context.Context, id uuid.UUID) error
-	DeleteSessionByAccount(ctx context.Context, accountID uuid.UUID) error
-	GetAccountByEmail(ctx context.Context, email string) (Account, error)
-	GetAccountByID(ctx context.Context, id uuid.UUID) (Account, error)
-	GetAccountByUsername(ctx context.Context, username string) (Account, error)
-	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
-	GetSessionByAccessTokenID(ctx context.Context, accessTokenID uuid.UUID) (Session, error)
-	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]Account, error)
-	ListSessionsByAccount(ctx context.Context, arg ListSessionsByAccountParams) ([]Session, error)
-	UpdateAccountAllowIP(ctx context.Context, arg UpdateAccountAllowIPParams) error
-	UpdateAccountAllowIPToken(ctx context.Context, arg UpdateAccountAllowIPTokenParams) error
-	UpdateAccountEmail(ctx context.Context, arg UpdateAccountEmailParams) error
-	UpdateAccountEmailChangeToken(ctx context.Context, arg UpdateAccountEmailChangeTokenParams) error
-	UpdateAccountEmailConfirmationToken(ctx context.Context, arg UpdateAccountEmailConfirmationTokenParams) error
-	UpdateAccountEmailVerified(ctx context.Context, arg UpdateAccountEmailVerifiedParams) error
-	UpdateAccountPassword(ctx context.Context, arg UpdateAccountPasswordParams) error
-	UpdateAccountRecoveryToken(ctx context.Context, arg UpdateAccountRecoveryTokenParams) error
+	Create_Session(ctx context.Context, arg Create_SessionParams) (Session, error)
+	Create_User(ctx context.Context, arg Create_UserParams) (User, error)
+	Delete_Session(ctx context.Context, id uuid.UUID) error
+	Delete_Session_ByUserID(ctx context.Context, userID uuid.UUID) error
+	Delete_User(ctx context.Context, id uuid.UUID) error
+	Read_Session_ByAccessTokenID(ctx context.Context, accessTokenID uuid.UUID) (Session, error)
+	Read_Session_ByID(ctx context.Context, id uuid.UUID) (Session, error)
+	Read_Sessions_ByUserID(ctx context.Context, arg Read_Sessions_ByUserIDParams) ([]Session, error)
+	Read_User_ByEmail(ctx context.Context, email string) (User, error)
+	Read_User_ByID(ctx context.Context, id uuid.UUID) (User, error)
+	Read_User_ByUsername(ctx context.Context, username string) (User, error)
+	Read_Users(ctx context.Context, arg Read_UsersParams) ([]User, error)
+	Update_User(ctx context.Context, arg Update_UserParams) (User, error)
+	Update_User_AllowIP(ctx context.Context, arg Update_User_AllowIPParams) error
+	Update_User_AllowIPToken(ctx context.Context, arg Update_User_AllowIPTokenParams) error
+	Update_User_DeleteToken(ctx context.Context, arg Update_User_DeleteTokenParams) error
+	Update_User_EmailChangeToken(ctx context.Context, arg Update_User_EmailChangeTokenParams) error
+	Update_User_EmailVerified(ctx context.Context, arg Update_User_EmailVerifiedParams) error
+	Update_User_RecoveryToken(ctx context.Context, arg Update_User_RecoveryTokenParams) error
+	Update_User_ResetPassword(ctx context.Context, arg Update_User_ResetPasswordParams) error
+	Update_User_VerifyToken(ctx context.Context, arg Update_User_VerifyTokenParams) error
 }
 
 var _ Querier = (*Queries)(nil)

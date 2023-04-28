@@ -3,8 +3,13 @@ package sqlc
 import "context"
 
 type QuerierExtended interface {
-	CreateAccountTx(ctx context.Context, arg CreateAccountTxParams) (Account, error)
+	Create_UserTx(ctx context.Context, arg Create_UserTxParams) (User, error)
 
-	UpdateAccountEmailConfirmationTokenTx(ctx context.Context, arg UpdateAccountEmailConfirmationTokenTxParams) error
-	UpdateAccountEmailVerifiedTx(ctx context.Context, arg UpdateAccountEmailVerifiedTxParams) error
+	Update_User_VerifyTokenTx(ctx context.Context, arg Update_User_VerifyTokenTxParams) error
+	Update_User_EmailVerifiedTx(ctx context.Context, arg Update_User_EmailVerifiedTxParams) error
+
+	Update_User_RecoveryTokenTx(ctx context.Context, arg Update_User_RecoveryTokenTxParams) error
+	Update_User_ResetPasswordTx(ctx context.Context, arg Update_User_ResetPasswordTxParams) error
+
+	Update_User_DeleteTokenTx(ctx context.Context, arg Update_User_DeleteTokenTxParams) error
 }

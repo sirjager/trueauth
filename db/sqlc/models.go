@@ -10,43 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type Account struct {
-	// account id
-	ID uuid.UUID `json:"id"`
-	// unique email
-	Email string `json:"email"`
-	// unique username
-	Username string `json:"username"`
-	// hashed password
-	Password string `json:"password"`
-	// first name can be empty
-	Firstname string `json:"firstname"`
-	// last name can be empty
-	Lastname string `json:"lastname"`
-	// email verified status
-	EmailVerified bool `json:"email_verified"`
-	// email confirmation token
-	ConfirmationToken string `json:"confirmation_token"`
-	// last email confirmation token sent at
-	LastConfirmationSentAt time.Time `json:"last_confirmation_sent_at"`
-	// password recovery token
-	RecoveryToken string `json:"recovery_token"`
-	// last password recovery token sent at
-	LastRecoverySentAt time.Time `json:"last_recovery_sent_at"`
-	// email change token
-	EmailChangeToken string `json:"email_change_token"`
-	// last email change token sent at
-	LastEmailChangeSentAt time.Time `json:"last_email_change_sent_at"`
-	// list of all allowed ip address
-	AllowedIps []string `json:"allowed_ips"`
-	// allow logins from ip address
-	AllowIpToken string `json:"allow_ip_token"`
-	// created at timestamp
-	CreatedAt time.Time `json:"created_at"`
-	// last updated at timestamp
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
 type Session struct {
 	// refresh token id
 	ID uuid.UUID `json:"id"`
@@ -54,14 +17,14 @@ type Session struct {
 	RefreshToken string `json:"refresh_token"`
 	// access token id
 	AccessTokenID uuid.UUID `json:"access_token_id"`
-	// short life access token
+	// short lived access token
 	AccessToken string `json:"access_token"`
 	// client ip address
 	ClientIp string `json:"client_ip"`
 	// client user agent
 	UserAgent string `json:"user_agent"`
-	// id of the account assigned to this session
-	AccountID uuid.UUID `json:"account_id"`
+	// id of the user assigned to this session
+	UserID uuid.UUID `json:"user_id"`
 	// session is blocked or not
 	Blocked bool `json:"blocked"`
 	// expiration time of access token
@@ -71,5 +34,46 @@ type Session struct {
 	// created at timestamp of this session
 	CreatedAt time.Time `json:"created_at"`
 	// last updated at timestamp of this session
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type User struct {
+	// account id
+	ID uuid.UUID `json:"id"`
+	// unique email address
+	Email string `json:"email"`
+	// unique username
+	Username string `json:"username"`
+	// hashed password
+	Password string `json:"password"`
+	// first name
+	Firstname string `json:"firstname"`
+	// last name
+	Lastname string `json:"lastname"`
+	// email verified status
+	EmailVerified bool `json:"email_verified"`
+	// short lived email verification token
+	VerifyToken string `json:"verify_token"`
+	// last verification token sent at timestamp
+	LastVerifySentAt time.Time `json:"last_verify_sent_at"`
+	// short lived password recovery token
+	RecoveryToken string `json:"recovery_token"`
+	// last password recovery token sent at timestamp
+	LastRecoverySentAt time.Time `json:"last_recovery_sent_at"`
+	// short lived email change token
+	EmailchangeToken string `json:"emailchange_token"`
+	// last change email token sent at timestamp
+	LastEmailchangeSentAt time.Time `json:"last_emailchange_sent_at"`
+	// list of all allowed ip address to access this row
+	AllowedIps []string `json:"allowed_ips"`
+	// short lived allowip token for allowing new ipaddress
+	AllowipToken string `json:"allowip_token"`
+	// short lived account deletion token
+	DeleteToken string `json:"delete_token"`
+	// last deletion token sent at timestamp
+	LastDeleteSentAt time.Time `json:"last_delete_sent_at"`
+	// created at timestamp
+	CreatedAt time.Time `json:"created_at"`
+	// last updated at timestamp
 	UpdatedAt time.Time `json:"updated_at"`
 }
