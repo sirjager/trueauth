@@ -124,7 +124,7 @@ service TrueAuth {
 
     rpc Recovery(RecoveryRequest) returns (RecoveryResponse) {
         option (google.api.http) = {
-            post: "/v1/recover"
+            post: "/v1/recovery"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -136,23 +136,23 @@ service TrueAuth {
 
     rpc Update(UpdateRequest) returns (UpdateResponse) {
         option (google.api.http) = {
-            patch: "/v1/account"
+            patch: "/v1/users"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-            description: "Update account details";
-            summary: "Update account";
+            description: "Update user details";
+            summary: "Update user";
             tags: "Auth";
         };
     }
 
     rpc Delete(DeleteRequest) returns (DeleteResponse) {
         option (google.api.http) = {
-            delete: "/v1/account"
+            delete: "/v1/users"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-            description: "Request account deletion";
-            summary: "Delete account";
+            description: "Request user deletion";
+            summary: "Delete user";
             tags: "Auth";
         };
     }

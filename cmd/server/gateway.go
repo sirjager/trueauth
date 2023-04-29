@@ -48,8 +48,8 @@ func RunGatewayServer(srvic *service.TrueAuthService, logger zerolog.Logger, con
 		errs <- err
 		logger.Fatal().Err(err).Msg("can not statik file server")
 	}
-	swaggerHander := http.StripPrefix("/api/swagger/", http.FileServer(statikFS))
-	mux.Handle("/api/swagger/", swaggerHander)
+	swaggerHander := http.StripPrefix("/api/docs/", http.FileServer(statikFS))
+	mux.Handle("/api/docs/", swaggerHander)
 
 	mux.Handle("/metrics", promhttp.Handler())
 

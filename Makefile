@@ -70,5 +70,8 @@ gen:
 	- make dbschema
 	- make sqlc
 
-.PHONY: proto tidy test run dbdocs dbschema migratenew migrateup migratedown sqlc gen
+mock:
+	mockgen -package mockdb -destination db/mock/store.go  github.com/sirjager/$(SERVICE_NAME)/db/sqlc Store
+
+.PHONY: proto tidy test run dbdocs dbschema migratenew migrateup migratedown sqlc gen mock
 
