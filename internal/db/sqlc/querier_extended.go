@@ -10,4 +10,5 @@ type QuerierExtended interface {
 	UpdateUserResetPasswordTx(ctx context.Context, arg UpdateUserResetPasswordTxParams) error
 
 	UpdateUserDeleteTokenTx(ctx context.Context, arg UpdateUserDeleteTokenTxParams) error
+	UpdateUserAllowIPTokenTx(ctx context.Context, arg UpdateUserAllowIPTokenTxParams) error
 }

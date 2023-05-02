@@ -66,6 +66,7 @@ func (s *CoreService) Login(ctx context.Context, req *rpc.LoginRequest) (*rpc.Lo
 			tokens.PayloadData{
 				UserID:      user.ID,
 				UserEmail:   user.Email,
+				AllowIP:     meta.ClientIp,
 				AllowIPCode: allowIPCode,
 			}, durationTTL,
 		)
@@ -74,7 +75,7 @@ func (s *CoreService) Login(ctx context.Context, req *rpc.LoginRequest) (*rpc.Lo
 		}
 
 		email := mail.Mail{To: []string{user.Email}}
-		email.Subject = "Thank you for joining us. Please confirm your email"
+		email.Subject = "Login request from unknown ip address"
 		email.Body = fmt.Sprintf(`
 		Hello <br/>
 		Login request from unknown ip address : <b>%s</b> <br/>

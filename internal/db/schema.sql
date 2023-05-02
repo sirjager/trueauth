@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-04-28T14:52:00.875Z
+-- Generated at: 2023-05-02T13:24:54.216Z
 
 CREATE TABLE "users" (
   "id" UUID PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
@@ -18,6 +18,7 @@ CREATE TABLE "users" (
   "last_emailchange_sent_at" TIMESTAMPTZ NOT NULL,
   "allowed_ips" TEXT[],
   "allowip_token" TEXT NOT NULL DEFAULT '',
+  "last_allowip_sent_at" TIMESTAMPTZ NOT NULL,
   "delete_token" TEXT NOT NULL DEFAULT '',
   "last_delete_sent_at" TIMESTAMPTZ NOT NULL,
   "created_at" TIMESTAMPTZ NOT NULL DEFAULT (now()),
@@ -76,6 +77,8 @@ COMMENT ON COLUMN "users"."last_emailchange_sent_at" IS 'last change email token
 COMMENT ON COLUMN "users"."allowed_ips" IS 'list of all allowed ip address to access this row';
 
 COMMENT ON COLUMN "users"."allowip_token" IS 'short lived allowip token for allowing new ipaddress';
+
+COMMENT ON COLUMN "users"."last_allowip_sent_at" IS 'last allow ip token sent at timestamp';
 
 COMMENT ON COLUMN "users"."delete_token" IS 'short lived user deletion token';
 

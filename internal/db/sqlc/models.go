@@ -68,6 +68,8 @@ type User struct {
 	AllowedIps []string `json:"allowed_ips"`
 	// short lived allowip token for allowing new ipaddress
 	AllowipToken string `json:"allowip_token"`
+	// last allow ip token sent at timestamp
+	LastAllowipSentAt time.Time `json:"last_allowip_sent_at"`
 	// short lived user deletion token
 	DeleteToken string `json:"delete_token"`
 	// last deletion token sent at timestamp

@@ -1,29 +1,37 @@
 version: '3'
 
 volumes:
-  trueauthdb:
+  trueauth_db:
+  trueauth_redis:
 
 services:
-  trueauthdb:
-    container_name: trueauthdb
+  trueauth_redis:
+    container_name: trueauth_redis
+    image: redis:latest
+    volumes:
+      - trueauth_redis:/data
+
+  trueauth_db:
+    container_name: trueauth_db
     image: postgres:14-alpine
     volumes:
-      - trueauthdb:/var/lib/postgresql/data
+      - trueauth_db:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASS}
       - POSTGRES_DB=${DB_NAME}
 
   trueauth:
-    image: ghcr.io/sirjager/trueauth:latest
     container_name: trueauth
+    image: ghcr.io/sirjager/trueauth:latest
     depends_on:
-      - trueauthdb
+      - trueauth_db
+      - trueauth_redis
     ports:
       - 4420
-      - 4424
+      - 4421
     environment:
-      - DB_HOST=trueauthdb
+      - DB_HOST=trueauth_db
       - DB_PORT=5432
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
@@ -34,5 +42,6 @@ services:
       - GMAIL_NAME=${GMAIL_NAME}
       - GMAIL_USER=${GMAIL_USER}
       - GMAIL_PASS=${GMAIL_PASS}
-    entrypoint: ['/app/wait-for.sh', 'trueauthdb:5432', '--', '/app/start.sh']
+      - REDIS_ADDR=trueauth_redis:6379
+    entrypoint: ['/app/wait-for.sh', 'trueauth_db:5432', '--', '/app/start.sh']
     command: ['/app/main']

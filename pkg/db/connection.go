@@ -16,6 +16,9 @@ type Config struct {
 	Driver  string `mapstructure:"DB_DRIVER"`  // The database driver to use: postgres, mysql
 	Migrate string `mapstructure:"DB_MIGRATE"` // The path to the database migration files
 	Url     string // The URL for the database connection (derived from other fields)
+
+	RedisAddr string `mapstructure:"REDIS_ADDR"` // Redis connection string async workers
+
 }
 
 // Database represents a database connection.

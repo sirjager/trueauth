@@ -40,7 +40,7 @@ func (processor *RedisTaskProcessor) ProcessTaskSendEmailVerified(ctx context.Co
 
 	//TODO: send an actual email
 	email := mail.Mail{To: []string{payload.Email}}
-	email.Subject = "Email verified"
+	email.Subject = "Email verified successfully"
 	email.Body = fmt.Sprintf(`Hello <br/>
 	Your email <b>%s</b> is successfully verified. <br/><br/>
 	Thank You`, payload.Email)

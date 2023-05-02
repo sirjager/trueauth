@@ -17,9 +17,9 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
     email, username, password,firstname, lastname,allowed_ips,
-    last_verify_sent_at,last_recovery_sent_at,last_emailchange_sent_at,last_delete_sent_at
+    last_verify_sent_at,last_recovery_sent_at,last_emailchange_sent_at,last_delete_sent_at,last_allowip_sent_at
 ) 
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, email, username, password, firstname, lastname, email_verified, verify_token, last_verify_sent_at, recovery_token, last_recovery_sent_at, emailchange_token, last_emailchange_sent_at, allowed_ips, allowip_token, delete_token, last_delete_sent_at, created_at, updated_at
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, email, username, password, firstname, lastname, email_verified, verify_token, last_verify_sent_at, recovery_token, last_recovery_sent_at, emailchange_token, last_emailchange_sent_at, allowed_ips, allowip_token, last_allowip_sent_at, delete_token, last_delete_sent_at, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -33,6 +33,7 @@ type CreateUserParams struct {
 	LastRecoverySentAt    time.Time `json:"last_recovery_sent_at"`
 	LastEmailchangeSentAt time.Time `json:"last_emailchange_sent_at"`
 	LastDeleteSentAt      time.Time `json:"last_delete_sent_at"`
+	LastAllowipSentAt     time.Time `json:"last_allowip_sent_at"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -47,6 +48,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.LastRecoverySentAt,
 		arg.LastEmailchangeSentAt,
 		arg.LastDeleteSentAt,
+		arg.LastAllowipSentAt,
 	)
 	var i User
 	err := row.Scan(
@@ -65,6 +67,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.LastEmailchangeSentAt,
 		pq.Array(&i.AllowedIps),
 		&i.AllowipToken,
+		&i.LastAllowipSentAt,
 		&i.DeleteToken,
 		&i.LastDeleteSentAt,
 		&i.CreatedAt,
@@ -83,7 +86,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 const readUserByEmail = `-- name: ReadUserByEmail :one
-SELECT id, email, username, password, firstname, lastname, email_verified, verify_token, last_verify_sent_at, recovery_token, last_recovery_sent_at, emailchange_token, last_emailchange_sent_at, allowed_ips, allowip_token, delete_token, last_delete_sent_at, created_at, updated_at FROM users WHERE email = $1 LIMIT 1
+SELECT id, email, username, password, firstname, lastname, email_verified, verify_token, last_verify_sent_at, recovery_token, last_recovery_sent_at, emailchange_token, last_emailchange_sent_at, allowed_ips, allowip_token, last_allowip_sent_at, delete_token, last_delete_sent_at, created_at, updated_at FROM users WHERE email = $1 LIMIT 1
 `
 
 func (q *Queries) ReadUserByEmail(ctx context.Context, email string) (User, error) {
@@ -105,6 +108,7 @@ func (q *Queries) ReadUserByEmail(ctx context.Context, email string) (User, erro
 		&i.LastEmailchangeSentAt,
 		pq.Array(&i.AllowedIps),
 		&i.AllowipToken,
+		&i.LastAllowipSentAt,
 		&i.DeleteToken,
 		&i.LastDeleteSentAt,
 		&i.CreatedAt,
@@ -114,7 +118,7 @@ func (q *Queries) ReadUserByEmail(ctx context.Context, email string) (User, erro
 }
 
 const readUserByID = `-- name: ReadUserByID :one
-SELECT id, email, username, password, firstname, lastname, email_verified, verify_token, last_verify_sent_at, recovery_token, last_recovery_sent_at, emailchange_token, last_emailchange_sent_at, allowed_ips, allowip_token, delete_token, last_delete_sent_at, created_at, updated_at FROM users WHERE id = $1 LIMIT 1
+SELECT id, email, username, password, firstname, lastname, email_verified, verify_token, last_verify_sent_at, recovery_token, last_recovery_sent_at, emailchange_token, last_emailchange_sent_at, allowed_ips, allowip_token, last_allowip_sent_at, delete_token, last_delete_sent_at, created_at, updated_at FROM users WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) ReadUserByID(ctx context.Context, id uuid.UUID) (User, error) {
@@ -136,6 +140,7 @@ func (q *Queries) ReadUserByID(ctx context.Context, id uuid.UUID) (User, error) 
 		&i.LastEmailchangeSentAt,
 		pq.Array(&i.AllowedIps),
 		&i.AllowipToken,
+		&i.LastAllowipSentAt,
 		&i.DeleteToken,
 		&i.LastDeleteSentAt,
 		&i.CreatedAt,
@@ -145,7 +150,7 @@ func (q *Queries) ReadUserByID(ctx context.Context, id uuid.UUID) (User, error) 
 }
 
 const readUserByUsername = `-- name: ReadUserByUsername :one
-SELECT id, email, username, password, firstname, lastname, email_verified, verify_token, last_verify_sent_at, recovery_token, last_recovery_sent_at, emailchange_token, last_emailchange_sent_at, allowed_ips, allowip_token, delete_token, last_delete_sent_at, created_at, updated_at FROM users WHERE username = $1 LIMIT 1
+SELECT id, email, username, password, firstname, lastname, email_verified, verify_token, last_verify_sent_at, recovery_token, last_recovery_sent_at, emailchange_token, last_emailchange_sent_at, allowed_ips, allowip_token, last_allowip_sent_at, delete_token, last_delete_sent_at, created_at, updated_at FROM users WHERE username = $1 LIMIT 1
 `
 
 func (q *Queries) ReadUserByUsername(ctx context.Context, username string) (User, error) {
@@ -167,6 +172,7 @@ func (q *Queries) ReadUserByUsername(ctx context.Context, username string) (User
 		&i.LastEmailchangeSentAt,
 		pq.Array(&i.AllowedIps),
 		&i.AllowipToken,
+		&i.LastAllowipSentAt,
 		&i.DeleteToken,
 		&i.LastDeleteSentAt,
 		&i.CreatedAt,
@@ -176,7 +182,7 @@ func (q *Queries) ReadUserByUsername(ctx context.Context, username string) (User
 }
 
 const readUsers = `-- name: ReadUsers :many
-SELECT id, email, username, password, firstname, lastname, email_verified, verify_token, last_verify_sent_at, recovery_token, last_recovery_sent_at, emailchange_token, last_emailchange_sent_at, allowed_ips, allowip_token, delete_token, last_delete_sent_at, created_at, updated_at FROM users LIMIT $2 OFFSET $1
+SELECT id, email, username, password, firstname, lastname, email_verified, verify_token, last_verify_sent_at, recovery_token, last_recovery_sent_at, emailchange_token, last_emailchange_sent_at, allowed_ips, allowip_token, last_allowip_sent_at, delete_token, last_delete_sent_at, created_at, updated_at FROM users LIMIT $2 OFFSET $1
 `
 
 type ReadUsersParams struct {
@@ -209,6 +215,7 @@ func (q *Queries) ReadUsers(ctx context.Context, arg ReadUsersParams) ([]User, e
 			&i.LastEmailchangeSentAt,
 			pq.Array(&i.AllowedIps),
 			&i.AllowipToken,
+			&i.LastAllowipSentAt,
 			&i.DeleteToken,
 			&i.LastDeleteSentAt,
 			&i.CreatedAt,
@@ -234,7 +241,7 @@ UPDATE users SET
     firstname = $3,
     lastname = $4
     WHERE id = $5
-RETURNING id, email, username, password, firstname, lastname, email_verified, verify_token, last_verify_sent_at, recovery_token, last_recovery_sent_at, emailchange_token, last_emailchange_sent_at, allowed_ips, allowip_token, delete_token, last_delete_sent_at, created_at, updated_at
+RETURNING id, email, username, password, firstname, lastname, email_verified, verify_token, last_verify_sent_at, recovery_token, last_recovery_sent_at, emailchange_token, last_emailchange_sent_at, allowed_ips, allowip_token, last_allowip_sent_at, delete_token, last_delete_sent_at, created_at, updated_at
 `
 
 type UpdateUserParams struct {
@@ -270,6 +277,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.LastEmailchangeSentAt,
 		pq.Array(&i.AllowedIps),
 		&i.AllowipToken,
+		&i.LastAllowipSentAt,
 		&i.DeleteToken,
 		&i.LastDeleteSentAt,
 		&i.CreatedAt,
@@ -298,17 +306,19 @@ func (q *Queries) UpdateUserAllowIP(ctx context.Context, arg UpdateUserAllowIPPa
 
 const updateUserAllowIPToken = `-- name: UpdateUserAllowIPToken :exec
 UPDATE users SET 
-    allowip_token = $1
-WHERE id = $2
+    allowip_token = $1,
+    last_allowip_sent_at = $2 
+WHERE id = $3
 `
 
 type UpdateUserAllowIPTokenParams struct {
-	AllowipToken string    `json:"allowip_token"`
-	ID           uuid.UUID `json:"id"`
+	AllowipToken      string    `json:"allowip_token"`
+	LastAllowipSentAt time.Time `json:"last_allowip_sent_at"`
+	ID                uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateUserAllowIPToken(ctx context.Context, arg UpdateUserAllowIPTokenParams) error {
-	_, err := q.db.ExecContext(ctx, updateUserAllowIPToken, arg.AllowipToken, arg.ID)
+	_, err := q.db.ExecContext(ctx, updateUserAllowIPToken, arg.AllowipToken, arg.LastAllowipSentAt, arg.ID)
 	return err
 }
 

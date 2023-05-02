@@ -98,3 +98,22 @@ func (store *SQLStore) UpdateUserDeleteTokenTx(ctx context.Context, arg UpdateUs
 		return
 	})
 }
+
+type UpdateUserAllowIPTokenTxParams struct {
+	UpdateUserAllowIPTokenParams
+	BeforeUpdate func() error
+}
+
+func (store *SQLStore) UpdateUserAllowIPTokenTx(ctx context.Context, arg UpdateUserAllowIPTokenTxParams) error {
+	return store.execTx(ctx, func(q *Queries) (err error) {
+		if arg.BeforeUpdate != nil {
+			if err = arg.BeforeUpdate(); err != nil {
+				return err
+			}
+		}
+		if err = q.UpdateUserAllowIPToken(ctx, arg.UpdateUserAllowIPTokenParams); err != nil {
+			return err
+		}
+		return
+	})
+}

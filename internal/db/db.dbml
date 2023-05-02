@@ -28,6 +28,7 @@ Table users as U {
 
   allowed_ips TEXT[] [note: 'list of all allowed ip address to access this row']
   allowip_token TEXT [not null, default: '', note: 'short lived allowip token for allowing new ipaddress']
+  last_allowip_sent_at TIMESTAMPTZ [not null, note: 'last allow ip token sent at timestamp']
 
   delete_token TEXT [not null, default: '', note: 'short lived user deletion token']
   last_delete_sent_at TIMESTAMPTZ [not null, note: 'last deletion token sent at timestamp']
