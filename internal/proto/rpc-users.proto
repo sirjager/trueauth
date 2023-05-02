@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package trueauth;
+
+import "user.proto";
+
+option go_package = "github.com/sirjager/rpcs/trueauth";
+
+message UserRequest { string identity = 1; } 
+message UserResponse { User user = 1; }

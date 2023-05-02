@@ -1,0 +1,43 @@
+project_name: trueauth
+
+builds:
+  - id: linux-amd64
+    binary: '{{.ProjectName}}_{{.Os}}_{{.Arch}}'
+    main: ./cmd
+    goos:
+      - linux
+    goarch:
+      - amd64
+    no_unique_dist_dir: true
+    hooks:
+      post:
+        - cp -rf migrations dist
+        - cp -f example.env dist
+
+  - id: darwin-amd64
+    binary: '{{.ProjectName}}_{{.Os}}_{{.Arch}}'
+    main: ./cmd
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    no_unique_dist_dir: true
+
+  - id: windows-amd64
+    binary: '{{.ProjectName}}_{{.Os}}_{{.Arch}}'
+    main: ./cmd
+    goos:
+      - windows
+    goarch:
+      - amd64
+    no_unique_dist_dir: true
+
+archives:
+  - format: tar.xz
+    name_template: '{{.ProjectName}}_{{.Os}}_{{.Arch}}'
+    files:
+      - migrations
+      - example.env
+
+checksum:
+  name_template: '{{.ProjectName}}_checksums.txt'
