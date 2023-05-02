@@ -2,6 +2,11 @@
 
 The TrueAuth API is a standalone authentication gRPC and REST API service that provides various endpoints for user authentication.
 
+#### Database Overview at DB Docs
+
+- ##### Preview [dbdocs.io/sirjager/trueauth](https://dbdocs.io/sirjager/trueauth)
+- ##### Password [github.com/sirjager/trueauth](https://dbdocs.io/sirjager/trueauth)
+
 ## Service Description
 
 The TrueAuth service provides the following functionalities:
