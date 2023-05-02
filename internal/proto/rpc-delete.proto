@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package trueauth;
+
+option go_package = "github.com/sirjager/rpcs/trueauth";
+
+message DeleteRequest { string code = 1; }
+message DeleteResponse { string message = 1; }
