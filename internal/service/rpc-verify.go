@@ -62,7 +62,7 @@ func (s *CoreService) Verify(ctx context.Context, req *rpc.VerifyRequest) (*rpc.
 		}
 
 		mail := mail.Mail{To: []string{authorized.User.Email}}
-		mail.Subject = "Thank you for joining us. Please confirm your mail"
+		mail.Subject = "Email verification code"
 		mail.Body = fmt.Sprintf(`
 		Hello <br/>
 		Your email verification code is : <b>%s</b> <br/>

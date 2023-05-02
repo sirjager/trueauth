@@ -57,7 +57,7 @@ func (s *CoreService) Recovery(ctx context.Context, req *rpc.RecoveryRequest) (*
 
 		// generate a random code
 		recoveryCode := utils.RandomNumberAsString(6)
-		durationTTL := s.Config.VerifyTokenTTL
+		durationTTL := s.Config.ResetTokenTTL
 
 		saveRecoveryToken, _, err := s.tokens.CreateToken(tokens.PayloadData{
 			UserID:       user.ID,
@@ -69,7 +69,7 @@ func (s *CoreService) Recovery(ctx context.Context, req *rpc.RecoveryRequest) (*
 		}
 
 		mail := mail.Mail{To: []string{user.Email}}
-		mail.Subject = "Thank you for joining us. Please confirm your mail"
+		mail.Subject = "Request for password recovery"
 		mail.Body = fmt.Sprintf(`
 		Hello <br/>
 		<b> Someone has requested password reset code from </b> <br/>
@@ -128,7 +128,7 @@ func (s *CoreService) Recovery(ctx context.Context, req *rpc.RecoveryRequest) (*
 
 	// We will send new password to user's email
 	mail := mail.Mail{To: []string{user.Email}}
-	mail.Subject = "Thank you for joining us. Please confirm your mail"
+	mail.Subject = "Your new login password"
 	mail.Body = fmt.Sprintf(`
 		Hello <br/>
 		You password has been reset. </br>

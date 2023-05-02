@@ -68,7 +68,6 @@ func main() {
 
 	redisOpt := asynq.RedisClientOpt{Addr: config.Database.RedisAddr}
 	taskDistributor := worker.NewRedisTaskDistributor(logr, redisOpt)
-	go workers.RunTaskProcessor(logr, store, mailer, config, redisOpt)
 
 	errs := make(chan error)
 	go handleSignals(errs)
@@ -86,7 +85,9 @@ func main() {
 		go grpc.RunServer(srvic, errs)
 	}
 
-	logr.Error().Err(<-errs).Msg("exit")
+	go workers.RunTaskProcessor(logr, store, mailer, config, redisOpt)
+
+	logr.Error().Err(<-errs).Msg("stopped server")
 }
 
 func handleSignals(errs chan error) {

@@ -135,6 +135,17 @@ service TrueAuth {
         };
     }
 
+    rpc Delete(DeleteRequest) returns (DeleteResponse) {
+        option (google.api.http) = {
+            delete: "/v1/users"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description: "Request user deletion";
+            summary: "Delete user";
+            tags: "Users";
+        };
+    }
+
     rpc Update(UpdateRequest) returns (UpdateResponse) {
         option (google.api.http) = {
             patch: "/v1/users"
@@ -143,18 +154,7 @@ service TrueAuth {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             description: "Update user details";
             summary: "Update user";
-            tags: "Auth";
-        };
-    }
-
-    rpc Delete(DeleteRequest) returns (DeleteResponse) {
-        option (google.api.http) = {
-            delete: "/v1/users"
-        };
-        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-            description: "Request user deletion";
-            summary: "Delete user";
-            tags: "Auth";
+            tags: "Users";
         };
     }
 

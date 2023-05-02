@@ -28,9 +28,9 @@ func (s *CoreService) Delete(ctx context.Context, req *rpc.DeleteRequest) (*rpc.
 	// If email is not verified then we will simply delete the user
 	if !authorized.User.EmailVerified {
 		if err := s.store.DeleteUser(ctx, authorized.User.ID); err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to terminate : %s", err.Error())
+			return nil, status.Errorf(codes.Internal, "failed to delete : %s", err.Error())
 		}
-		return &rpc.DeleteResponse{Message: "user has been terminated"}, nil
+		return &rpc.DeleteResponse{Message: "user account has been deleted"}, nil
 	}
 
 	meta := s.extractMetadata(ctx)
@@ -61,7 +61,7 @@ func (s *CoreService) Delete(ctx context.Context, req *rpc.DeleteRequest) (*rpc.
 		}
 
 		mail := mail.Mail{To: []string{authorized.User.Email}}
-		mail.Subject = "Thank you for joining us. Please confirm your mail"
+		mail.Subject = "Request to delete user account"
 		mail.Body = fmt.Sprintf(`
 		Hello <br/>
 		Account deletion requested from :
@@ -115,9 +115,9 @@ func (s *CoreService) Delete(ctx context.Context, req *rpc.DeleteRequest) (*rpc.
 
 	// Now delete the user
 	if err := s.store.DeleteUser(ctx, authorized.User.ID); err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to terminate : %s", err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to delete : %s", err.Error())
 	}
-	return &rpc.DeleteResponse{Message: "user has been terminated"}, nil
+	return &rpc.DeleteResponse{Message: "user account has been deleted"}, nil
 }
 
 func validateDeleteRequest(req *rpc.DeleteRequest) (violations []*errdetails.BadRequest_FieldViolation) {

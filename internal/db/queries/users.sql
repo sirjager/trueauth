@@ -1,9 +1,9 @@
 -- name: CreateUser :one
 INSERT INTO users (
     email, username, password,firstname, lastname,allowed_ips,
-    last_verify_sent_at,last_recovery_sent_at,last_emailchange_sent_at,last_delete_sent_at
+    last_verify_sent_at,last_recovery_sent_at,last_emailchange_sent_at,last_delete_sent_at,last_allowip_sent_at
 ) 
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *;
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *;
 
 
 -- name: ReadUserByID :one
@@ -61,8 +61,9 @@ WHERE id = $3;
 
 -- name: UpdateUserAllowIPToken :exec
 UPDATE users SET 
-    allowip_token = $1
-WHERE id = $2;
+    allowip_token = $1,
+    last_allowip_sent_at = $2 
+WHERE id = $3;
 
 
 -- name: UpdateUserAllowIP :exec
