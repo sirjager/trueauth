@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
 	"os/signal"
@@ -11,77 +10,83 @@ import (
 
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
-	"github.com/sirjager/trueauth/cfg"
-	"github.com/sirjager/trueauth/cmd/server"
-	"github.com/sirjager/trueauth/db"
-	"github.com/sirjager/trueauth/db/sqlc"
-	"github.com/sirjager/trueauth/mail"
-	"github.com/sirjager/trueauth/service"
-	"github.com/sirjager/trueauth/worker"
+
+	"github.com/sirjager/trueauth/config"
+
+	"github.com/sirjager/trueauth/cmd/gateway"
+	"github.com/sirjager/trueauth/cmd/grpc"
+	"github.com/sirjager/trueauth/cmd/workers"
+
+	"github.com/sirjager/trueauth/internal/db/sqlc"
+	"github.com/sirjager/trueauth/internal/service"
+	"github.com/sirjager/trueauth/internal/worker"
+
+	"github.com/sirjager/trueauth/pkg/db"
+	"github.com/sirjager/trueauth/pkg/mail"
 )
 
-var logger zerolog.Logger
+var logr zerolog.Logger
 var startTime time.Time
 var serviceName string
 
 func init() {
 	serviceName = "TrueAuth"
 	startTime = time.Now()
-	logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: false})
-	logger = logger.With().Timestamp().Logger()
-	logger = logger.With().Str("service", strings.ToLower(serviceName)).Logger()
+	logr = zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: false})
+	logr = logr.With().Timestamp().Logger()
+	logr = logr.With().Str("service", strings.ToLower(serviceName)).Logger()
 }
 
 func main() {
-	config, err := cfg.LoadConfigs(".", "remote")
+	config, err := config.LoadConfigs(".", "example")
 	if err != nil {
-		logger.Fatal().Err(err).Msg("failed to load configurations")
+		logr.Fatal().Err(err).Msg("failed to load configurations")
 	}
 	config.StartTime = startTime
 	config.ServiceName = serviceName
 
-	conn, err := sql.Open(config.DBConfig.DBDriver, config.DBConfig.DBUrl)
+	database, conn, err := db.NewDatabae(config.Database, logr)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("failed to make database connection")
+		logr.Fatal().Err(err).Msg("failed to create new database instance")
 	}
-	defer conn.Close()
+	defer database.Close()
 
-	if err = db.PingRedis(config.DBConfig.RedisAddr, logger); err != nil {
-		logger.Fatal().Err(err).Msg("failed to ping redis")
-	}
-
-	if err = db.Migrate(logger, conn, config.DBConfig); err != nil {
-		logger.Fatal().Err(err).Msg("failed to migrate database")
+	if err = database.Ping(); err != nil {
+		logr.Fatal().Err(err).Msg("failed to ping database")
 	}
 
-	mailer, err := mail.NewGmailSender(config.GmailSMTP)
+	if err = database.Migrate(); err != nil {
+		logr.Fatal().Err(err).Msg("failed to migrate database")
+	}
+
+	mailer, err := mail.NewGmailSender(config.Mail)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("failed to initialize gmail smtp")
+		logr.Fatal().Err(err).Msg("failed to initialize gmail smtp")
 	}
 
 	store := sqlc.NewStore(conn)
 
-	redisOpt := asynq.RedisClientOpt{Addr: config.DBConfig.RedisAddr}
-	taskDistributor := worker.NewRedisTaskDistributor(logger, redisOpt)
-	go server.RunTaskProcessor(logger, store, mailer, config, redisOpt)
+	redisOpt := asynq.RedisClientOpt{Addr: config.RedisAddr}
+	taskDistributor := worker.NewRedisTaskDistributor(logr, redisOpt)
+	go workers.RunTaskProcessor(logr, store, mailer, config, redisOpt)
 
 	errs := make(chan error)
 	go handleSignals(errs)
 
-	srvic, err := service.NewTrueAuthService(logger, config, store, mailer, taskDistributor)
+	srvic, err := service.NewTrueAuthService(logr, config, store, mailer, taskDistributor)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("failed to create service")
+		logr.Fatal().Err(err).Msg("failed to create service")
 	}
 
-	if config.RestPort != "" {
-		go server.RunGatewayServer(srvic, logger, config, errs)
+	if config.GatewayPort != "" {
+		go gateway.RunServer(srvic, errs)
 	}
 
 	if config.GrpcPort != "" {
-		go server.RunGRPCServer(srvic, logger, config, errs)
+		go grpc.RunServer(srvic, errs)
 	}
 
-	logger.Error().Err(<-errs).Msg("exit")
+	logr.Error().Err(<-errs).Msg("exit")
 }
 
 func handleSignals(errs chan error) {

@@ -1,7 +1,7 @@
 # grpc and gateways
 SERVICE_NAME=trueauth
 RPCS_DIR=../rpcs
-PROTO_DIR=./proto
+PROTO_DIR=./internal/proto
 
 GO_RPC_DIR=$(RPCS_DIR)/$(SERVICE_NAME)/go
 
@@ -10,9 +10,10 @@ STATIK_OUT=./docs
 SWAGGER_OUT=./docs/swagger
 
 # TEST: database configs 
-DB_MIGRATIONS=./db/migration
-DB_URL=postgres://postgres:FW3F6ojfGN6IbZfJ@localhost:5432/testdb?sslmode=disable
+DB_MIGRATIONS=./migration
+DB_URL=postgres://postgres:testpassword@localhost:5432/postgres?sslmode=disable
 
+# Generate protobuf and gRPC code, Swagger documentation, and static assets
 proto:
 	- rm -rf $(GO_RPC_DIR)
 	- mkdir -p $(GO_RPC_DIR) 
@@ -27,51 +28,59 @@ proto:
 	$(PROTO_DIR)/*.proto
 	statik -src=$(SWAGGER_OUT) -dest=$(STATIK_OUT)
 
-
+# Clean up go.sum and tidy dependencies
 tidy:
 	rm -f ./go.sum
-	rm -rf ./vendor
 	go get github.com/sirjager/rpcs@latest
 	go mod tidy
-	# go mod vendor
 
+# Run tests
 test:
 	go clean -testcache
 	go test -v -cover -short ./... 
 
+# Build the project
 build:
 	golint ./...
 	go build -o ./dist/main ./cmd/main.go
 
+# Linting and formatting
+lint:
+	golint ./...
+
+# Run the project
 run:
 	go run ./cmd/main.go
 
+# Generate database documentation
 dbdocs:
-	dbdocs build ./db/db.dbml;
+	dbdocs build ./internal/db/db.dbml;
 
+# Generate database schema
 dbschema:
-	dbml2sql --postgres -o ./db/schema.sql ./db/db.dbml
+	dbml2sql --postgres -o ./internal/db/schema.sql ./internal/db/db.dbml
 
-
+# Create a new database migration
 migratenew:
 	migrate create -ext sql -dir $(DB_MIGRATIONS) -seq $(filter-out $@,$(MAKECMDGOALS))
 
+# Run database migrations (up)
 migrateup:
 	migrate -source file://$(DB_MIGRATIONS) -database $(DB_URL) -verbose up
 
+# Rollback database migrations (down)
 migratedown:
 	migrate -source file://$(DB_MIGRATIONS) -database $(DB_URL) -verbose down --all
 
+# Generate SQL code using SQLC
 sqlc:
 	sqlc generate
 
+release:
+	goreleaser --snapshot --clean
 
-gen:
-	- make dbschema
-	- make sqlc
+image:
+	docker build --pull --rm -f "Dockerfile" -t gomicro:latest "."
 
-mock:
-	mockgen -package mockdb -destination db/mock/store.go  github.com/sirjager/$(SERVICE_NAME)/db/sqlc Store
-
-.PHONY: proto tidy test run dbdocs dbschema migratenew migrateup migratedown sqlc gen mock
-
+# Declare phony targets to prevent conflicts with file names
+.PHONY: proto tidy test run dbdocs dbschema migratenew migrateup migratedown sqlc release

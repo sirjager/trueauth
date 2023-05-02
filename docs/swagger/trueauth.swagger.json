@@ -342,6 +342,38 @@
         ]
       }
     },
+    "/v1/users/{identity}": {
+      "get": {
+        "summary": "Returns requested user",
+        "description": "Get request user",
+        "operationId": "TrueAuth_User",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/trueauthUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "identity",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      }
+    },
     "/v1/verify": {
       "post": {
         "summary": "Request and verify email",
@@ -405,40 +437,6 @@
         }
       }
     },
-    "trueauthAccount": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "email": {
-          "type": "string"
-        },
-        "username": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        },
-        "firstname": {
-          "type": "string"
-        },
-        "lastname": {
-          "type": "string"
-        },
-        "verified": {
-          "type": "boolean"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
-      }
-    },
     "trueauthAllowIPResponse": {
       "type": "object",
       "properties": {
@@ -488,8 +486,8 @@
     "trueauthLoginResponse": {
       "type": "object",
       "properties": {
-        "account": {
-          "$ref": "#/definitions/trueauthAccount"
+        "user": {
+          "$ref": "#/definitions/trueauthUser"
         },
         "sessionId": {
           "type": "string"
@@ -586,8 +584,8 @@
     "trueauthRegisterResponse": {
       "type": "object",
       "properties": {
-        "account": {
-          "$ref": "#/definitions/trueauthAccount"
+        "user": {
+          "$ref": "#/definitions/trueauthUser"
         }
       }
     },
@@ -611,8 +609,47 @@
     "trueauthUpdateResponse": {
       "type": "object",
       "properties": {
-        "account": {
-          "$ref": "#/definitions/trueauthAccount"
+        "user": {
+          "$ref": "#/definitions/trueauthUser"
+        }
+      }
+    },
+    "trueauthUser": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "firstname": {
+          "type": "string"
+        },
+        "lastname": {
+          "type": "string"
+        },
+        "verified": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "trueauthUserResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "$ref": "#/definitions/trueauthUser"
         }
       }
     },
