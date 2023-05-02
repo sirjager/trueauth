@@ -28,8 +28,6 @@ type Config struct {
 	DeleteTokenTTL      time.Duration `mapstructure:"DELETE_TOKEN_TTL"`      // reset token time to live
 	DeleteTokenCooldown time.Duration `mapstructure:"DELETE_TOKEN_COOLDOWN"` // reset token request cooldown
 
-	RedisAddr string `mapstructure:"REDIS_ADDR"` // Redis connection string async workers
-
 	//? for pkg
 	Mail     mail.Config // Mail holds the configuration for mail-related settings.
 	Database db.Config   // DBConfig holds the configuration for the database.

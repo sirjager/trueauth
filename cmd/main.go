@@ -66,7 +66,7 @@ func main() {
 
 	store := sqlc.NewStore(conn)
 
-	redisOpt := asynq.RedisClientOpt{Addr: config.RedisAddr}
+	redisOpt := asynq.RedisClientOpt{Addr: config.Database.RedisAddr}
 	taskDistributor := worker.NewRedisTaskDistributor(logr, redisOpt)
 	go workers.RunTaskProcessor(logr, store, mailer, config, redisOpt)
 
