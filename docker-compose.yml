@@ -22,13 +22,14 @@ services:
       - POSTGRES_DB=${DB_NAME}
 
   trueauth:
+    container_name: trueauth
     image: ghcr.io/sirjager/trueauth:latest
     depends_on:
-      - trueauth_redis
       - trueauth_db
+      - trueauth_redis
     ports:
       - 4420
-      - 4424
+      - 4421
     environment:
       - DB_HOST=trueauth_db
       - DB_PORT=5432
