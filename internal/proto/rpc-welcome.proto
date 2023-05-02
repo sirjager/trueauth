@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package trueauth;
-
-option go_package = "github.com/sirjager/rpcs/trueauth";
-
-
-message WelcomeRequest {}
-message WelcomeResponse { string message = 1 ; }

@@ -17,7 +17,7 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rakyll/statik v0.1.7
 	github.com/rs/zerolog v1.29.0
-	github.com/sirjager/rpcs v0.0.0-20230502053431-0c263fbeb941
+	github.com/sirjager/rpcs v0.0.0-20230428145817-20bf72eba135
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/crypto v0.4.0
