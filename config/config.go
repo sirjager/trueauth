@@ -1,7 +1,7 @@
 package config
 
 import (
-	"fmt"
+	"strings"
 	"time"
 
 	"github.com/sirjager/trueauth/pkg/db"
@@ -10,8 +10,6 @@ import (
 )
 
 type Config struct {
-	LogErrors bool `mapstructure:"LOG_ERRORS"` //? for logging errors in console
-
 	//? for internal
 	StartTime   time.Time // StartTime is the timestamp when the application started.
 	ServiceName string    // ServiceName is the name of the service.
@@ -57,8 +55,7 @@ func LoadConfigs(path, name string) (config Config, err error) {
 		return
 	}
 
-	// Construct the DBUrl using the DBConfig values.
-	config.Database.Url = fmt.Sprintf("%s://%s:%s@%s:%s/%s%s", config.Database.Driver, config.Database.User, config.Database.Pass, config.Database.Host, config.Database.Port, config.Database.Name, config.Database.Args)
 	config.Database.Migrate = "file://" + config.Database.Migrate
+	config.Database.Driver = strings.ToLower(config.Database.Driver)
 	return
 }

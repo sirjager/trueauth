@@ -55,7 +55,7 @@ func main() {
 		logr.Fatal().Err(err).Msg("failed to ping database")
 	}
 
-	if err = database.Migrate(); err != nil {
+	if err = database.MigrateUsingBindata(); err != nil {
 		logr.Fatal().Err(err).Msg("failed to migrate database")
 	}
 

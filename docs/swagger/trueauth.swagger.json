@@ -306,7 +306,7 @@
           }
         ],
         "tags": [
-          "Auth"
+          "Users"
         ]
       },
       "patch": {
@@ -338,7 +338,7 @@
           }
         ],
         "tags": [
-          "Auth"
+          "Users"
         ]
       }
     },

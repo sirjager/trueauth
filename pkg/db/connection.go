@@ -7,18 +7,14 @@ import (
 )
 
 type Config struct {
-	Name    string `mapstructure:"DB_NAME"`    // The name of the database
-	Host    string `mapstructure:"DB_HOST"`    // The hostname or IP address of the database server
-	Port    string `mapstructure:"DB_PORT"`    // The port number on which the database server is listening
-	User    string `mapstructure:"DB_USER"`    // The username for authenticating with the database server
-	Pass    string `mapstructure:"DB_PASS"`    // The password for authenticating with the database server
-	Args    string `mapstructure:"DB_ARGS"`    // Additional arguments for the database connection
-	Driver  string `mapstructure:"DB_DRIVER"`  // The database driver to use: postgres, mysql
-	Migrate string `mapstructure:"DB_MIGRATE"` // The path to the database migration files
-	Url     string // The URL for the database connection (derived from other fields)
-
+	Url       string `mapstructure:"DB_URL"`     // The database driver to use: postgres, mysql
+	Driver    string `mapstructure:"DB_DRIVER"`  // Additional arguments for the database connection
+	Migrate   string `mapstructure:"DB_MIGRATE"` // The path to the database migration files
+	DBName    string `mapstructure:"DB_NAME"`    // The path to the database migration files
+	User      string `mapstructure:"DB_USER"`    // The path to the database migration files
+	Pass      string `mapstructure:"DB_PASS"`    // The path to the database migration files
+	SSLMode   string `mapstructure:"DB_SSLMODE"` // The path to the database migration files
 	RedisAddr string `mapstructure:"REDIS_ADDR"` // Redis connection string async workers
-
 }
 
 // Database represents a database connection.
@@ -36,7 +32,11 @@ func NewDatabae(config Config, logr zerolog.Logger) (*Database, *sql.DB, error) 
 		return nil, nil, err
 	}
 	// Return a new Database instance with the connection.
-	return &Database{conn, config, logr}, conn, err
+	return &Database{
+		conn:   conn,
+		logr:   logr,
+		config: config,
+	}, conn, err
 }
 
 // Close closes the database connection.
