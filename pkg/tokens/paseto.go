@@ -37,7 +37,7 @@ func (builder *PasetoBuilder) CreateToken(p PayloadData, duration time.Duration)
 	return token, payload, err
 }
 
-// Verifys token integrity and expiration time
+// Verifies token integrity and expiration time
 func (builder *PasetoBuilder) VerifyToken(token string) (*Payload, error) {
 	payload := &Payload{}
 	err := builder.paseto.Decrypt(token, builder.symmetricKey, payload, nil)

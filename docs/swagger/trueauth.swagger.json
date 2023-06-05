@@ -161,14 +161,10 @@
         "parameters": [
           {
             "name": "sessions",
-            "description": "sessions are optional if you want to target specific session or mutiple sessions seperated by comma",
+            "description": "if no session are provided then all session are deleted\nif specific/multiple sessions sepearted by comma are provided only those sessions will be deleted",
             "in": "query",
             "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
+            "type": "string"
           }
         ],
         "tags": [
@@ -396,7 +392,12 @@
         "parameters": [
           {
             "name": "code",
-            "description": "By default this will send email verification token to registered email\nif user has already requested email verification and has verification code then email is verified",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "email",
             "in": "query",
             "required": false,
             "type": "string"
@@ -480,6 +481,9 @@
         },
         "password": {
           "type": "string"
+        },
+        "allowIpCode": {
+          "type": "string"
         }
       }
     },
@@ -550,6 +554,10 @@
     "trueauthRefreshResponse": {
       "type": "object",
       "properties": {
+        "sessionId": {
+          "type": "string",
+          "title": "Session ID"
+        },
         "accessToken": {
           "type": "string",
           "title": "Access Token"
@@ -584,8 +592,29 @@
     "trueauthRegisterResponse": {
       "type": "object",
       "properties": {
-        "user": {
-          "$ref": "#/definitions/trueauthUser"
+        "message": {
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/trueauthResponseMetadata"
+        }
+      }
+    },
+    "trueauthResponseMetadata": {
+      "type": "object",
+      "properties": {
+        "statusCode": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "isSuccess": {
+          "type": "boolean"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -656,9 +685,9 @@
     "trueauthVerifyResponse": {
       "type": "object",
       "properties": {
-        "message": {
-          "type": "string",
-          "title": "successful response"
+        "user": {
+          "$ref": "#/definitions/trueauthUser",
+          "title": "updated user"
         }
       }
     },

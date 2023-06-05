@@ -9,8 +9,9 @@ import "user.proto";
 option go_package = "github.com/sirjager/trueauth/rpc";
 
 message LoginRequest {
-    string identity = 1;
-    string password = 2;
+    string identity      = 1;
+    string password      = 2;
+    string allow_ip_code = 3;
 }
 
 message LoginResponse {

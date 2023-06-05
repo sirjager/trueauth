@@ -15,9 +15,12 @@ require (
 	github.com/lib/pq v1.10.7
 	github.com/mattn/go-sqlite3 v1.14.10
 	github.com/o1egl/paseto v1.0.0
+	github.com/oklog/ulid/v2 v2.1.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rakyll/statik v0.1.7
+	github.com/rs/xid v1.4.0
 	github.com/rs/zerolog v1.29.0
+	github.com/segmentio/ksuid v1.0.4
 	github.com/sirjager/rpcs v0.0.0-20230502053431-0c263fbeb941
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.1

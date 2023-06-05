@@ -5,12 +5,12 @@ import (
 
 	"github.com/sirjager/trueauth/internal/db/sqlc"
 
-	rpc "github.com/sirjager/rpcs/trueauth/go"
+	rpc "github.com/sirjager/trueauth/stubs/go"
 )
 
 func publicProfile(user sqlc.User) *rpc.User {
 	_user := &rpc.User{
-		Id:        user.ID.String(),
+		Id:        string(user.ID),
 		Email:     user.Email,
 		Username:  user.Username,
 		Firstname: user.Firstname,

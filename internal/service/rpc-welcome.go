@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	rpc "github.com/sirjager/rpcs/trueauth/go"
+	rpc "github.com/sirjager/trueauth/stubs/go"
 )
 
 func welcomeMessage(name string) string {

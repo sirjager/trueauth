@@ -11,6 +11,7 @@ message RefreshRequest {
 }
 
 message RefreshResponse {
-    string                    access_token            = 1;  // Access Token
-    google.protobuf.Timestamp access_token_expires_at = 2;  // Access Token Expiration
+    string                    session_id              = 1;  // Session ID
+    string                    access_token            = 2;  // Access Token
+    google.protobuf.Timestamp access_token_expires_at = 3;  // Access Token Expiration
 }

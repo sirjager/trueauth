@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package trueauth;
+
+option go_package = "github.com/sirjager/trueauth/rpc";
+
+message ResponseMetadata {
+    int32           status_code = 1;
+    bool            is_success  = 2;
+    repeated string errors      = 3;
+}

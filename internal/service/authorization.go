@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/sirjager/trueauth/internal/db/sqlc"
 	"github.com/sirjager/trueauth/pkg/tokens"
 	"google.golang.org/grpc/metadata"
@@ -16,68 +18,84 @@ const authorizationHeader = "authorization"
 const authorizationBearer = "bearer"
 
 type AuthorizedUser struct {
-	User    sqlc.User
-	Session sqlc.Session
-	Token   string
-	Payload *tokens.Payload
+	user           sqlc.User
+	access_token   string
+	access_payload *tokens.Payload
+	stored_session Session
 }
 
-// Checks Authorization header. returns token, payload, user and error
+// Checks Authorization header. returns access_token, access_payload, stored_session, user and error
 func (s *CoreService) authorize(ctx context.Context) (authorized AuthorizedUser, err error) {
 	meta, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return authorized, fmt.Errorf("missing metadata")
+		return AuthorizedUser{}, fmt.Errorf("missing metadata")
 	}
 	values := meta.Get(authorizationHeader)
 	if len(values) == 0 {
-		return authorized, fmt.Errorf("missing authorization header")
+		return AuthorizedUser{}, fmt.Errorf("missing authorization header")
 	}
 
-	// authheader will look like:    <token-type> <token>
+	// values[0]: will look like:    <token-type> <token>
 	// example: Bearer firstpart.secondpart.thirdpart
-	authHeader := values[0]
-	fields := strings.Fields(authHeader)
+	fields := strings.Fields(values[0])
 	if len(fields) < 2 {
-		return authorized, fmt.Errorf("invalid authorization header format")
+		return AuthorizedUser{}, fmt.Errorf("invalid authorization header format")
 	}
 	authType := fields[0]
 	if strings.ToLower(authType) != authorizationBearer {
-		return authorized, fmt.Errorf("unsupported authorization type: %s", authType)
+		return AuthorizedUser{}, fmt.Errorf("unsupported authorization type: %s", authType)
 	}
 
-	authorized.Token = fields[1]
-	authorized.Payload, err = s.tokens.VerifyToken(authorized.Token)
+	// we are storing incoming bearer token in authorized.Token
+	authorized.access_token = fields[1]
+
+	// this will validate token and expiration time
+	authorized.access_payload, err = s.tokens.VerifyToken(authorized.access_token)
 	if err != nil {
-		return authorized, fmt.Errorf("invalid access token: %s", err.Error())
+		return AuthorizedUser{}, fmt.Errorf("invalid access token: %s", err.Error())
 	}
 
 	//? We will also check if token is stored or not
-	authorized.Session, err = s.store.ReadSessionByAccessTokenID(ctx, authorized.Payload.Id)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return authorized, fmt.Errorf("invalid access token")
-		}
-		return authorized, fmt.Errorf("failed to fetch session: %s", err.Error())
+	session_key := accessTokenKey(authorized.access_payload.Data.UserID, authorized.access_payload.Data.SID)
+	session_bytes, err := s.redis.Get(ctx, session_key)
+
+	if err != nil && err != redis.Nil {
+		return AuthorizedUser{}, fmt.Errorf("failed to fetch session: %s", err.Error())
 	}
 
-	if authorized.Session.AccessToken != authorized.Token {
-		return authorized, fmt.Errorf("invalid access token: %s", err.Error())
+	if err == redis.Nil || len(session_bytes) == 0 {
+		return AuthorizedUser{}, fmt.Errorf("invalid or expired access token")
 	}
 
-	if authorized.Session.UserID.String() != authorized.Payload.Payload.UserID.String() {
-		return authorized, fmt.Errorf("invalid access token: %s", err.Error())
+	if err = json.Unmarshal(session_bytes, &authorized.stored_session); err != nil {
+		return AuthorizedUser{}, err
 	}
 
-	authorized.User, err = s.store.ReadUserByID(ctx, authorized.Session.UserID)
+	// now we match if incoming token and stored token are same or not
+	if authorized.access_token != authorized.stored_session.Token {
+		return AuthorizedUser{}, fmt.Errorf("invalid access token")
+	}
+
+	// Match UserID with incoming token payload
+	if authorized.access_payload.Data.UserID != authorized.stored_session.UserID {
+		return AuthorizedUser{}, fmt.Errorf("invalid access token")
+	}
+
+	authorized.user, err = s.store.ReadUserByID(ctx, []byte(authorized.access_payload.Data.UserID))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return authorized, fmt.Errorf("user does not exists: %s", err.Error())
+			return AuthorizedUser{}, fmt.Errorf("user does not exists: %s", err.Error())
 		}
-		return authorized, fmt.Errorf("failed to fetch user: %s", err.Error())
+		return AuthorizedUser{}, fmt.Errorf("failed to fetch user: %s", err.Error())
 	}
 
-	if s.isUnKnownIP(ctx, authorized.User) {
-		return authorized, unknownIPError()
+	// This ensures that access token can only be used only by the ip address it was assigned to
+	if authorized.access_payload.Data.ClientIP != authorized.stored_session.ClientIP {
+		return AuthorizedUser{}, fmt.Errorf("this access token was not assigned to your current ip address, generate new access token")
+	}
+
+	if s.isUnKnownIP(ctx, authorized.user) {
+		return AuthorizedUser{}, unknownIPError()
 	}
 
 	return authorized, err

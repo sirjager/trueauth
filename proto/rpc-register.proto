@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package trueauth;
 
-import "user.proto";
-
 option go_package = "github.com/sirjager/trueauth/rpc";
+
+import "metadata.proto";
 
 message RegisterRequest {
     string email     = 1;
@@ -15,5 +15,6 @@ message RegisterRequest {
 }
 
 message RegisterResponse {
-    User user = 1;
+    string           message  = 1;
+    ResponseMetadata metadata = 100;
 }

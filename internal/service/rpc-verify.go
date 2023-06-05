@@ -2,138 +2,88 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/hibiken/asynq"
+	"github.com/lib/pq"
 
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	rpc "github.com/sirjager/rpcs/trueauth/go"
-
-	"github.com/sirjager/trueauth/internal/db/sqlc"
 	"github.com/sirjager/trueauth/internal/worker"
-
-	"github.com/sirjager/trueauth/pkg/mail"
-	"github.com/sirjager/trueauth/pkg/tokens"
 	"github.com/sirjager/trueauth/pkg/utils"
+	"github.com/sirjager/trueauth/pkg/validator"
+	rpc "github.com/sirjager/trueauth/stubs/go"
 )
 
-// Request email verification and verify email
-//
-// 1. if CODE is provided then verify code
-// 2. If NO CODE then send email verification code
 func (s *CoreService) Verify(ctx context.Context, req *rpc.VerifyRequest) (*rpc.VerifyResponse, error) {
-	authorized, err := s.authorize(ctx)
-	if err != nil {
-		return nil, unAuthenticatedError(err)
-	}
-
-	if authorized.User.EmailVerified {
-		return &rpc.VerifyResponse{Message: fmt.Sprintf("email %s is already verified", authorized.User.Email)}, nil
-	}
-
-	//? if no code is provided means, user is requesting email verification code
-	if req.GetCode() == "" {
-
-		// If verification code is sent recently then wait for verification request cooldown
-		if time.Since(authorized.User.LastVerifySentAt) < s.Config.VerifyTokenCooldown {
-			tryAfter := time.Until(authorized.User.LastVerifySentAt.Add(s.Config.VerifyTokenCooldown))
-			return &rpc.VerifyResponse{
-				Message: fmt.Sprintf("email verification has been requested recently, please try again after %s", tryAfter),
-			}, nil
-		}
-
-		// generate a random code
-		verificationCode := utils.RandomNumberAsString(6)
-		durationTTL := s.Config.VerifyTokenTTL
-
-		verificationToken, _, err := s.tokens.CreateToken(
-			tokens.PayloadData{
-				UserID:           authorized.User.ID,
-				UserEmail:        authorized.User.Email,
-				VerificationCode: verificationCode,
-			}, durationTTL,
-		)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to create code: %s", err.Error())
-		}
-
-		mail := mail.Mail{To: []string{authorized.User.Email}}
-		mail.Subject = "Email verification code"
-		mail.Body = fmt.Sprintf(`
-		Hello <br/>
-		Your email verification code is : <b>%s</b> <br/>
-		This code is only valid for %s <br/> <br/>
-		If you didn't request this, simply ignore this message. <br/> <br/>
-		Thank You`, verificationCode, durationTTL.String())
-
-		if err = s.store.UpdateUserVerifyTokenTx(ctx, sqlc.UpdateUserVerifyTokenTxParams{
-			UpdateUserVerifyTokenParams: sqlc.UpdateUserVerifyTokenParams{
-				LastVerifySentAt: time.Now(),
-				VerifyToken:      verificationToken,
-				ID:               authorized.User.ID,
-			},
-			BeforeUpdate: func() error {
-				return s.mailer.SendMail(mail)
-			},
-		}); err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to update email confirmation token: %s", err.Error())
-		}
-
-		return &rpc.VerifyResponse{Message: fmt.Sprintf("email verification code sent to your email %s", authorized.User.Email)}, nil
-	}
-
-	//? if code is provided means user is submiting email verification code
-
 	violations := validateVerifyRequest(req)
 	if violations != nil {
 		return nil, invalidArgumentsError(violations)
 	}
-
-	tokenPayload, err := s.tokens.VerifyToken(authorized.User.VerifyToken)
+	// fetch pending registration
+	bytes, err := s.redis.Get(ctx, utils.PendingRegistrationKey(req.GetEmail()))
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "invalid email verification code: %s", err.Error())
+		if err == redis.Nil {
+			return nil, status.Error(codes.Internal, "invalid email verification code")
+		}
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	if tokenPayload.Payload.UserEmail != authorized.User.Email {
-		return nil, status.Errorf(codes.Internal, "invalid code: mismatched email")
+	var payload worker.PayloadSendEmailVerification
+	if err = json.Unmarshal(bytes, &payload); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	if tokenPayload.Payload.UserID.String() != authorized.User.ID.String() {
-		return nil, status.Errorf(codes.Internal, "invalid code: mismatched user id")
+	// check if code is same or not
+	if payload.VerificationCode != req.GetCode() {
+		return nil, status.Error(codes.Internal, "invalid verification code")
 	}
 
-	if tokenPayload.Payload.VerificationCode != req.GetCode() {
-		return nil, status.Errorf(codes.Internal, "invalid code: mismatched code")
-	}
-
-	if err = s.store.UpdateUserEmailVerifiedTx(ctx, sqlc.UpdateUserEmailVerifiedTxParams{
-		UpdateUserEmailVerifiedParams: sqlc.UpdateUserEmailVerifiedParams{
-			EmailVerified: true,
-			VerifyToken:   "null",
-			ID:            authorized.User.ID,
-		},
-		AfterUpdate: func() error {
-			opts := []asynq.Option{
-				asynq.MaxRetry(5),
-				asynq.Group(worker.QUEUE_LOW),
-				asynq.ProcessIn(time.Second * 10),
+	createUserParams := payload.CreateUserParams
+	createUserParams.EmailVerified = true
+	user, err := s.store.CreateUser(ctx, createUserParams)
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			switch pqErr.Code.Name() {
+			case "unique_violation":
+				return nil, status.Errorf(codes.Internal, fmt.Sprintf("%s already exists", unique_violation(pqErr)))
 			}
-			return s.taskDistributor.DistributeTaskSendEmailVerified(ctx,
-				worker.PayloadSendEmailVerified{Email: authorized.User.Email}, opts...)
-		},
-	}); err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to set email verified: %s", err.Error())
+		}
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	return &rpc.VerifyResponse{Message: fmt.Sprintf("email %s successfully verified", authorized.User.Email)}, nil
+	// now since user is created we will delete pending registration record from redis
+	delOpts := []asynq.Option{asynq.MaxRetry(5), asynq.Group(worker.QUEUE_DEFAULT), asynq.ProcessIn(time.Millisecond)}
+	if err = s.taskDistributor.DistributeTaskClearCompletedVerifications(ctx, worker.PayloadClearCompletedVerfications{Email: user.Email}, delOpts...); err != nil {
+		s.Logr.Error().Err(err).Msgf("Verify.redis.Del.Failed")
+	}
+
+	// send email: email successfully verified
+	opts := []asynq.Option{asynq.MaxRetry(3), asynq.Group(worker.QUEUE_LOW), asynq.ProcessIn(time.Second * 5)}
+	if err = s.taskDistributor.DistributeTaskSendEmailVerified(ctx, worker.PayloadSendEmailVerified{Email: user.Email}, opts...); err != nil {
+		s.Logr.Error().Err(err).Msg("Verify.DistributeTaskSendEmailVerified.Error")
+	}
+
+	return &rpc.VerifyResponse{User: publicProfile(user)}, nil
+}
+
+func unique_violation(err *pq.Error) string {
+	s := strings.Split(err.Detail, "=")[0]
+	return strings.Split(strings.Split(s, "(")[1], ")")[0]
 }
 
 func validateVerifyRequest(req *rpc.VerifyRequest) (violations []*errdetails.BadRequest_FieldViolation) {
-	if len(req.GetCode()) != 6 {
+	if err := validator.ValidateEmail(req.GetEmail()); err != nil {
+		violations = append(violations, fieldViolation("email", err))
+	}
+	if len(req.GetCode()) != 20 {
+		// our code is always unqiue 20char long generated by utils.UUID_XID()
 		violations = append(violations, fieldViolation("code", fmt.Errorf("invalid code")))
 	}
 	return

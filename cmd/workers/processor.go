@@ -8,11 +8,29 @@ import (
 	"github.com/sirjager/trueauth/internal/db/sqlc"
 	"github.com/sirjager/trueauth/internal/worker"
 
+	"github.com/sirjager/trueauth/pkg/db"
 	"github.com/sirjager/trueauth/pkg/mail"
 )
 
-func RunTaskProcessor(logger zerolog.Logger, store sqlc.Store, mailer mail.MailSender, config config.Config, redisOpt asynq.RedisClientOpt) {
-	taskProcessor, err := worker.NewRedisTaskProcessor(logger, store, mailer, config, redisOpt)
+func RunTaskProcessor(
+	logger zerolog.Logger,
+	store sqlc.Store,
+	redis *db.RedisClient,
+	mailer mail.MailSender,
+	config config.Config,
+	redisOpt asynq.RedisClientOpt,
+	emailTemplate string,
+
+) {
+	taskProcessor, err := worker.NewRedisTaskProcessor(
+		logger,
+		store,
+		redis,
+		mailer,
+		config,
+		redisOpt,
+		emailTemplate,
+	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to create task processor")
 	}

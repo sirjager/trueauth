@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
@@ -16,7 +17,7 @@ const (
 
 type MetaData struct {
 	UserAgent string
-	ClientIp  string
+	ClientIP  string
 }
 
 func (s *CoreService) extractMetadata(ctx context.Context) *MetaData {
@@ -29,7 +30,7 @@ func (s *CoreService) extractMetadata(ctx context.Context) *MetaData {
 		}
 		//  For HTTP client-ip
 		if clientIp := md.Get(gatewayClientIpHeaderKey); len(clientIp) > 0 {
-			meta.ClientIp = clientIp[0]
+			meta.ClientIP = clientIp[0]
 		}
 		//  For gRPC user-agent
 		if userAgent := md.Get(grpcUserAgentHeaderKey); len(userAgent) > 0 {
@@ -39,8 +40,21 @@ func (s *CoreService) extractMetadata(ctx context.Context) *MetaData {
 
 	// For gRPC client-ip
 	if p, ok := peer.FromContext(ctx); ok {
-		meta.ClientIp = p.Addr.String()
+		meta.ClientIP = p.Addr.String()
 	}
 
 	return meta
+}
+
+func (s *CoreService) extractHeaders(ctx context.Context, key string) ([]string, error) {
+	meta, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("missing metadata")
+	}
+	values := meta.Get(key)
+	if len(values) == 0 {
+		return nil, fmt.Errorf("missing %s from headers", key)
+	}
+
+	return values, nil
 }

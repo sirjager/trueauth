@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	rpc "github.com/sirjager/rpcs/trueauth/go"
+	rpc "github.com/sirjager/trueauth/stubs/go"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

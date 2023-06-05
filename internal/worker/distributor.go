@@ -9,17 +9,20 @@ import (
 
 type TaskDistributor interface {
 	DistributeTaskSendEmailVerified(ctx context.Context, payload PayloadSendEmailVerified, opts ...asynq.Option) error
+	DistributeTaskSendEmailVerification(ctx context.Context, payload PayloadSendEmailVerification, opts ...asynq.Option) (err error)
+	DistributeTaskClearCompletedVerifications(ctx context.Context, payload PayloadClearCompletedVerfications, opts ...asynq.Option) (err error)
+	DistributeTaskSendEmailAllowIP(ctx context.Context, payload PayloadSendEmailAllowIP, opts ...asynq.Option) error
 }
 
 type RedisTaskDistributor struct {
 	client *asynq.Client
-	logger zerolog.Logger
+	logr   zerolog.Logger
 }
 
-func NewRedisTaskDistributor(logger zerolog.Logger, redisOpts asynq.RedisClientOpt) TaskDistributor {
+func NewRedisTaskDistributor(logr zerolog.Logger, redisOpts asynq.RedisClientOpt) TaskDistributor {
 	client := asynq.NewClient(redisOpts)
 	return &RedisTaskDistributor{
 		client: client,
-		logger: logger,
+		logr:   logr,
 	}
 }

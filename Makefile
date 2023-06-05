@@ -67,7 +67,7 @@ test:
 # Build the project
 build:
 	golint ./...
-	go build -o ./dist/main ./cmd/main.go
+	go build -o ./dist/main main.go
 
 
 # Linting and formatting
@@ -77,11 +77,11 @@ lint:
 
 # Run the project
 run:
-	go run ./cmd/main.go
+	go run main.go
 
 # Run the project
 dev:
-	nodemon --watch './**/*.go' --signal SIGTERM --exec 'go' run ./cmd/main.go
+	nodemon --watch './**/*.go' --signal SIGTERM --exec 'go' run main.go
 
 
 bindata:
@@ -126,6 +126,7 @@ dbrestart:
 	- docker stop $(SERVICE_NAME)_db
 	docker start $(SERVICE_NAME)_db
 dbdelete:
+	- docker stop $(SERVICE_NAME)_db
 	docker rm $(SERVICE_NAME)_db
 
 redisrun:
@@ -136,7 +137,8 @@ redisrestart:
 	- docker stop $(SERVICE_NAME)_redis
 	docker start $(SERVICE_NAME)_redis
 redisdelete:
-	docker rm $(SERVICE_NAME)__redis
+	- docker stop $(SERVICE_NAME)_redis
+	docker rm $(SERVICE_NAME)_redis
 
 
 # Declare phony targets to prevent conflicts with file names

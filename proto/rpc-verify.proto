@@ -4,12 +4,13 @@ package trueauth;
 
 option go_package = "github.com/sirjager/trueauth/rpc";
 
+import "user.proto";
+
 message VerifyRequest {
-    // By default this will send email verification token to registered email
-    // if user has already requested email verification and has verification code then email is verified
-    string code = 1;
+    string code  = 1;
+    string email = 2;
 }
 
 message VerifyResponse {
-    string message = 1;  // successful response
+    User user = 1;  // updated user
 }

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	rpc "github.com/sirjager/rpcs/trueauth/go"
 	"github.com/sirjager/trueauth/pkg/validator"
+	rpc "github.com/sirjager/trueauth/stubs/go"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -16,19 +16,17 @@ func (s *CoreService) User(ctx context.Context, req *rpc.UserRequest) (*rpc.User
 	if violations != nil {
 		return nil, invalidArgumentsError(violations)
 	}
-
 	authorized, err := s.authorize(ctx)
 	if err != nil {
 		return nil, unAuthenticatedError(err)
 	}
 
 	// authorized user can only access their own profile
-	if authorized.User.ID.String() == req.GetIdentity() || authorized.User.Email == req.GetIdentity() || authorized.User.Username == req.GetIdentity() {
-		return &rpc.UserResponse{User: publicProfile(authorized.User)}, nil
+	if string(authorized.user.ID) == req.GetIdentity() || authorized.user.Email == req.GetIdentity() || authorized.user.Username == req.GetIdentity() {
+		return &rpc.UserResponse{User: publicProfile(authorized.user)}, nil
 	}
 
 	//TODO: if authorized user have permissions like admin then we will return requested user.
-
 	//* For now we will just return user not found
 	return nil, status.Errorf(codes.NotFound, "user not found")
 }

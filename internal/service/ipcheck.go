@@ -10,7 +10,7 @@ func (s *CoreService) isUnKnownIP(ctx context.Context, user sqlc.User) bool {
 	meta := s.extractMetadata(ctx)
 	isUnknown := true
 	for _, r := range user.AllowedIps {
-		if r == meta.ClientIp {
+		if r == meta.ClientIP {
 			isUnknown = false
 			break
 		}

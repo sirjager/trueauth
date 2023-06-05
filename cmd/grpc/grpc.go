@@ -11,7 +11,7 @@ import (
 
 	"github.com/sirjager/trueauth/internal/service"
 
-	rpc "github.com/sirjager/rpcs/trueauth/go"
+	rpc "github.com/sirjager/trueauth/stubs/go"
 )
 
 func RunServer(srvic *service.CoreService, errs chan error) {

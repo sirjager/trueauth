@@ -5,7 +5,9 @@ package trueauth;
 option go_package = "github.com/sirjager/trueauth/rpc";
 
 message LogoutRequest {
-    repeated string sessions = 1;  // sessions are optional if you want to target specific session or mutiple sessions seperated by comma
+    // if no session are provided then all session are deleted
+    // if specific/multiple sessions sepearted by comma are provided only those sessions will be deleted
+    string sessions = 1;
 }
 
 message LogoutResponse {
