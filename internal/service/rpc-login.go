@@ -9,21 +9,19 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/go-redis/redis/v8"
-	rpc "github.com/sirjager/trueauth/stubs/go"
-
 	"github.com/sirjager/trueauth/internal/db/sqlc"
 	"github.com/sirjager/trueauth/internal/worker"
-
 	"github.com/sirjager/trueauth/pkg/crypt"
 	"github.com/sirjager/trueauth/pkg/tokens"
 	"github.com/sirjager/trueauth/pkg/utils"
 	"github.com/sirjager/trueauth/pkg/validator"
+	rpc "github.com/sirjager/trueauth/stubs/go"
 )
 
 //  1. validate login request
@@ -33,7 +31,10 @@ import (
 //     3.1 if password verification failed then return: invalid credentials error
 //  4. extracting metadata like: ipaddress, userAgent
 //  5. check if current ipaddress is present in user.allowed_ips
-func (s *CoreService) Login(ctx context.Context, req *rpc.LoginRequest) (*rpc.LoginResponse, error) {
+func (s *CoreService) Login(
+	ctx context.Context,
+	req *rpc.LoginRequest,
+) (*rpc.LoginResponse, error) {
 	findBy, violations := validateLoginRequest(req)
 	if violations != nil {
 		return nil, invalidArgumentsError(violations)
@@ -83,10 +84,13 @@ func (s *CoreService) Login(ctx context.Context, req *rpc.LoginRequest) (*rpc.Lo
 				if payload.Code == req.GetAllowIpCode() && payload.AllowIP == meta.ClientIP {
 					//
 				}
-
 			}
 			tryAfter := time.Until(payload.LastEmailSentAt.Add(s.Config.AllowIPTokenCooldown))
-			return nil, status.Errorf(codes.Internal, "previous request is already pending to allow your current ip address, check instructions on your email or try again after %s", tryAfter)
+			return nil, status.Errorf(
+				codes.Internal,
+				"previous request is already pending to allow your current ip address, check instructions on your email or try again after %s",
+				tryAfter,
+			)
 
 		}
 
@@ -99,19 +103,38 @@ func (s *CoreService) Login(ctx context.Context, req *rpc.LoginRequest) (*rpc.Lo
 		}); err != nil {
 			return nil, status.Errorf(codes.Internal, err.Error())
 		}
-		return nil, status.Errorf(codes.Internal, "mail has been sent to your email address to allow login from your ip address")
+		return nil, status.Errorf(
+			codes.Internal,
+			"mail has been sent to your email address to allow login from your ip address",
+		)
 	}
 
 	sessionID := utils.UUID_XID()
 
-	accessTokenPayload := tokens.PayloadData{SID: sessionID, UserID: string(user.ID), UserEmail: user.Email, ClientIP: meta.ClientIP}
-	access_token, access_payload, err := s.tokens.CreateToken(accessTokenPayload, s.Config.AccessTokenTTL)
+	accessTokenPayload := tokens.PayloadData{
+		SID:       sessionID,
+		UserID:    string(user.ID),
+		UserEmail: user.Email,
+		ClientIP:  meta.ClientIP,
+	}
+	access_token, access_payload, err := s.tokens.CreateToken(
+		accessTokenPayload,
+		s.Config.AccessTokenTTL,
+	)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	refreshTokenPayload := tokens.PayloadData{SID: sessionID, UserID: string(user.ID), UserEmail: user.Email, ClientIP: meta.ClientIP}
-	refresh_token, refresh_payload, err := s.tokens.CreateToken(refreshTokenPayload, s.Config.RefreshTokenTTL)
+	refreshTokenPayload := tokens.PayloadData{
+		SID:       sessionID,
+		UserID:    string(user.ID),
+		UserEmail: user.Email,
+		ClientIP:  meta.ClientIP,
+	}
+	refresh_token, refresh_payload, err := s.tokens.CreateToken(
+		refreshTokenPayload,
+		s.Config.RefreshTokenTTL,
+	)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
@@ -151,8 +174,22 @@ func (s *CoreService) Login(ctx context.Context, req *rpc.LoginRequest) (*rpc.Lo
 	access_token_key := accessTokenKey(string(user.ID), access_payload.ID)
 	refresh_token_key := refreshTokenKey(string(user.ID), refresh_payload.ID)
 	commands := []redis.Cmder{
-		redis.NewStringCmd(ctx, "SET", access_token_key, session_access_token_data, "EX", s.Config.AccessTokenTTL.Seconds()),
-		redis.NewStatusCmd(ctx, "SET", refresh_token_key, session_refresh_token_data, "EX", s.Config.RefreshTokenTTL.Seconds()),
+		redis.NewStringCmd(
+			ctx,
+			"SET",
+			access_token_key,
+			session_access_token_data,
+			"EX",
+			s.Config.AccessTokenTTL.Seconds(),
+		),
+		redis.NewStatusCmd(
+			ctx,
+			"SET",
+			refresh_token_key,
+			session_refresh_token_data,
+			"EX",
+			s.Config.RefreshTokenTTL.Seconds(),
+		),
 	}
 	_, err = s.redis.Transaction(ctx, commands)
 	if err != nil {
@@ -169,7 +206,9 @@ func (s *CoreService) Login(ctx context.Context, req *rpc.LoginRequest) (*rpc.Lo
 	}, nil
 }
 
-func validateLoginRequest(req *rpc.LoginRequest) (identity string, violations []*errdetails.BadRequest_FieldViolation) {
+func validateLoginRequest(
+	req *rpc.LoginRequest,
+) (identity string, violations []*errdetails.BadRequest_FieldViolation) {
 	identity = ""
 	if strings.Contains(req.GetIdentity(), "@") {
 		if err := validator.ValidateEmail(req.GetIdentity()); err != nil {
@@ -189,12 +228,18 @@ func validateLoginRequest(req *rpc.LoginRequest) (identity string, violations []
 	if req.GetAllowIpCode() != "" {
 		if len(req.GetAllowIpCode()) != 20 {
 			// our code is always unqiue 20char long generated by utils.UUID_XID()
-			violations = append(violations, fieldViolation("allow_ip_code", fmt.Errorf("invalid allow ip code")))
+			violations = append(
+				violations,
+				fieldViolation("allow_ip_code", fmt.Errorf("invalid allow ip code")),
+			)
 		}
 	}
 
 	if identity == "" {
-		violations = append(violations, fieldViolation("identity", fmt.Errorf("identity must be a valid username or an email")))
+		violations = append(
+			violations,
+			fieldViolation("identity", fmt.Errorf("identity must be a valid username or an email")),
+		)
 	}
 	return identity, violations
 }

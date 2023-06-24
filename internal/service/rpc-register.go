@@ -46,6 +46,9 @@ func (s *CoreService) Register(ctx context.Context, req *rpc.RegisterRequest) (*
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
+  
+
 	if user.Email == req.GetEmail() {
 		return nil, status.Errorf(codes.AlreadyExists, "email already exists")
 	}

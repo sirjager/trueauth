@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"os"
 	"os/signal"
@@ -12,25 +13,22 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
 
-	"github.com/sirjager/trueauth/config"
-
 	"github.com/sirjager/trueauth/cmd/gateway"
 	"github.com/sirjager/trueauth/cmd/grpc"
 	"github.com/sirjager/trueauth/cmd/workers"
-
+	"github.com/sirjager/trueauth/config"
 	"github.com/sirjager/trueauth/internal/db/sqlc"
 	"github.com/sirjager/trueauth/internal/service"
 	"github.com/sirjager/trueauth/internal/worker"
-
 	"github.com/sirjager/trueauth/pkg/db"
 	"github.com/sirjager/trueauth/pkg/mail"
-
-	_ "embed"
 )
 
-var logr zerolog.Logger
-var startTime time.Time
-var serviceName string
+var (
+	logr        zerolog.Logger
+	startTime   time.Time
+	serviceName string
+)
 
 //go:embed templates/email-template.html
 var emailTemplate string
@@ -87,7 +85,14 @@ func main() {
 	errs := make(chan error)
 	go handleSignals(errs)
 
-	srvic, err := service.NewTrueAuthService(logr, config, store, mailer, taskDistributor, redisClient)
+	srvic, err := service.NewTrueAuthService(
+		logr,
+		config,
+		store,
+		mailer,
+		taskDistributor,
+		redisClient,
+	)
 	if err != nil {
 		logr.Fatal().Err(err).Msg("failed to create service")
 	}
