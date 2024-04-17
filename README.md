@@ -2,6 +2,11 @@
 
 The TrueAuth API is a standalone authentication gRPC and REST API service that provides various endpoints for user authentication.
 
+#### Database Overview at DB Docs
+
+- ##### Preview [dbdocs.io/sirjager/trueauth](https://dbdocs.io/sirjager/trueauth)
+- ##### Password [github.com/sirjager/trueauth](https://dbdocs.io/sirjager/trueauth)
+
 ## Service Description
 
 The TrueAuth service provides the following functionalities:
@@ -101,15 +106,18 @@ The TrueAuth service provides the following functionalities:
     }
 
   RESPONSE
-  {
     "user": {
-        "id": "2fb0eea2-9b1f-4103-a206-ec50547193e7",
+        "id": "99488f4d-b8ab-4ea6-8722-b0f1fe2051d3",
         "email": "email@gmail.com",
         "username": "johndoe",
-        "created_at": "2023-05-02T11:04:57.044452Z",
-        "updated_at": "2023-05-02T11:04:57.044452Z"
-    }
-  }
+        "created_at": "2023-05-02T17:37:45.970720Z",
+        "updated_at": "2023-05-02T17:37:45.970720Z"
+    },
+    "session_id": "048cfdb8-b92f-449f-9bf5-6de4c8ca7b64",
+    "access_token": "v2.local.L2t4A6f96-Qd0gXqBVEZxfcu0BJdJE-Ywwp3w0unicGoCn2DisFjV_AE06Ch-z6pqmE_4kO7VjBsHipLFpoSNnGacwpDoqTsI9w081uJ1lkkpNlwwoWQIjwEVDJ1DgxKqkU9PhDTB8HzFS1R67CFSi-FlCzvU4_sSz_ze9ygojK91gsv_jtAMiLlvDn6s7n3bk5pqiXNowlylVjHkHmiwvQSO7TGjPmAyx6rOT122EG1HUED__uTEJD2iVumjcCTqEwgGi8kyb90bR3RZvdcB2XoupaoOe_wbvcInxxA4pIU8ufUBV-W5EqOERNqeg.bnVsbA",
+    "refresh_token": "v2.local.FM9i9wmpWYe9Ag9JEjTpPpgMldyj5lKLGVCshKfjUvL3apJfbff6ehsNLjPIYO-Y4h0B4e8XWzoNWgTS7CzH9i0TLE8wR0oJXdmttf8bdlAkX3NhcUrTxLbcJPcQxQH0peNOWLBSxtw-o7hS214WpfVfXb49hgzb2yqB9I71Kcs_MaTHmNxbAzOrA2TAqn8r3U9jGwqPalMob4K67ZGBL3OOcgzsQIAenSKCwmArrIRTptdr81nEi4esIWozhKTWY2GcRcIX2G6s9qVqL6rrYBCIxoCq4RtVFN--saGRRcba7r9CbnohpBxDAv4QQA.bnVsbA",
+    "access_token_expires_at": "2023-05-05T17:37:56.677812136Z",
+    "refresh_token_expires_at": "2023-05-08T17:37:56.678011913Z"
   ```
 
 ### Verify
