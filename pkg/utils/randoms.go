@@ -8,9 +8,11 @@ import (
 	"github.com/google/uuid"
 )
 
-const alphabets = "abcdefghijklmnopqrstuvwxyz"
-const numbers = "0123456789"
-const symbols = "_%#:>,<@!`$*()"
+const (
+	alphabets = "abcdefghijklmnopqrstuvwxyz"
+	numbers   = "0123456789"
+	symbols   = "_%#:>,<@!`$*()"
+)
 
 var (
 	randSource                        rand.Source
@@ -24,17 +26,18 @@ func init() {
 	symbolLen = len(symbols)
 }
 
+// RandomUUID generates a random UUID
 func RandomUUID() uuid.UUID {
 	return uuid.New()
 }
 
-// Generate a random number between min and max
+// RandomInt generates a random integer between min and max
 func RandomInt(min, max int64) int64 {
 	r := rand.New(randSource)
 	return min + r.Int63n(max-min+1)
 }
 
-// Generate a random string of length len
+// RandomString generates a random string of length n
 func RandomString(n int) string {
 	r := rand.New(randSource)
 	result := make([]byte, n)
@@ -44,6 +47,7 @@ func RandomString(n int) string {
 	return string(result)
 }
 
+// RandomNumberAsString generates a random number of length digits
 func RandomNumberAsString(digits int) string {
 	r := rand.New(randSource)
 	result := make([]byte, digits)
@@ -53,7 +57,7 @@ func RandomNumberAsString(digits int) string {
 	return string(result)
 }
 
-// Generate a random symbols of length len
+// RandomSymbols generates a random string of length n
 func RandomSymbols(n int) string {
 	r := rand.New(randSource)
 	result := make([]byte, n)
@@ -63,18 +67,21 @@ func RandomSymbols(n int) string {
 	return string(result)
 }
 
+// RandomEmail generates a random email
 func RandomEmail() string {
 	randomString := RandomString(5)
 	randomInt := strconv.Itoa(int(RandomInt(1, 20)))
 	return randomString + randomInt + "@gmail.com"
 }
 
+// RandomUserName generates a random username
 func RandomUserName() string {
 	randomStringLength := int(RandomInt(5, 30))
 	randomInt := strconv.Itoa(int(RandomInt(1, 20)))
 	return RandomString(randomStringLength) + randomInt
 }
 
+// RandomPassword generates a random password
 func RandomPassword() string {
 	randomStringLength := int(RandomInt(8, 30))
 	symbols := RandomSymbols(5)

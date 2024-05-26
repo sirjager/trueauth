@@ -2,44 +2,45 @@ package gateway
 
 import (
 	"context"
-	"net"
+	"errors"
+	"fmt"
 	"net/http"
 
+
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rakyll/statik/fs"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	_ "github.com/sirjager/trueauth/docs/statik"
-
-	"github.com/sirjager/trueauth/internal/service"
-
-	rpc "github.com/sirjager/rpcs/trueauth/go"
+	"github.com/sirjager/trueauth/server"
+	"github.com/sirjager/trueauth/stubs"
 )
 
-func RunServer(srvic *service.CoreService, errs chan error) {
-	opts := []runtime.ServeMuxOption{}
+func StartServer(ctx context.Context, wg *errgroup.Group, address string, srvr *server.Server) {
+	// if need any custom headers, add it here to allow
+	allowedIncoming := []string{} // only extends default headers
+	allowedOutgoing := []string{}
 
-	opts = append(opts, runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
-		MarshalOptions:   protojson.MarshalOptions{UseProtoNames: true},
-		UnmarshalOptions: protojson.UnmarshalOptions{DiscardUnknown: false},
-	}))
-
-	allowedHeaders := []string{
-		//
+	opts := []runtime.ServeMuxOption{
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+			UnmarshalOptions: protojson.UnmarshalOptions{DiscardUnknown: false},
+			MarshalOptions: protojson.MarshalOptions{
+				UseProtoNames:   false,
+				UseEnumNumbers:  false,
+				EmitUnpopulated: false,
+			},
+		}),
+		runtime.WithIncomingHeaderMatcher(customHeaderMatcher(srvr.Logr, allowedIncoming)),
+		runtime.WithForwardResponseOption(mutateResponse(srvr.Logr)),
+		runtime.WithOutgoingHeaderMatcher(customHeaderMatcher(srvr.Logr, allowedOutgoing)),
 	}
-
-	opts = append(opts, runtime.WithIncomingHeaderMatcher(AllowedHeaders(allowedHeaders)))
 
 	grpcMux := runtime.NewServeMux(opts...)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	err := rpc.RegisterTrueAuthHandlerServer(ctx, grpcMux, srvic)
+	err := stubs.RegisterTrueAuthHandlerServer(ctx, grpcMux, srvr)
 	if err != nil {
-		errs <- err
-		srvic.Logr.Fatal().Err(err).Msg("can not register handler server")
+		srvr.Logr.Fatal().Err(err).Msg("can not register handler server")
 	}
 
 	mux := http.NewServeMux()
@@ -48,23 +49,36 @@ func RunServer(srvic *service.CoreService, errs chan error) {
 	// File server for swagger documentations
 	statikFS, err := fs.New()
 	if err != nil {
-		errs <- err
-		srvic.Logr.Fatal().Err(err).Msg("can not statik file server")
+		srvr.Logr.Fatal().Err(err).Msg("can not statik file server")
 	}
-	swaggerHander := http.StripPrefix("/api/docs/", http.FileServer(statikFS))
-	mux.Handle("/api/docs/", swaggerHander)
+	swaggerHander := http.StripPrefix("/v1/docs/", http.FileServer(statikFS))
+	mux.Handle("/v1/docs/", swaggerHander)
 
-	mux.Handle("/metrics", promhttp.Handler())
+	handler := logger(srvr.Logr, mux)
 
-	listener, err := net.Listen("tcp", ":"+srvic.Config.GatewayPort)
-	if err != nil {
-		errs <- err
-		srvic.Logr.Fatal().Err(err).Msg("unable to start rest gateway server")
-	}
+	httpServer := &http.Server{Handler: handler, Addr: address}
+	wg.Go(func() error {
+		srvr.Logr.Info().Msgf("started http server at %s", address)
+		if err := httpServer.ListenAndServe(); err != nil {
+			if !errors.Is(err, http.ErrServerClosed) {
+				srvr.Logr.Error().Err(err).Msg("failed to start http server")
+				return err
+			}
+		}
+		return nil
+	})
 
-	srvic.Logr.Info().Msgf("started rest server at %s", listener.Addr().String())
-
-	handler := Logger(srvic.Logr, mux)
-
-	errs <- http.Serve(listener, handler)
+	wg.Go(func() error {
+		<-ctx.Done()
+		fmt.Println()
+		srvr.Logr.Info().Msg("gracefully shutting down http server")
+		// NOTE: here we can limit maximum time for graceful shutdown
+		// but for now we do not need it, we can use context.Background()
+		if err := httpServer.Shutdown(context.Background()); err != nil {
+			srvr.Logr.Error().Err(err).Msg("failed to shutdown http server")
+			return err
+		}
+		srvr.Logr.Info().Msg("http server shutdown complete")
+		return nil
+	})
 }

@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "TrueAuth Api",
+    "title": "TrueAuth",
     "version": "0.1.0",
     "contact": {
       "name": "SirJager",
@@ -18,6 +18,11 @@
       }
     }
   ],
+  "schemes": [
+    "http",
+    "https",
+    "wss"
+  ],
   "consumes": [
     "application/json"
   ],
@@ -27,8 +32,7 @@
   "paths": {
     "/": {
       "get": {
-        "summary": "Welcome Message",
-        "description": "Returns welcome message",
+        "summary": "welcome message",
         "operationId": "TrueAuth_Welcome",
         "responses": {
           "200": {
@@ -49,171 +53,9 @@
         ]
       }
     },
-    "/v1/allowip": {
+    "/v1/auth/refresh": {
       "get": {
-        "summary": "Allow ip address",
-        "description": "Allow ip address",
-        "operationId": "TrueAuth_AllowIP",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/trueauthAllowIPResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "code",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/v1/health": {
-      "get": {
-        "summary": "Api Health",
-        "description": "Returns api health",
-        "operationId": "TrueAuth_Health",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/trueauthHealthResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "tags": [
-          "System"
-        ]
-      }
-    },
-    "/v1/login": {
-      "post": {
-        "summary": "Login User",
-        "description": "Login User",
-        "operationId": "TrueAuth_Login",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/trueauthLoginResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/trueauthLoginRequest"
-            }
-          }
-        ],
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/v1/logout": {
-      "post": {
-        "summary": "Logout",
-        "description": "Logout active sessions",
-        "operationId": "TrueAuth_Logout",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/trueauthLogoutResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "sessions",
-            "description": "sessions are optional if you want to target specific session or mutiple sessions seperated by comma",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
-          }
-        ],
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/v1/recovery": {
-      "post": {
-        "summary": "Password recovery",
-        "description": "Get a password recovery code",
-        "operationId": "TrueAuth_Recovery",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/trueauthRecoveryResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/trueauthRecoveryRequest"
-            }
-          }
-        ],
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/v1/refresh": {
-      "post": {
-        "summary": "Refresh access token",
-        "description": "Refresh access token",
+        "summary": "refresh access token",
         "operationId": "TrueAuth_Refresh",
         "responses": {
           "200": {
@@ -231,29 +73,31 @@
         },
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/trueauthRefreshRequest"
-            }
+            "name": "user",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
           }
         ],
         "tags": [
-          "Auth"
+          "Authentication"
+        ],
+        "security": [
+          {
+            "RefreshToken": []
+          }
         ]
       }
     },
-    "/v1/register": {
+    "/v1/auth/reset": {
       "post": {
-        "summary": "Register User",
-        "description": "Register User",
-        "operationId": "TrueAuth_Register",
+        "summary": "password reset",
+        "operationId": "TrueAuth_Reset",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/trueauthRegisterResponse"
+              "$ref": "#/definitions/trueauthResetResponse"
             }
           },
           "default": {
@@ -269,19 +113,168 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/trueauthRegisterRequest"
+              "$ref": "#/definitions/trueauthResetRequest"
             }
           }
         ],
         "tags": [
-          "Auth"
+          "Authentication"
         ]
       }
     },
-    "/v1/users": {
+    "/v1/auth/signin": {
+      "get": {
+        "summary": "signin user",
+        "operationId": "TrueAuth_Signin",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/trueauthSigninResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "user",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "tokens",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "cookies",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "BasicAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/auth/signout": {
       "delete": {
-        "summary": "Delete user",
-        "description": "Request user deletion",
+        "summary": "signout sessions",
+        "operationId": "TrueAuth_Signout",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/trueauthSignoutResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "session",
+            "description": "session are optional if you want to target",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "all",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/v1/auth/signup": {
+      "post": {
+        "summary": "signup new user",
+        "operationId": "TrueAuth_Signup",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/trueauthSignupResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/trueauthSignupRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/v1/auth/user": {
+      "get": {
+        "summary": "get user",
+        "operationId": "TrueAuth_User",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/trueauthUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "user deletion",
         "operationId": "TrueAuth_Delete",
         "responses": {
           "200": {
@@ -306,78 +299,18 @@
           }
         ],
         "tags": [
-          "Users"
-        ]
-      },
-      "patch": {
-        "summary": "Update user",
-        "description": "Update user details",
-        "operationId": "TrueAuth_Update",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/trueauthUpdateResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/trueauthUpdateRequest"
-            }
-          }
+          "Authentication"
         ],
-        "tags": [
-          "Users"
+        "security": [
+          {
+            "AccessToken": []
+          }
         ]
       }
     },
-    "/v1/users/{identity}": {
+    "/v1/auth/verify": {
       "get": {
-        "summary": "Returns requested user",
-        "description": "Get request user",
-        "operationId": "TrueAuth_User",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/trueauthUserResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "identity",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "Users"
-        ]
-      }
-    },
-    "/v1/verify": {
-      "post": {
-        "summary": "Request and verify email",
-        "description": "Request and verify email",
+        "summary": "email verification",
         "operationId": "TrueAuth_Verify",
         "responses": {
           "200": {
@@ -395,15 +328,43 @@
         },
         "parameters": [
           {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "code",
-            "description": "By default this will send email verification token to registered email\nif user has already requested email verification and has verification code then email is verified",
             "in": "query",
             "required": false,
             "type": "string"
           }
         ],
         "tags": [
-          "Auth"
+          "Authentication"
+        ]
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "summary": "api health",
+        "operationId": "TrueAuth_Health",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/trueauthHealthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "System"
         ]
       }
     }
@@ -437,14 +398,6 @@
         }
       }
     },
-    "trueauthAllowIPResponse": {
-      "type": "object",
-      "properties": {
-        "message": {
-          "type": "string"
-        }
-      }
-    },
     "trueauthDeleteResponse": {
       "type": "object",
       "properties": {
@@ -457,40 +410,82 @@
       "type": "object",
       "properties": {
         "status": {
-          "type": "string"
+          "type": "string",
+          "description": "Status represents the current status of the API."
         },
         "uptime": {
-          "type": "string"
+          "type": "string",
+          "description": "Uptime represents the duration since the API was started."
         },
         "started": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "description": "Started represents the timestamp when the API was started."
         },
         "timestamp": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "description": "Timestamp represents the current timestamp."
         }
       }
     },
-    "trueauthLoginRequest": {
+    "trueauthRefreshResponse": {
       "type": "object",
       "properties": {
-        "identity": {
+        "sessionId": {
+          "type": "string",
+          "format": "byte"
+        },
+        "accessToken": {
           "type": "string"
         },
-        "password": {
+        "accessTokenExpiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "user": {
+          "$ref": "#/definitions/trueauthUser"
+        }
+      }
+    },
+    "trueauthResetRequest": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "title": "if already has password reset code"
+        },
+        "email": {
+          "type": "string",
+          "title": "required: registered email address to reset"
+        },
+        "signoutAll": {
+          "type": "boolean",
+          "title": "optional: true to signout all sessions"
+        },
+        "newPassword": {
+          "type": "string",
+          "title": "send with code to change new password"
+        }
+      }
+    },
+    "trueauthResetResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
           "type": "string"
         }
       }
     },
-    "trueauthLoginResponse": {
+    "trueauthSigninResponse": {
       "type": "object",
       "properties": {
         "user": {
           "$ref": "#/definitions/trueauthUser"
         },
         "sessionId": {
-          "type": "string"
+          "type": "string",
+          "format": "byte"
         },
         "accessToken": {
           "type": "string"
@@ -505,10 +500,13 @@
         "refreshTokenExpiresAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "message": {
+          "type": "string"
         }
       }
     },
-    "trueauthLogoutResponse": {
+    "trueauthSignoutResponse": {
       "type": "object",
       "properties": {
         "message": {
@@ -516,52 +514,7 @@
         }
       }
     },
-    "trueauthRecoveryRequest": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "string"
-        },
-        "email": {
-          "type": "string"
-        },
-        "logoutAll": {
-          "type": "boolean"
-        }
-      }
-    },
-    "trueauthRecoveryResponse": {
-      "type": "object",
-      "properties": {
-        "message": {
-          "type": "string"
-        }
-      }
-    },
-    "trueauthRefreshRequest": {
-      "type": "object",
-      "properties": {
-        "refreshToken": {
-          "type": "string",
-          "title": "Refresh Token"
-        }
-      }
-    },
-    "trueauthRefreshResponse": {
-      "type": "object",
-      "properties": {
-        "accessToken": {
-          "type": "string",
-          "title": "Access Token"
-        },
-        "accessTokenExpiresAt": {
-          "type": "string",
-          "format": "date-time",
-          "title": "Access Token Expiration"
-        }
-      }
-    },
-    "trueauthRegisterRequest": {
+    "trueauthSignupRequest": {
       "type": "object",
       "properties": {
         "email": {
@@ -579,34 +532,14 @@
         "lastname": {
           "type": "string"
         }
-      }
+      },
+      "required": [
+        "email",
+        "username",
+        "password"
+      ]
     },
-    "trueauthRegisterResponse": {
-      "type": "object",
-      "properties": {
-        "user": {
-          "$ref": "#/definitions/trueauthUser"
-        }
-      }
-    },
-    "trueauthUpdateRequest": {
-      "type": "object",
-      "properties": {
-        "username": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        },
-        "firstname": {
-          "type": "string"
-        },
-        "lastname": {
-          "type": "string"
-        }
-      }
-    },
-    "trueauthUpdateResponse": {
+    "trueauthSignupResponse": {
       "type": "object",
       "properties": {
         "user": {
@@ -618,7 +551,8 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "format": "byte"
         },
         "email": {
           "type": "string"
@@ -633,6 +567,9 @@
           "type": "string"
         },
         "verified": {
+          "type": "boolean"
+        },
+        "blocked": {
           "type": "boolean"
         },
         "createdAt": {
@@ -656,9 +593,11 @@
     "trueauthVerifyResponse": {
       "type": "object",
       "properties": {
+        "user": {
+          "$ref": "#/definitions/trueauthUser"
+        },
         "message": {
-          "type": "string",
-          "title": "successful response"
+          "type": "string"
         }
       }
     },
@@ -667,8 +606,26 @@
       "properties": {
         "message": {
           "type": "string"
+        },
+        "docs": {
+          "type": "string"
         }
       }
+    }
+  },
+  "securityDefinitions": {
+    "AccessToken": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    },
+    "BasicAuth": {
+      "type": "basic"
+    },
+    "RefreshToken": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
     }
   }
 }

@@ -10,7 +10,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func Logger(logger zerolog.Logger) func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
+func Logger(
+	logr zerolog.Logger,
+) func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
 		start := time.Now()
 		res, err = handler(ctx, req)
@@ -21,9 +23,9 @@ func Logger(logger zerolog.Logger) func(ctx context.Context, req interface{}, in
 			statusCode = st.Code()
 		}
 
-		event := logger.Info()
+		event := logr.Info()
 		if err != nil {
-			event = logger.Error().Err(err)
+			event = logr.Error().Err(err)
 		}
 
 		event.
@@ -35,11 +37,12 @@ func Logger(logger zerolog.Logger) func(ctx context.Context, req interface{}, in
 			Msg("")
 
 		return res, err
-
 	}
 }
 
-func StreamLogger(logger zerolog.Logger) func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+func StreamLogger(
+	logr zerolog.Logger,
+) func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		start := time.Now()
 		err := handler(srv, ss)
@@ -50,9 +53,9 @@ func StreamLogger(logger zerolog.Logger) func(srv interface{}, ss grpc.ServerStr
 			statusCode = st.Code()
 		}
 
-		event := logger.Info()
+		event := logr.Info()
 		if err != nil {
-			event = logger.Error().Err(err)
+			event = logr.Error().Err(err)
 		}
 
 		event.

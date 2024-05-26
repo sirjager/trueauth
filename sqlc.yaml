@@ -1,16 +1,23 @@
-version: '2'
-
+---
+version: "2"
 sql:
   - schema: ./migrations
-    queries: ./internal/db/queries
+    queries: ./db/queries
     engine: postgresql
     gen:
       go:
-        package: sqlc
-        out: ./internal/db/sqlc
+        package: db
+        out: ./db/db
+        sql_package: "pgx/v5"
         emit_json_tags: true
         emit_interface: true
         emit_empty_slices: true
         json_tags_case_style: snake
         emit_prepared_queries: false
         output_files_suffix: _gen
+        overrides:
+          - db_type: "timestamptz"
+            go_type: "time.Time"
+          - db_type: "uuid"
+            go_type:
+              type: "[]byte"

@@ -5,6 +5,7 @@
 temp
 !local.env
 !example.env
+!defaults.env
 .venv/
 venv/
 vendor

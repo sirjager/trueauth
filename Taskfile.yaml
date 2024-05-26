@@ -1,0 +1,184 @@
+---
+version: "3"
+
+dotenv:
+  - defaults.env
+  - overrides.env
+
+interval: 500ms
+
+vars:
+  SERVICE_NAME: trueauth
+  MIGRATIONS_DIR: migrations
+  STUBS_DIR: stubs
+  PROTO_DIR: proto
+  STATIK_DIR: docs
+  DOCS_SWAGGER: docs/swagger
+
+tasks:
+  statik:
+    desc: generates binary code from static files
+    cmds:
+      - statik -src={{.DOCS_SWAGGER}} -dest={{.STATIK_DIR}}
+
+  proto:
+    desc: generates go code from proto
+    cmds:
+      - rm -rf {{.STUBS_DIR}}
+      - mkdir -p {{.STUBS_DIR}}
+      - rm -f {{.DOCS_SWAGGER}}/*.swagger.json
+      - rm -rf "{{.STATIK_DIR}}/statik"
+      - |
+        protoc \
+        --proto_path={{.PROTO_DIR}} \
+        --go_out={{.STUBS_DIR}} \
+        --go_opt=paths=source_relative \
+        --go-grpc_out={{.STUBS_DIR}} \
+        --go-grpc_opt=paths=source_relative \
+        --grpc-gateway_out={{.STUBS_DIR}} \
+        --grpc-gateway_opt=paths=source_relative \
+        --openapiv2_out={{.DOCS_SWAGGER}} \
+        --openapiv2_opt=allow_merge=true,merge_file_name={{.SERVICE_NAME}} \
+        {{.PROTO_DIR}}/*.proto
+      - task: statik
+      - task: sqlc
+      - task: tidy
+
+  sqlc:
+    desc: sqlc generates fully type-safe idiomatic Go code from SQL
+    cmds:
+      - rm -f db/db/*.sql_gen.go
+      - sqlc generate
+      - task: migration-build
+
+  release:
+    desc: goreleaser release
+    cmds:
+      - goreleaser --snapshot --clean
+
+  dbdocs:
+    desc: generate docs
+    cmd: dbdocs build db/db.dbml
+
+  dbschema:
+    desc: Generate schema
+    cmd: dbml2sql --postgres -o db/schema.sql db/db.dbml
+
+  swag:
+    desc: swag converts go annotations to swagger documentation
+    cmds:
+      - swag fmt
+      - swag init --outputTypes go,yaml
+
+  tidy:
+    desc: run go mod tidy
+    cmds:
+      - rm -f ./go.sum
+      - go mod tidy
+      # - go mod vendor
+
+  test:
+    desc: run go test
+    cmds:
+      - go clean -testcache
+      - go test -v -cover -short ./...
+
+  build:
+    desc: builds the binary
+    cmds:
+      - task: sqlc
+      - task: lint
+      - task: migration-build
+      - go build -o ./dist/main main.go
+
+  lint:
+    desc: lint the code
+    cmds:
+      - golint ./...
+
+  run:
+    desc: run the code
+    cmds:
+      - go run main.go
+
+  dev:
+    desc: run the code
+    cmds:
+      - go run main.go
+
+  migration-new:
+    desc: create new migration
+    summary: Use task new-migration -- "create table users"
+    cmd: migrate create -ext sql -dir {{.MIGRATIONS_DIR}} -seq {{.CLI_ARGS}}
+
+  migration-fix:
+    desc: run migrations fix
+    cmd: |
+      migrate \
+      -source file://{{.MIGRATIONS_DIR}} \
+      -database {{.DATABASE_URL}} -verbose up
+
+  migration-drop:
+    desc: drop everything inside database
+    cmd: |
+      migrate \
+      -source file://{{.MIGRATIONS_DIR}} \
+      -database {{.DATABASE_URL}} -verbose drop -f
+
+  migration-up:
+    desc: run migrations up
+    cmd: |
+      migrate \
+      -source file://{{.MIGRATIONS_DIR}} \
+      -database {{.DATABASE_URL}} -verbose up
+
+  migration-down:
+    desc: run migrations down
+    cmd: |
+      migrate \
+      -source file://{{.MIGRATIONS_DIR}} \
+      -database {{.DATABASE_URL}} -verbose down -all
+
+  migration-build:
+    desc: build migration files as binary code
+    cmd: cd {{.MIGRATIONS_DIR}} && go-bindata -pkg migrations .
+
+  up:
+    desc: run containers
+    preconditions:
+      - test -f docker-compose.yaml
+    cmd: docker compose up -d
+
+  down:
+    desc: stop containers
+    preconditions:
+      - test -f docker-compose.yaml
+    cmd: docker compose down
+
+  restart:
+    desc: run containers
+    cmds:
+      - task: down
+      - task: up
+
+  pull:
+    desc: pull latest images
+    cmd: docker compose pull
+
+  docker-remove:
+    desc: containers remove
+    cmd: docker compose rm -f
+
+  docker-build:
+    desc: build docker image
+    cmd: docker compose build
+
+  docker-image:
+    desc: build docker image
+    cmd: build --pull --rm -f "Dockerfile" -t {{.SERVICE_NAME}}:latest "."
+
+  mock:
+    desc: Mock for tests
+    cmds:
+      - mockgen -package mockdb -destination \
+        db/mock/store.go github.com/sirjager/{{.SERVICE_NAME}}/db/db Store

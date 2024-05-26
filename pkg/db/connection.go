@@ -1,52 +1,52 @@
 package db
 
 import (
-	"database/sql"
+	"context"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
 
 type Config struct {
-	Url       string `mapstructure:"DB_URL"`     // The database driver to use: postgres, mysql
-	Driver    string `mapstructure:"DB_DRIVER"`  // Additional arguments for the database connection
-	Migrate   string `mapstructure:"DB_MIGRATE"` // The path to the database migration files
-	DBName    string `mapstructure:"DB_NAME"`    // The path to the database migration files
-	User      string `mapstructure:"DB_USER"`    // The path to the database migration files
-	Pass      string `mapstructure:"DB_PASS"`    // The path to the database migration files
-	SSLMode   string `mapstructure:"DB_SSLMODE"` // The path to the database migration files
-	RedisAddr string `mapstructure:"REDIS_ADDR"` // Redis connection string async workers
+	Migrations string `mapstructure:"MIGRATIONS_DIR"`  // The path to the database migration files
+	Driver     string `mapstructure:"DATABASE_DRIVER"` // The database driver to use: postgres, mysql
+	Name       string `mapstructure:"DATABASE_NAME"`   // The name of the database
+	Host       string `mapstructure:"DATABASE_HOST"`   // The hostname or IP address of the database server
+	Port       string `mapstructure:"DATABASE_PORT"`   // The port number on which the database server is listening
+	User       string `mapstructure:"DATABASE_USER"`   // The username for authenticating with the database server
+	Pass       string `mapstructure:"DATABASE_PASS"`   // The password for authenticating with the database server
+	Args       string `mapstructure:"DATABASE_ARGS"`   // Additional arguments for the database connection
+	URL        string // The URL for the database connection (derived from other fields)
+	RedisURL   string `mapstructure:"REDIS_URL"`      // The URL for the redis connction
+	RedisAddr  string `mapstructure:"REDIS_ADDRESS"`  // The URL for the redis connction
+	RedisUser  string `mapstructure:"REDIS_USERNAME"` // The username for authenticating with the redis server
+	RedisPass  string `mapstructure:"REDIS_PASSWORD"` // The password for authenticating with the redis server
+	RedisPort  string `mapstructure:"REDIS_PORT"`     // The port number on which the redis server is listening
 }
 
 // Database represents a database connection.
 type Database struct {
-	conn   *sql.DB
-	config Config
 	logr   zerolog.Logger
+	pool   *pgxpool.Pool
+	config Config
 }
 
 // NewConnection creates a new database connection based on the provided configuration.
 // It returns a Database instance and any error encountered during the connection process.
-func NewDatabae(config Config, logr zerolog.Logger) (*Database, *sql.DB, error) {
-	conn, err := sql.Open(config.Driver, config.Url)
+func NewDatabae(
+	ctx context.Context,
+	config Config,
+	logr zerolog.Logger,
+) (*Database, *pgxpool.Pool, error) {
+	pool, err := pgxpool.New(ctx, config.URL)
 	if err != nil {
 		return nil, nil, err
 	}
 	// Return a new Database instance with the connection.
-	return &Database{
-		conn:   conn,
-		logr:   logr,
-		config: config,
-	}, conn, err
+	return &Database{logr, pool, config}, pool, err
 }
 
 // Close closes the database connection.
-func (d *Database) Close() error {
-	// Close the underlying database connection.
-	return d.conn.Close()
-}
-
-// Ping database
-func (d *Database) Ping() error {
-	// Close the underlying database connection.
-	return d.conn.Ping()
+func (database *Database) Close() {
+	database.pool.Close()
 }

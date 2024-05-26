@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package trueauth;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/sirjager/trueauth/stubs";
+
+message HealthRequest {}
+
+message HealthResponse {
+    // Status represents the current status of the API.
+    string status = 1;
+
+    // Uptime represents the duration since the API was started.
+    google.protobuf.Duration uptime = 2;
+
+    // Started represents the timestamp when the API was started.
+    google.protobuf.Timestamp started = 3;
+
+    // Timestamp represents the current timestamp.
+    google.protobuf.Timestamp timestamp = 4;
+}
