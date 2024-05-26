@@ -8,8 +8,7 @@ The TrueAuth API is a standalone authentication gRPC and REST API service that p
 - ##### Password [github.com/sirjager/trueauth](https://dbdocs.io/sirjager/trueauth)
 
 ## API Documentation 
-This api uses Swagger 2.0 specification.
-Run the service and visit endpoint  */v1/docs*
+This api uses [Swagger For API Documentation](https://sirjager.github.io/trueauth/)
 
 ## Additional Information
 
