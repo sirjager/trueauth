@@ -12,8 +12,8 @@ vars:
   MIGRATIONS_DIR: migrations
   STUBS_DIR: stubs
   PROTO_DIR: proto
-  STATIK_DIR: docs
-  DOCS_SWAGGER: docs/swagger
+  STATIK_DIR: .
+  DOCS_SWAGGER: swagger
 
 tasks:
   statik:

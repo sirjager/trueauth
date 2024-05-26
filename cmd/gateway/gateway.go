@@ -12,7 +12,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	_ "github.com/sirjager/trueauth/docs/statik"
+	_ "github.com/sirjager/trueauth/statik"
 	"github.com/sirjager/trueauth/server"
 	"github.com/sirjager/trueauth/stubs"
 )
