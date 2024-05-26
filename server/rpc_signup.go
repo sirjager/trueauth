@@ -35,7 +35,6 @@ func (s *Server) Signup(ctx context.Context, req *rpc.SignupRequest) (*rpc.Signu
 		HashPass:  hashedPassword,
 		Firstname: req.GetFirstname(),
 		Lastname:  req.GetLastname(),
-		Verified: true,
 	}
 
 	user, err := s.store.CreateUser(ctx, createUserParams)
