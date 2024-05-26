@@ -13,7 +13,7 @@ vars:
   STUBS_DIR: stubs
   PROTO_DIR: proto
   STATIK_DIR: .
-  DOCS_SWAGGER: swagger
+  DOCS_SWAGGER: docs
 
 tasks:
   statik:
