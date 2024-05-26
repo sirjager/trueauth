@@ -1,3 +1,7 @@
 package db
 
-type QuerierExtended interface{}
+import "context"
+
+type QuerierExtended interface {
+	UpdateUserPasswordTx(ctx context.Context, arg UpdateUserPasswordTx) error
+}

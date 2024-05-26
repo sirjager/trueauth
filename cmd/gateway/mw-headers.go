@@ -13,7 +13,7 @@ const (
 )
 
 func customHeaderMatcher(l zerolog.Logger, h []string) func(s string) (string, bool) {
-	l.Debug().Str("middleware", "allowedHeaders").Msg(REGISTER)
+	l.Info().Str("middleware", "allowedHeaders").Msg(REGISTER)
 	return func(key string) (string, bool) {
 		// logr.Log().Str("middleware", "allowedHeaders").Msg(RUNNING)
 		for _, v := range h {

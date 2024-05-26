@@ -10,21 +10,21 @@ import (
 type TaskDistributor interface {
 	Shutdown()
 
-	DistributeTaskSendEmailVerification(
+	DistributeTaskSendEmailVerificationCode(
 		ctx context.Context,
-		payload PayloadEmailVerification,
+		payload PayloadEmailVerificationCode,
 		opts ...asynq.Option,
 	) error
 
-	DistributeTaskSendEmailDeletion(
+	DistributeTaskSendUserDeletionCode(
 		ctx context.Context,
-		payload PayloadEmailDeletion,
+		payload PayloadUserDeletionCode,
 		opts ...asynq.Option,
 	) error
 
 	DistributeTaskSendPasswordResetCode(
 		ctx context.Context,
-		payload PayloadPasswordReset,
+		payload PayloadPasswordResetCode,
 		opts ...asynq.Option,
 	) error
 }

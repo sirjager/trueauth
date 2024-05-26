@@ -31,9 +31,6 @@ import (
 var (
 	logr      zerolog.Logger
 	startTime time.Time
-
-	//go:embed templates/email.html
-	emailTemplate string
 )
 
 // NOTE: Listenting to thse signals for gracefull shutdown
@@ -50,7 +47,8 @@ func init() {
 }
 
 func main() {
-	config, err := config.LoadConfigs(".", "defaults")
+	// INFO: change name of .env file here. For defaults, use "defaults"
+	config, err := config.LoadConfigs(".", "prod")
 	if err != nil {
 		logr.Fatal().Err(err).Msg("failed to load configurations")
 	}
@@ -65,7 +63,6 @@ func main() {
 	// NOTE: store server start time in config
 	config.Server.StartTime = startTime
 	// NOTE: store email template in config
-	config.Mail.Template = emailTemplate
 
 	// NOTE: update server name in logger
 	logr = logr.With().Str("server", config.Server.ServerName).Logger()

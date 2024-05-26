@@ -13,13 +13,7 @@ import (
 	rpc "github.com/sirjager/trueauth/stubs"
 )
 
-const (
-	RUNNING = "running"
-)
-
 func (s *Server) Signin(ctx context.Context, req *rpc.SigninRequest) (*rpc.SigninResponse, error) {
-	s.Logr.Log().Str("method", "Signin").Msg(RUNNING)
-
 	authenticated, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, status.Errorf(_unauthenticated, err.Error())

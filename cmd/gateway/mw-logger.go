@@ -16,9 +16,8 @@ const (
 )
 
 func logger(logr zerolog.Logger, handler http.Handler) http.Handler {
-	logr.Debug().Str("middleware", "logger").Msg(REGISTER)
+	logr.Info().Str("middleware", "logger").Msg(REGISTER)
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		logr.Log().Str("middleware", "logger").Msg(RUNNING)
 		start := time.Now()
 		rec := &ResponseRecorder{ResponseWriter: res, StatusCode: 200, Body: &bytes.Buffer{}}
 		handler.ServeHTTP(rec, req)

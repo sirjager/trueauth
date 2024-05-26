@@ -14,9 +14,8 @@ import (
 func mutateResponse(
 	logr zerolog.Logger,
 ) func(context.Context, http.ResponseWriter, protoreflect.ProtoMessage) error {
-	logr.Debug().Str("middleware", "mutateResponse").Msg(REGISTER)
+	logr.Info().Str("middleware", "mutateResponse").Msg(REGISTER)
 	return func(ctx context.Context, w http.ResponseWriter, m protoreflect.ProtoMessage) error {
-		logr.Log().Str("middleware", "mutateResponse").Msg(RUNNING)
 
 		if md, ok := runtime.ServerMetadataFromContext(ctx); ok {
 			for k, v := range md.HeaderMD {

@@ -10,34 +10,34 @@ import (
 	"github.com/sirjager/trueauth/pkg/mail"
 )
 
-const TaskSendEmailUserDeletion = "task:sendEmailUserDeletion"
+const TaskSendEmailVerificationCode = "task:sendEmailVerification"
 
-type PayloadEmailDeletion struct {
+type PayloadEmailVerificationCode struct {
 	Token string `json:"token"`
 }
 
-func (d *RedisTaskDistributor) DistributeTaskSendEmailDeletion(
+func (d *RedisTaskDistributor) DistributeTaskSendEmailVerificationCode(
 	ctx context.Context,
-	payload PayloadEmailDeletion,
+	payload PayloadEmailVerificationCode,
 	opts ...asynq.Option,
 ) error {
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("failed marshaling payload: %w", err)
 	}
-	task := asynq.NewTask(TaskSendEmailUserDeletion, jsonPayload, opts...)
+	task := asynq.NewTask(TaskSendEmailVerificationCode, jsonPayload, opts...)
 	if _, err := d.client.EnqueueContext(ctx, task); err != nil {
 		return fmt.Errorf("failed to enque task: %w", err)
 	}
-	d.logger.Info().Str("task", TaskSendEmailUserDeletion).Msg("task enqueued")
+	d.logger.Info().Str("task", TaskSendEmailVerificationCode).Msg("task enqueued")
 	return nil
 }
 
-func (p *RedisTaskProcessor) ProcessTaskSendEmailDeletion(
+func (p *RedisTaskProcessor) ProcessTaskSendEmailVerificationCode(
 	ctx context.Context,
 	task *asynq.Task,
 ) error {
-	var payload PayloadEmailDeletion
+	var payload PayloadEmailVerificationCode
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal payload: %w", asynq.SkipRetry)
 	}
@@ -49,9 +49,11 @@ func (p *RedisTaskProcessor) ProcessTaskSendEmailDeletion(
 	}
 
 	email := mail.Mail{To: []string{tokenPayload.Payload.UserEmail}}
-	email.Subject = "Account Deletion Requested"
+	email.Subject = "Complete Email Verification"
 	email.Body = fmt.Sprintf(`
-	User account deletion requested. Use the code to complete the process.<br>
+	Welcome to our community. <br><br>
+	Complete Your Registration <br>
+	Use the code to complete the process.<br>
 	Client IP  : <b>%s</b> <br>
 	User Agent : <b>%s</b> <br>
 	Use Code   : <b>%s</b> <br>
@@ -67,6 +69,6 @@ func (p *RedisTaskProcessor) ProcessTaskSendEmailDeletion(
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
-	p.logger.Info().Str("task", TaskSendEmailUserDeletion).Msg("task processed successfully")
+	p.logger.Info().Str("task", TaskSendEmailVerificationCode).Msg("task processed successfully")
 	return nil
 }

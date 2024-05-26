@@ -22,8 +22,8 @@ const (
 type TaskProcessor interface {
 	Start() error
 	Shutdown()
-	ProcessTaskSendEmailVerification(ctx context.Context, task *asynq.Task) error
-	ProcessTaskSendEmailDeletion(ctx context.Context, task *asynq.Task) error
+	ProcessTaskSendEmailVerificationCode(ctx context.Context, task *asynq.Task) error
+	ProcessTaskSendUserDeletionCode(ctx context.Context, task *asynq.Task) error
 	ProcessTaskSendPasswordResetCode(ctx context.Context, task *asynq.Task) error
 }
 
@@ -84,8 +84,8 @@ func NewRedisTaskProcessor(
 func (processor *RedisTaskProcessor) Start() error {
 	mux := asynq.NewServeMux()
 
-	mux.HandleFunc(TaskSendEmailVerification, processor.ProcessTaskSendEmailVerification)
-	mux.HandleFunc(TaskSendEmailUserDeletion, processor.ProcessTaskSendEmailDeletion)
+	mux.HandleFunc(TaskSendEmailVerificationCode, processor.ProcessTaskSendEmailVerificationCode)
+	mux.HandleFunc(TaskSendUserDeletionCode, processor.ProcessTaskSendUserDeletionCode)
 	mux.HandleFunc(TaskSendPasswordResetCode, processor.ProcessTaskSendPasswordResetCode)
 
 	return processor.server.Start(mux)
@@ -94,12 +94,3 @@ func (processor *RedisTaskProcessor) Start() error {
 func (processor *RedisTaskProcessor) Shutdown() {
 	processor.server.Shutdown()
 }
-
-const (
-	TemplateHeading    = "{{HEADING}}"
-	TemplateSubHeading = "{{SUBHEADING}}"
-	TemplateBody       = "{{BODY}}"
-	TemplateAction     = "{{ACTION}}"
-	TemplateAppName    = "{{APPNAME}}"
-	TemplateActionLink = "{{ACTION_LINK}}"
-)

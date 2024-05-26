@@ -65,8 +65,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 }
 
 const deleteUser = `-- name: DeleteUser :exec
-delete from "_users"
-where id = $1
+delete from "_users" where id = $1
 `
 
 func (q *Queries) DeleteUser(ctx context.Context, id []byte) error {
@@ -75,10 +74,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id []byte) error {
 }
 
 const readUser = `-- name: ReadUser :one
-select id, email, username, hash_salt, hash_pass, firstname, lastname, verified, blocked, created_at, updated_at, token_email_verify, token_password_reset, token_email_change, token_user_deletion, last_email_verify, last_password_reset, last_email_change, last_user_deletion
-from "_users"
-where id = $1
-limit 1
+select id, email, username, hash_salt, hash_pass, firstname, lastname, verified, blocked, created_at, updated_at, token_email_verify, token_password_reset, token_email_change, token_user_deletion, last_email_verify, last_password_reset, last_email_change, last_user_deletion from "_users" where id = $1 limit 1
 `
 
 func (q *Queries) ReadUser(ctx context.Context, id []byte) (User, error) {
@@ -109,10 +105,7 @@ func (q *Queries) ReadUser(ctx context.Context, id []byte) (User, error) {
 }
 
 const readUserByEmail = `-- name: ReadUserByEmail :one
-select id, email, username, hash_salt, hash_pass, firstname, lastname, verified, blocked, created_at, updated_at, token_email_verify, token_password_reset, token_email_change, token_user_deletion, last_email_verify, last_password_reset, last_email_change, last_user_deletion
-from "_users"
-where email = $1
-limit 1
+select id, email, username, hash_salt, hash_pass, firstname, lastname, verified, blocked, created_at, updated_at, token_email_verify, token_password_reset, token_email_change, token_user_deletion, last_email_verify, last_password_reset, last_email_change, last_user_deletion from "_users" where email = $1 limit 1
 `
 
 func (q *Queries) ReadUserByEmail(ctx context.Context, email string) (User, error) {
@@ -143,10 +136,7 @@ func (q *Queries) ReadUserByEmail(ctx context.Context, email string) (User, erro
 }
 
 const readUserByUsername = `-- name: ReadUserByUsername :one
-select id, email, username, hash_salt, hash_pass, firstname, lastname, verified, blocked, created_at, updated_at, token_email_verify, token_password_reset, token_email_change, token_user_deletion, last_email_verify, last_password_reset, last_email_change, last_user_deletion
-from "_users"
-where username = $1
-limit 1
+select id, email, username, hash_salt, hash_pass, firstname, lastname, verified, blocked, created_at, updated_at, token_email_verify, token_password_reset, token_email_change, token_user_deletion, last_email_verify, last_password_reset, last_email_change, last_user_deletion from "_users" where username = $1 limit 1
 `
 
 func (q *Queries) ReadUserByUsername(ctx context.Context, username string) (User, error) {
@@ -177,10 +167,7 @@ func (q *Queries) ReadUserByUsername(ctx context.Context, username string) (User
 }
 
 const readUsers = `-- name: ReadUsers :many
-select id, email, username, hash_salt, hash_pass, firstname, lastname, verified, blocked, created_at, updated_at, token_email_verify, token_password_reset, token_email_change, token_user_deletion, last_email_verify, last_password_reset, last_email_change, last_user_deletion
-from "_users"
-limit $2
-offset $1
+select id, email, username, hash_salt, hash_pass, firstname, lastname, verified, blocked, created_at, updated_at, token_email_verify, token_password_reset, token_email_change, token_user_deletion, last_email_verify, last_password_reset, last_email_change, last_user_deletion from "_users" limit $2 offset $1
 `
 
 type ReadUsersParams struct {
@@ -228,78 +215,48 @@ func (q *Queries) ReadUsers(ctx context.Context, arg ReadUsersParams) ([]User, e
 	return items, nil
 }
 
-const updateUserDeletion = `-- name: UpdateUserDeletion :exec
+const updateUserDeletionToken = `-- name: UpdateUserDeletionToken :exec
 UPDATE "_users" SET token_user_deletion = $1, last_user_deletion = $2 WHERE id = $3
 `
 
-type UpdateUserDeletionParams struct {
+type UpdateUserDeletionTokenParams struct {
 	TokenUserDeletion string    `json:"token_user_deletion"`
 	LastUserDeletion  time.Time `json:"last_user_deletion"`
 	ID                []byte    `json:"id"`
 }
 
-func (q *Queries) UpdateUserDeletion(ctx context.Context, arg UpdateUserDeletionParams) error {
-	_, err := q.db.Exec(ctx, updateUserDeletion, arg.TokenUserDeletion, arg.LastUserDeletion, arg.ID)
+func (q *Queries) UpdateUserDeletionToken(ctx context.Context, arg UpdateUserDeletionTokenParams) error {
+	_, err := q.db.Exec(ctx, updateUserDeletionToken, arg.TokenUserDeletion, arg.LastUserDeletion, arg.ID)
 	return err
 }
 
-const updateUserTokenEmailVerify = `-- name: UpdateUserTokenEmailVerify :exec
+const updateUserEmailVerificationToken = `-- name: UpdateUserEmailVerificationToken :exec
 UPDATE "_users" SET token_email_verify = $1, last_email_verify = $2 WHERE id = $3
 `
 
-type UpdateUserTokenEmailVerifyParams struct {
+type UpdateUserEmailVerificationTokenParams struct {
 	TokenEmailVerify string    `json:"token_email_verify"`
 	LastEmailVerify  time.Time `json:"last_email_verify"`
 	ID               []byte    `json:"id"`
 }
 
-func (q *Queries) UpdateUserTokenEmailVerify(ctx context.Context, arg UpdateUserTokenEmailVerifyParams) error {
-	_, err := q.db.Exec(ctx, updateUserTokenEmailVerify, arg.TokenEmailVerify, arg.LastEmailVerify, arg.ID)
+func (q *Queries) UpdateUserEmailVerificationToken(ctx context.Context, arg UpdateUserEmailVerificationTokenParams) error {
+	_, err := q.db.Exec(ctx, updateUserEmailVerificationToken, arg.TokenEmailVerify, arg.LastEmailVerify, arg.ID)
 	return err
 }
 
-const updateUserTokenPasswordReset = `-- name: UpdateUserTokenPasswordReset :exec
-UPDATE "_users" SET token_password_reset = $1, last_password_reset = $2 WHERE id = $3
-`
-
-type UpdateUserTokenPasswordResetParams struct {
-	TokenPasswordReset string    `json:"token_password_reset"`
-	LastPasswordReset  time.Time `json:"last_password_reset"`
-	ID                 []byte    `json:"id"`
-}
-
-func (q *Queries) UpdateUserTokenPasswordReset(ctx context.Context, arg UpdateUserTokenPasswordResetParams) error {
-	_, err := q.db.Exec(ctx, updateUserTokenPasswordReset, arg.TokenPasswordReset, arg.LastPasswordReset, arg.ID)
-	return err
-}
-
-const updateUserUpdatePassword = `-- name: UpdateUserUpdatePassword :exec
-UPDATE "_users" SET hash_pass = $1, hash_salt = $2 WHERE id = $3
-`
-
-type UpdateUserUpdatePasswordParams struct {
-	HashPass string `json:"hash_pass"`
-	HashSalt string `json:"hash_salt"`
-	ID       []byte `json:"id"`
-}
-
-func (q *Queries) UpdateUserUpdatePassword(ctx context.Context, arg UpdateUserUpdatePasswordParams) error {
-	_, err := q.db.Exec(ctx, updateUserUpdatePassword, arg.HashPass, arg.HashSalt, arg.ID)
-	return err
-}
-
-const updateUserVerified = `-- name: UpdateUserVerified :one
+const updateUserEmailVerified = `-- name: UpdateUserEmailVerified :one
 UPDATE "_users" SET verified = $1, token_email_verify = $2 WHERE id = $3 RETURNING id, email, username, hash_salt, hash_pass, firstname, lastname, verified, blocked, created_at, updated_at, token_email_verify, token_password_reset, token_email_change, token_user_deletion, last_email_verify, last_password_reset, last_email_change, last_user_deletion
 `
 
-type UpdateUserVerifiedParams struct {
+type UpdateUserEmailVerifiedParams struct {
 	Verified         bool   `json:"verified"`
 	TokenEmailVerify string `json:"token_email_verify"`
 	ID               []byte `json:"id"`
 }
 
-func (q *Queries) UpdateUserVerified(ctx context.Context, arg UpdateUserVerifiedParams) (User, error) {
-	row := q.db.QueryRow(ctx, updateUserVerified, arg.Verified, arg.TokenEmailVerify, arg.ID)
+func (q *Queries) UpdateUserEmailVerified(ctx context.Context, arg UpdateUserEmailVerifiedParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateUserEmailVerified, arg.Verified, arg.TokenEmailVerify, arg.ID)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -323,4 +280,40 @@ func (q *Queries) UpdateUserVerified(ctx context.Context, arg UpdateUserVerified
 		&i.LastUserDeletion,
 	)
 	return i, err
+}
+
+const updateUserPassword = `-- name: UpdateUserPassword :exec
+UPDATE "_users" SET hash_pass = $1, hash_salt = $2, last_password_reset = $3 WHERE id = $4
+`
+
+type UpdateUserPasswordParams struct {
+	HashPass          string    `json:"hash_pass"`
+	HashSalt          string    `json:"hash_salt"`
+	LastPasswordReset time.Time `json:"last_password_reset"`
+	ID                []byte    `json:"id"`
+}
+
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error {
+	_, err := q.db.Exec(ctx, updateUserPassword,
+		arg.HashPass,
+		arg.HashSalt,
+		arg.LastPasswordReset,
+		arg.ID,
+	)
+	return err
+}
+
+const updateUserPasswordResetToken = `-- name: UpdateUserPasswordResetToken :exec
+UPDATE "_users" SET token_password_reset = $1, last_password_reset = $2 WHERE id = $3
+`
+
+type UpdateUserPasswordResetTokenParams struct {
+	TokenPasswordReset string    `json:"token_password_reset"`
+	LastPasswordReset  time.Time `json:"last_password_reset"`
+	ID                 []byte    `json:"id"`
+}
+
+func (q *Queries) UpdateUserPasswordResetToken(ctx context.Context, arg UpdateUserPasswordResetTokenParams) error {
+	_, err := q.db.Exec(ctx, updateUserPasswordResetToken, arg.TokenPasswordReset, arg.LastPasswordReset, arg.ID)
+	return err
 }

@@ -5,7 +5,6 @@ type Config struct {
 	SMTPSender string `mapstructure:"SMTP_NAME"`
 	SMTPUser   string `mapstructure:"SMTP_USER"`
 	SMTPPass   string `mapstructure:"SMTP_PASS"`
-	Template   string
 }
 
 // Mail represents an email message.

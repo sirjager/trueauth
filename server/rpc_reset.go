@@ -39,12 +39,6 @@ func (s *Server) Reset(ctx context.Context, req *rpc.ResetRequest) (*rpc.ResetRe
 		return nil, fmt.Errorf("something went wrong: %w", err)
 	}
 
-	// we also need to verify if email is verifed or not,
-	// if not verified, we return error and abort, since we can't reset password
-	if !user.Verified {
-		return nil, status.Errorf(_aborted, errEmailNotVerified)
-	}
-
 	meta := s.extractMetadata(ctx)
 
 	// NOTE: If code is not provided, that means user does not have password reset code,
@@ -75,7 +69,7 @@ func (s *Server) Reset(ctx context.Context, req *rpc.ResetRequest) (*rpc.ResetRe
 		}
 
 		// generate task params and options
-		taskParams := worker.PayloadPasswordReset{Token: token}
+		taskParams := worker.PayloadPasswordResetCode{Token: token}
 		randomDelay := time.Millisecond * time.Duration(utils.RandomInt(100, 600))
 		taskOptions := []asynq.Option{
 			asynq.MaxRetry(5),            // max retries if any error occurs
@@ -89,12 +83,12 @@ func (s *Server) Reset(ctx context.Context, req *rpc.ResetRequest) (*rpc.ResetRe
 			return nil, status.Errorf(_internal, errMsg, err.Error())
 		}
 
-		updateParams := db.UpdateUserTokenPasswordResetParams{
+		updateParams := db.UpdateUserPasswordResetTokenParams{
 			ID:                 user.ID,
 			TokenPasswordReset: token,
 			LastPasswordReset:  time.Now(),
 		}
-		if err = s.store.UpdateUserTokenPasswordReset(ctx, updateParams); err != nil {
+		if err = s.store.UpdateUserPasswordResetToken(ctx, updateParams); err != nil {
 			return nil, status.Errorf(_internal, err.Error())
 		}
 
@@ -135,19 +129,20 @@ func (s *Server) Reset(ctx context.Context, req *rpc.ResetRequest) (*rpc.ResetRe
 		return nil, status.Errorf(_internal, "failed to hash password: %s", err.Error())
 	}
 
-	updateParams := db.UpdateUserUpdatePasswordParams{
-		ID:       user.ID,
-		HashSalt: hashingSalt,
-		HashPass: hashedPassword,
-	}
-	if err = s.store.UpdateUserUpdatePassword(ctx, updateParams); err != nil {
+	if err = s.store.UpdateUserPasswordTx(ctx, db.UpdateUserPasswordTx{
+		UpdateUserPasswordParams: db.UpdateUserPasswordParams{
+			ID:       user.ID,
+			HashSalt: hashingSalt,
+			HashPass: hashedPassword,
+		},
+		BeforeUpdate: func() error {
+			if req.GetSignoutAll() {
+				return s.store.DeleteSessionByUserID(ctx, user.ID)
+			}
+			return nil
+		},
+	}); err != nil {
 		return nil, status.Errorf(_internal, err.Error())
-	}
-
-	if req.GetSignoutAll() {
-		if err = s.store.DeleteSessionByUserID(ctx, user.ID); err != nil {
-			return nil, status.Errorf(_internal, err.Error())
-		}
 	}
 
 	return &rpc.ResetResponse{Message: "successfully updated password"}, nil

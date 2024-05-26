@@ -54,7 +54,7 @@ func (s *Server) Delete(ctx context.Context, req *rpc.DeleteRequest) (*rpc.Delet
 		}
 
 		// generate task params and options
-		taskParams := worker.PayloadEmailDeletion{Token: token}
+		taskParams := worker.PayloadUserDeletionCode{Token: token}
 		randomDelay := time.Millisecond * time.Duration(utils.RandomInt(100, 600))
 		taskOptions := []asynq.Option{
 			asynq.MaxRetry(5),            // max retries if any error occurs
@@ -63,19 +63,19 @@ func (s *Server) Delete(ctx context.Context, req *rpc.DeleteRequest) (*rpc.Delet
 		}
 
 		// now we will distribute task send email deletion code
-		if err = s.tasks.DistributeTaskSendEmailDeletion(ctx, taskParams, taskOptions...); err != nil {
+		if err = s.tasks.DistributeTaskSendUserDeletionCode(ctx, taskParams, taskOptions...); err != nil {
 			errMsg := "failed to initiate account deletion, %s"
 			return nil, status.Errorf(_internal, errMsg, err.Error())
 		}
 
 		// after task is successfully distributed then we will save deletion token in database
 		// so that mutltiple requests can be minimized
-		updateParam := db.UpdateUserDeletionParams{
+		updateParam := db.UpdateUserDeletionTokenParams{
 			ID:                authorized.User.ID,
 			TokenUserDeletion: token,
 			LastUserDeletion:  time.Now(),
 		}
-		if uErr := s.store.UpdateUserDeletion(ctx, updateParam); uErr != nil {
+		if uErr := s.store.UpdateUserDeletionToken(ctx, updateParam); uErr != nil {
 			return nil, status.Errorf(_internal, uErr.Error())
 		}
 

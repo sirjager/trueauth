@@ -10,34 +10,34 @@ import (
 	"github.com/sirjager/trueauth/pkg/mail"
 )
 
-const TaskSendPasswordResetCode = "task:sendPasswordResetCode"
+const TaskSendUserDeletionCode = "task:sendEmailUserDeletion"
 
-type PayloadPasswordResetCode struct {
+type PayloadUserDeletionCode struct {
 	Token string `json:"token"`
 }
 
-func (d *RedisTaskDistributor) DistributeTaskSendPasswordResetCode(
+func (d *RedisTaskDistributor) DistributeTaskSendUserDeletionCode(
 	ctx context.Context,
-	payload PayloadPasswordResetCode,
+	payload PayloadUserDeletionCode,
 	opts ...asynq.Option,
 ) error {
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("failed marshaling payload: %w", err)
 	}
-	task := asynq.NewTask(TaskSendPasswordResetCode, jsonPayload, opts...)
+	task := asynq.NewTask(TaskSendUserDeletionCode, jsonPayload, opts...)
 	if _, err := d.client.EnqueueContext(ctx, task); err != nil {
 		return fmt.Errorf("failed to enque task: %w", err)
 	}
-	d.logger.Info().Str("task", TaskSendPasswordResetCode).Msg("task enqueued")
+	d.logger.Info().Str("task", TaskSendUserDeletionCode).Msg("task enqueued")
 	return nil
 }
 
-func (p *RedisTaskProcessor) ProcessTaskSendPasswordResetCode(
+func (p *RedisTaskProcessor) ProcessTaskSendUserDeletionCode(
 	ctx context.Context,
 	task *asynq.Task,
 ) error {
-	var payload PayloadPasswordResetCode
+	var payload PayloadUserDeletionCode
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal payload: %w", asynq.SkipRetry)
 	}
@@ -49,9 +49,9 @@ func (p *RedisTaskProcessor) ProcessTaskSendPasswordResetCode(
 	}
 
 	email := mail.Mail{To: []string{tokenPayload.Payload.UserEmail}}
-	email.Subject = "Password Reset Requested"
+	email.Subject = "Account Deletion Requested"
 	email.Body = fmt.Sprintf(`
-	Password reset requested. <br><br>
+	User account deletion requested.<br><br>
 	Use the code to complete the process.<br>
 	Client IP  : <b>%s</b> <br>
 	User Agent : <b>%s</b> <br>
@@ -68,6 +68,6 @@ func (p *RedisTaskProcessor) ProcessTaskSendPasswordResetCode(
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
-	p.logger.Info().Str("task", TaskSendPasswordResetCode).Msg("task processed successfully")
+	p.logger.Info().Str("task", TaskSendUserDeletionCode).Msg("task processed successfully")
 	return nil
 }

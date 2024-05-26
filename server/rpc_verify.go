@@ -60,22 +60,22 @@ func (s *Server) Verify(ctx context.Context, req *rpc.VerifyRequest) (*rpc.Verif
 			return nil, status.Errorf(_internal, "failed to create token, %s", tokenErr.Error())
 		}
 
-		taskParams := worker.PayloadEmailVerification{Token: token}
+		taskParams := worker.PayloadEmailVerificationCode{Token: token}
 		taskOptions := []asynq.Option{
 			asynq.MaxRetry(5),
 			asynq.Group(worker.QueueLow),
 			asynq.ProcessIn(time.Millisecond * time.Duration(utils.RandomInt(100, 600))),
 		}
-		if err = s.tasks.DistributeTaskSendEmailVerification(ctx, taskParams, taskOptions...); err != nil {
+		if err = s.tasks.DistributeTaskSendEmailVerificationCode(ctx, taskParams, taskOptions...); err != nil {
 			return nil, status.Errorf(_internal, "send email verification failed, %s", err.Error())
 		}
 
-		updateParam := db.UpdateUserTokenEmailVerifyParams{
+		updateParam := db.UpdateUserEmailVerificationTokenParams{
 			ID:               user.ID,
 			LastEmailVerify:  time.Now(),
 			TokenEmailVerify: token,
 		}
-		if uErr := s.store.UpdateUserTokenEmailVerify(ctx, updateParam); uErr != nil {
+		if uErr := s.store.UpdateUserEmailVerificationToken(ctx, updateParam); uErr != nil {
 			return nil, status.Errorf(_internal, uErr.Error())
 		}
 
@@ -99,8 +99,8 @@ func (s *Server) Verify(ctx context.Context, req *rpc.VerifyRequest) (*rpc.Verif
 		return nil, status.Errorf(_aborted, errInvaidCode)
 	}
 
-	params := db.UpdateUserVerifiedParams{Verified: true, TokenEmailVerify: "", ID: user.ID}
-	user, err = s.store.UpdateUserVerified(ctx, params)
+	params := db.UpdateUserEmailVerifiedParams{Verified: true, TokenEmailVerify: "", ID: user.ID}
+	user, err = s.store.UpdateUserEmailVerified(ctx, params)
 	if err != nil {
 		return nil, status.Errorf(_internal, "failed to update verified status, %s", err.Error())
 	}

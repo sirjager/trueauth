@@ -22,11 +22,11 @@ type Querier interface {
 	ReadUserByEmail(ctx context.Context, email string) (User, error)
 	ReadUserByUsername(ctx context.Context, username string) (User, error)
 	ReadUsers(ctx context.Context, arg ReadUsersParams) ([]User, error)
-	UpdateUserDeletion(ctx context.Context, arg UpdateUserDeletionParams) error
-	UpdateUserTokenEmailVerify(ctx context.Context, arg UpdateUserTokenEmailVerifyParams) error
-	UpdateUserTokenPasswordReset(ctx context.Context, arg UpdateUserTokenPasswordResetParams) error
-	UpdateUserUpdatePassword(ctx context.Context, arg UpdateUserUpdatePasswordParams) error
-	UpdateUserVerified(ctx context.Context, arg UpdateUserVerifiedParams) (User, error)
+	UpdateUserDeletionToken(ctx context.Context, arg UpdateUserDeletionTokenParams) error
+	UpdateUserEmailVerificationToken(ctx context.Context, arg UpdateUserEmailVerificationTokenParams) error
+	UpdateUserEmailVerified(ctx context.Context, arg UpdateUserEmailVerifiedParams) (User, error)
+	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error
+	UpdateUserPasswordResetToken(ctx context.Context, arg UpdateUserPasswordResetTokenParams) error
 }
 
 var _ Querier = (*Queries)(nil)

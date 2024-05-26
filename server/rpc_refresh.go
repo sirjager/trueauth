@@ -17,8 +17,6 @@ func (s *Server) Refresh(
 	ctx context.Context,
 	req *rpc.RefreshRequest,
 ) (*rpc.RefreshResponse, error) {
-	s.Logr.Log().Str("method", "Refresh").Msg(RUNNING)
-
 	authorized, err := s.authorize(ctx, checkRefreshToken)
 	if err != nil {
 		return nil, status.Errorf(_unauthenticated, err.Error())
