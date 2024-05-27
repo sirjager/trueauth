@@ -1,9 +1,9 @@
+---
 project_name: trueauth
 
 builds:
   - id: linux-amd64
-    binary: '{{.ProjectName}}_{{.Os}}_{{.Arch}}'
-    main: ./cmd
+    binary: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
     goos:
       - linux
     goarch:
@@ -11,14 +11,12 @@ builds:
     no_unique_dist_dir: true
     hooks:
       post:
-        - cp -rf migrations dist
-        - cp -f example.env dist
+        - cp -f defaults.env dist
         - cp -f LICENSE dist
         - cp -f README.md dist
 
   - id: darwin-amd64
-    binary: '{{.ProjectName}}_{{.Os}}_{{.Arch}}'
-    main: ./cmd
+    binary: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
     goos:
       - darwin
     goarch:
@@ -26,8 +24,7 @@ builds:
     no_unique_dist_dir: true
 
   - id: windows-amd64
-    binary: '{{.ProjectName}}_{{.Os}}_{{.Arch}}'
-    main: ./cmd
+    binary: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
     goos:
       - windows
     goarch:
@@ -36,12 +33,11 @@ builds:
 
 archives:
   - format: tar.xz
-    name_template: '{{.ProjectName}}_{{.Os}}_{{.Arch}}'
+    name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
     files:
-      - migrations
-      - example.env
+      - defaults.env
       - LICENSE
       - README.md
 
 checksum:
-  name_template: '{{.ProjectName}}_checksums.txt'
+  name_template: "{{.ProjectName}}_checksums.txt"

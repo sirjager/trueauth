@@ -3,9 +3,6 @@ package config
 import "time"
 
 type AuthConfig struct {
-	// callback url to frontend
-	CallbackURL string `mapstructure:"AUTH_CALLBACK_URL"`
-
 	// for creating access and refresh tokens
 	Secret string `mapstructure:"AUTH_TOKEN_SECRET"`
 	// access token time to live
