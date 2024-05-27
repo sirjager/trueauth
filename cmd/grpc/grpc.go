@@ -27,6 +27,7 @@ func RunServer(ctx context.Context, wg *errgroup.Group, address string, srvr *se
 		),
 
 		grpc.MaxRecvMsgSize(1024*1024), // bytes * Kilobytes * Megabytes
+		grpc.MaxConcurrentStreams(100), // to limit max concurrent streams
 	)
 
 	stubs.RegisterTrueAuthServer(grpcServer, srvr)
