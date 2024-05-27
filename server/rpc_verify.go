@@ -28,8 +28,10 @@ func (s *Server) Verify(ctx context.Context, req *rpc.VerifyRequest) (*rpc.Verif
 
 	user, err := s.store.ReadUserByEmail(ctx, req.GetEmail())
 	if err != nil {
+		// NOTE: Here we can also return ErrEmailNotRegistered, but
+		// we dont want to disclose if user exists or not, so we simply return email sent.
 		if errors.Is(err, db.ErrRecordNotFound) {
-			return nil, status.Errorf(_notFound, errEmailNotRegistered)
+			return &rpc.VerifyResponse{Message: "check your inbox for further instructions"}, nil
 		}
 		return nil, status.Errorf(_internal, err.Error())
 	}
@@ -43,6 +45,8 @@ func (s *Server) Verify(ctx context.Context, req *rpc.VerifyRequest) (*rpc.Verif
 		return &rpc.VerifyResponse{User: publicProfile(profile)}, nil
 	}
 
+	meta := s.extractMetadata(ctx)
+
 	if len(req.GetCode()) == 0 {
 		if time.Since(user.LastEmailVerify) < s.config.Auth.VerifyTokenCooldown {
 			tryAfter := s.config.Auth.VerifyTokenCooldown - time.Since(user.LastEmailVerify)
@@ -54,7 +58,13 @@ func (s *Server) Verify(ctx context.Context, req *rpc.VerifyRequest) (*rpc.Verif
 		}
 
 		code := utils.RandomNumberAsString(verifyCodeDigitsCount)
-		tokenParams := tokens.PayloadData{UserEmail: user.Email, UserID: user.ID, Code: code}
+		tokenParams := tokens.PayloadData{
+			Code:      code,
+			UserID:    user.ID,
+			UserEmail: user.Email,
+			ClientIP:  meta.ClientIP,
+			UserAgent: meta.UserAgent,
+		}
 		token, _, tokenErr := s.tokens.CreateToken(tokenParams, s.config.Auth.VerifyTokenExpDur)
 		if tokenErr != nil {
 			return nil, status.Errorf(_internal, "failed to create token, %s", tokenErr.Error())

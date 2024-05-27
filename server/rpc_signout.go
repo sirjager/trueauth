@@ -46,20 +46,11 @@ func (s *Server) Signout(
 		if err = s.store.DeleteSession(ctx, id.Bytes()); err != nil {
 			return nil, status.Errorf(_internal, err.Error())
 		}
-
 		return &rpc.SignoutResponse{Message: "session deleted"}, nil
 	}
 
-	// if session is empty, delete current session
-	// it extracts access tokens, and access token payload if any
-	meta := s.extractMetadata(ctx)
-
-	if meta.payload == nil {
-		return nil, status.Errorf(_unauthenticated, errUnauthorized)
-	}
-
 	// delete session using access token id
-	if err := s.store.DeleteSessionByAccessTokenID(ctx, meta.payload.ID); err != nil {
+	if err := s.store.DeleteSession(ctx, authorized.Session.ID); err != nil {
 		return nil, status.Errorf(_internal, err.Error())
 	}
 
