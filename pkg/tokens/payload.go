@@ -4,45 +4,47 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/sirjager/trueauth/pkg/utils"
 )
 
-var ErrExpiredToken = errors.New("token has expired")
-var ErrInvalidToken = errors.New("token is invalid")
+var (
+	// ErrExpiredToken is returned when a token has expired
+	ErrExpiredToken = errors.New("token expired")
 
+	// ErrInvalidToken is returned when a token is invalid
+	ErrInvalidToken = errors.New("invalid token")
+)
+
+// PayloadData contains the payload data of the token
 type PayloadData struct {
-	UserID    uuid.UUID `json:"user_id,omitempty"`
-	UserEmail string    `json:"user_email,omitempty"`
-
-	RecoveryCode     string `json:"recovery_code,omitempty"`
-	DeletionCode     string `json:"deletion_code,omitempty"`
-	VerificationCode string `json:"email_verification_code,omitempty"`
-
-	AllowIP     string `json:"allow_ip,omitempty"`
-	AllowIPCode string `json:"allow_ip_code,omitempty"`
+	Code      string `json:"code,omitempty"`
+	Type      string `json:"type,omitempty"`
+	UserID    []byte `json:"user_id,omitempty"`
+	UserEmail string `json:"user_email,omitempty"`
+	ClientIP  string `json:"client_ip,omitempty"`
+	UserAgent string `json:"user_agent,omitempty"`
 }
 
+// Payload contains the payload data of the token
 type Payload struct {
-	Id        uuid.UUID   `json:"id,omitempty"`
 	IssuedAt  time.Time   `json:"iat,omitempty"`
 	ExpiresAt time.Time   `json:"expires,omitempty"`
 	Payload   PayloadData `json:"payload,omitempty"`
+	ID        []byte      `json:"id,omitempty"`
 }
 
+// NewPayload creates a new payload for a specific username and duration
 func NewPayload(p PayloadData, duration time.Duration) (*Payload, error) {
-	token_id, err := uuid.NewRandom()
-	if err != nil {
-		return nil, err
-	}
 	payload := &Payload{
-		Id:        token_id,
 		Payload:   p,
 		IssuedAt:  time.Now(),
+		ID:        utils.XIDNew().Bytes(),
 		ExpiresAt: time.Now().Add(duration),
 	}
 	return payload, nil
 }
 
+// Valid checks if the token payload is not expired
 func (payload *Payload) Valid() error {
 	if time.Now().After(payload.ExpiresAt) {
 		return ErrExpiredToken

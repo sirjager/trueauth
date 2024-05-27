@@ -3,7 +3,9 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE OR REPLACE FUNCTION fn_update_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
-   NEW.updated_at = NOW(); 
-   RETURN NEW;
+	IF OLD.* IS DISTINCT FROM NEW.* THEN
+				NEW.updated_at = NOW(); 
+	END IF;
+	RETURN NEW;
 END;
 $$ language plpgsql ;

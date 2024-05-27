@@ -1,72 +1,71 @@
-CREATE TABLE "users" (
-  "id" UUID PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
+CREATE TABLE "_users" (
+  "id" BYTEA PRIMARY KEY NOT NULL,
   "email" VARCHAR(255) UNIQUE NOT NULL,
   "username" VARCHAR(255) UNIQUE NOT NULL,
-  "password" VARCHAR(255) NOT NULL,
+
+	"hash_salt" VARCHAR(255) NOT NULL,
+	"hash_pass" VARCHAR(255) NOT NULL,
+
   "firstname" VARCHAR(255) NOT NULL DEFAULT '',
   "lastname" VARCHAR(255) NOT NULL DEFAULT '',
-  "email_verified" BOOL NOT NULL DEFAULT false,
-  "verify_token" TEXT NOT NULL DEFAULT '',
-  "last_verify_sent_at" TIMESTAMPTZ NOT NULL,
-  "recovery_token" TEXT NOT NULL DEFAULT '',
-  "last_recovery_sent_at" TIMESTAMPTZ NOT NULL,
-  "emailchange_token" TEXT NOT NULL DEFAULT '',
-  "last_emailchange_sent_at" TIMESTAMPTZ NOT NULL,
-  "allowed_ips" TEXT[],
-  "allowip_token" TEXT NOT NULL DEFAULT '',
-  "last_allowip_sent_at" TIMESTAMPTZ NOT NULL,
-  "delete_token" TEXT NOT NULL DEFAULT '',
-  "last_delete_sent_at" TIMESTAMPTZ NOT NULL,
+
+  "verified" BOOL NOT NULL DEFAULT false,
+  "blocked" BOOL NOT NULL DEFAULT false,
+
   "created_at" TIMESTAMPTZ NOT NULL DEFAULT (now()),
-  "updated_at" TIMESTAMPTZ NOT NULL DEFAULT (now())
+  "updated_at" TIMESTAMPTZ NOT NULL DEFAULT (now()),
+
+  "token_email_verify" TEXT NOT NULL DEFAULT '',
+	"token_password_reset" TEXT NOT NULL DEFAULT '',
+	"token_email_change" TEXT NOT NULL DEFAULT '',
+	"token_user_deletion" TEXT NOT NULL DEFAULT '',
+
+	"last_email_verify" TIMESTAMPTZ NOT NULL DEFAULT '2000-01-01 00:00:00',
+	"last_password_reset" TIMESTAMPTZ NOT NULL DEFAULT '2000-01-01 00:00:00',
+	"last_email_change" TIMESTAMPTZ NOT NULL DEFAULT '2000-01-01 00:00:00',
+	"last_user_deletion" TIMESTAMPTZ NOT NULL DEFAULT '2000-01-01 00:00:00'
 );
 
-CREATE INDEX ON "users" ("firstname");
+CREATE INDEX ON "_users" ("firstname");
+CREATE INDEX ON "_users" ("lastname");
 
-CREATE INDEX ON "users" ("lastname");
-
-
-
-COMMENT ON COLUMN "users"."id" IS 'user id';
-
-COMMENT ON COLUMN "users"."email" IS 'unique email address';
-
-COMMENT ON COLUMN "users"."username" IS 'unique username';
-
-COMMENT ON COLUMN "users"."password" IS 'hashed password';
-
-COMMENT ON COLUMN "users"."firstname" IS 'first name';
-
-COMMENT ON COLUMN "users"."lastname" IS 'last name';
-
-COMMENT ON COLUMN "users"."email_verified" IS 'email verified status';
-
-COMMENT ON COLUMN "users"."verify_token" IS 'short lived email verification token';
-
-COMMENT ON COLUMN "users"."last_verify_sent_at" IS 'last verification token sent at timestamp';
-
-COMMENT ON COLUMN "users"."recovery_token" IS 'short lived password recovery token';
-
-COMMENT ON COLUMN "users"."last_recovery_sent_at" IS 'last password recovery token sent at timestamp';
-
-COMMENT ON COLUMN "users"."emailchange_token" IS 'short lived email change token';
-
-COMMENT ON COLUMN "users"."last_emailchange_sent_at" IS 'last change email token sent at timestamp';
-
-COMMENT ON COLUMN "users"."allowed_ips" IS 'list of all allowed ip address to access this row';
-
-COMMENT ON COLUMN "users"."allowip_token" IS 'short lived allowip token for allowing new ipaddress';
-
-COMMENT ON COLUMN "users"."last_allowip_sent_at" IS 'last allow ip token sent at timestamp';
-
-COMMENT ON COLUMN "users"."delete_token" IS 'short lived user deletion token';
-
-COMMENT ON COLUMN "users"."last_delete_sent_at" IS 'last deletion token sent at timestamp';
-
-COMMENT ON COLUMN "users"."created_at" IS 'created at timestamp';
-
-COMMENT ON COLUMN "users"."updated_at" IS 'last updated at timestamp';
-
-
-CREATE TRIGGER trg_update_updated_at BEFORE UPDATE ON "users"
+CREATE TRIGGER trg_update_updated_at BEFORE UPDATE ON "_users"
 FOR EACH ROW WHEN (OLD.id = NEW.id) EXECUTE FUNCTION fn_update_timestamp();
+
+COMMENT ON COLUMN "_users"."id" IS 'account id';
+
+COMMENT ON COLUMN "_users"."email" IS 'unique email address';
+
+COMMENT ON COLUMN "_users"."username" IS 'unique username';
+
+COMMENT ON COLUMN "_users"."hash_salt" IS 'salt used for hashing';
+
+COMMENT ON COLUMN "_users"."hash_pass" IS 'hashed password';
+
+COMMENT ON COLUMN "_users"."firstname" IS 'first name';
+
+COMMENT ON COLUMN "_users"."lastname" IS 'last name';
+
+COMMENT ON COLUMN "_users"."verified" IS 'email verified status';
+
+COMMENT ON COLUMN "_users"."blocked" IS 'account blocked status';
+
+COMMENT ON COLUMN "_users"."created_at" IS 'created at timestamp';
+
+COMMENT ON COLUMN "_users"."updated_at" IS 'last updated at timestamp';
+
+COMMENT ON COLUMN "_users"."token_email_verify" IS 'email verification token';
+
+COMMENT ON COLUMN "_users"."token_password_reset" IS 'password reset token';
+
+COMMENT ON COLUMN "_users"."token_email_change" IS 'email change token';
+
+COMMENT ON COLUMN "_users"."token_user_deletion" IS 'user deletion token';
+
+COMMENT ON COLUMN "_users"."last_email_verify" IS 'last email verification timestamp';
+
+COMMENT ON COLUMN "_users"."last_password_reset" IS 'last password reset timestamp';
+
+COMMENT ON COLUMN "_users"."last_email_change" IS 'last email change timestamp';
+
+COMMENT ON COLUMN "_users"."last_user_deletion" IS 'last user deletion timestamp';
