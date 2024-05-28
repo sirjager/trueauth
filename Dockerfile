@@ -22,6 +22,7 @@ WORKDIR /app
 RUN apk add libc6-compat
 
 EXPOSE 4420
+EXPOSE 4421
 
 COPY  start.sh .
 COPY  wait-for.sh .

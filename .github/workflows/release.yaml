@@ -56,3 +56,28 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITPAT }}
           REGISTRY: ${{ env.REGISTRY }}
           IMAGE: ${{ env.REPOSITORY }}
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITPAT }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: |
+            - --label=org.opencontainers.image.title=${{ env.REPOSITORY }}
+            - --label=org.opencontainers.image.description=${{ env.REPOSITORY }}
+            - --label=org.opencontainers.image.url=https://github.com/${{ env.REPOSITORY }}
+            - --label=org.opencontainers.image.source=https://github.com/${{ env.REPOSITORY }}
