@@ -14,7 +14,8 @@ const (
 	StatusUP = "UP"
 )
 
-func (s *Server) Health(c context.Context, r *rpc.HealthRequest) (*rpc.HealthResponse, error) {
+func (s *Server) Health(ctx context.Context, req *rpc.HealthRequest) (*rpc.HealthResponse, error) {
+	s.authorize(ctx)
 	return &rpc.HealthResponse{
 		Status:    StatusUP,
 		Timestamp: timestamppb.Now(),

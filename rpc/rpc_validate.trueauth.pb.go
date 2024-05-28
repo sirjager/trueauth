@@ -26,8 +26,10 @@ type ValidateRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// token to validate
 	Token string `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
-	User  bool   `protobuf:"varint,2,opt,name=user,proto3" json:"user,omitempty"`
+	// set to true to return user in response body
+	User bool `protobuf:"varint,2,opt,name=user,proto3" json:"user,omitempty"`
 }
 
 func (x *ValidateRequest) Reset() {

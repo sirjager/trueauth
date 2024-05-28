@@ -14,7 +14,6 @@ import (
 type Config struct {
 	Database    db.Config
 	Mail        mail.Config
-	RabbitMQURL string `mapstructure:"RABBITMQ_URL"`
 	Server      ServerConfig
 	Auth        AuthConfig
 }

@@ -11,15 +11,27 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/encoding/protojson"
 
+	"github.com/sirjager/trueauth/config"
 	"github.com/sirjager/trueauth/rpc"
 	"github.com/sirjager/trueauth/server"
 	_ "github.com/sirjager/trueauth/statik"
 )
 
-func StartServer(ctx context.Context, wg *errgroup.Group, address string, srvr *server.Server) {
-	// if need any custom headers, add it here to allow
-	allowedIncoming := []string{} // only extends default headers
-	allowedOutgoing := []string{}
+func StartServer(
+	ctx context.Context,
+	wg *errgroup.Group,
+	address string,
+	srvr *server.Server,
+	config config.Config,
+) {
+	// NOTE: Filter headers: + for allowing and - for disallowing
+	incomingHeaders := []string{
+		"+cookie", //
+	}
+	outgoingHeaders := []string{
+		"+x-server-name",
+		"+x-latency",
+	}
 
 	opts := []runtime.ServeMuxOption{
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
@@ -30,9 +42,9 @@ func StartServer(ctx context.Context, wg *errgroup.Group, address string, srvr *
 				EmitUnpopulated: false,
 			},
 		}),
-		runtime.WithIncomingHeaderMatcher(customHeaderMatcher(allowedIncoming)),
-		runtime.WithForwardResponseOption(mutateResponse()),
-		runtime.WithOutgoingHeaderMatcher(customHeaderMatcher(allowedOutgoing)),
+		runtime.WithIncomingHeaderMatcher(customHeaderMatcher(incomingHeaders)),
+		runtime.WithForwardResponseOption(addCustomHeaders(config)),
+		runtime.WithOutgoingHeaderMatcher(customHeaderMatcher(outgoingHeaders)),
 	}
 
 	grpcMux := runtime.NewServeMux(opts...)

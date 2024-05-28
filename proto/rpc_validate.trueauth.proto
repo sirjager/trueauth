@@ -8,11 +8,13 @@ import "model_user.trueauth.proto";
 option go_package = "github.com/sirjager/trueauth/rpc";
 
 message ValidateRequest {
-    string token = 1 [(google.api.field_behavior) = REQUIRED];
-    bool user = 2;
+  // token to validate
+  string token = 1 [(google.api.field_behavior) = REQUIRED];
+  // set to true to return user in response body
+  bool user = 2;
 }
 
 message ValidateResponse {
-    User user = 1;
-    string message = 2;
+  User user = 1;
+  string message = 2;
 }

@@ -5,11 +5,12 @@ package trueauth;
 option go_package = "github.com/sirjager/trueauth/rpc";
 
 message SignoutRequest {
-    // session are optional if you want to target
-    string session = 1;
-    bool all = 2;
+  // set sessionId to signout specific session
+  string session = 1;
+  // set to true to signout all sessions
+  bool all = 2;
 }
 
 message SignoutResponse {
-    string message = 1;
+  string message = 1;
 }

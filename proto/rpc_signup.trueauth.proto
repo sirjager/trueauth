@@ -8,13 +8,14 @@ import "model_user.trueauth.proto";
 option go_package = "github.com/sirjager/trueauth/rpc";
 
 message SignupRequest {
-    string email = 1 [(google.api.field_behavior) = REQUIRED];
-    string username = 2 [(google.api.field_behavior) = REQUIRED];
-    string password = 3 [(google.api.field_behavior) = REQUIRED];
-    string firstname = 4;
-    string lastname = 5;
+  string email = 1 [(google.api.field_behavior) = REQUIRED];
+  string username = 2 [(google.api.field_behavior) = REQUIRED];
+  string password = 3 [(google.api.field_behavior) = REQUIRED];
+  string firstname = 4;
+  string lastname = 5;
 }
 
 message SignupResponse {
-    User user = 1;
+  // if user is set to true, user is returned in response body
+  User user = 1;
 }

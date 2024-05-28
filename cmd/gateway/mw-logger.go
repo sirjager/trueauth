@@ -30,6 +30,7 @@ func logger(logr zerolog.Logger, handler http.Handler) http.Handler {
 			}
 			event = logr.Error().Interface("error", data["message"])
 		}
+
 		event.
 			Str("protocol", "REST").
 			Str("method", req.Method).

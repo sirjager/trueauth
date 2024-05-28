@@ -145,18 +145,21 @@
         "parameters": [
           {
             "name": "user",
+            "description": "set to true to return user in response body",
             "in": "query",
             "required": false,
             "type": "boolean"
           },
           {
             "name": "tokens",
+            "description": "set to true to return tokens in response body",
             "in": "query",
             "required": false,
             "type": "boolean"
           },
           {
             "name": "cookies",
+            "description": "set to true to set cookies in response headers",
             "in": "query",
             "required": false,
             "type": "boolean"
@@ -193,13 +196,14 @@
         "parameters": [
           {
             "name": "session",
-            "description": "session are optional if you want to target",
+            "description": "set sessionId to signout specific session",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "all",
+            "description": "set to true to signout all sessions",
             "in": "query",
             "required": false,
             "type": "boolean"
@@ -518,27 +522,34 @@
       "type": "object",
       "properties": {
         "user": {
-          "$ref": "#/definitions/trueauthUser"
+          "$ref": "#/definitions/trueauthUser",
+          "title": "if user is set, user is returned in response body"
         },
         "sessionId": {
-          "type": "string"
+          "type": "string",
+          "title": "if tokens is set, session_id is returned in response body"
         },
         "accessToken": {
-          "type": "string"
+          "type": "string",
+          "title": "if tokens is set, access_token is returned in response body"
         },
         "refreshToken": {
-          "type": "string"
+          "type": "string",
+          "title": "if tokens is set, refresh_token is returned in response body"
         },
         "accessTokenExpiresAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "if tokens is set, access_token_expires_at is returned in response body"
         },
         "refreshTokenExpiresAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "if tokens is set, refresh_token_expires_at is returned in response body"
         },
         "message": {
-          "type": "string"
+          "type": "string",
+          "title": "successfull message"
         }
       }
     },
@@ -579,7 +590,8 @@
       "type": "object",
       "properties": {
         "user": {
-          "$ref": "#/definitions/trueauthUser"
+          "$ref": "#/definitions/trueauthUser",
+          "title": "if user is set to true, user is returned in response body"
         }
       }
     },
@@ -630,10 +642,12 @@
       "type": "object",
       "properties": {
         "token": {
-          "type": "string"
+          "type": "string",
+          "title": "token to validate"
         },
         "user": {
-          "type": "boolean"
+          "type": "boolean",
+          "title": "set to true to return user in response body"
         }
       },
       "required": [

@@ -29,12 +29,13 @@ const (
 //
 // Extracts authorization header, cookies, verifies and returns AuthorizedUser or error
 func (s *Server) authorize(ctx context.Context, refresh ...bool) (auth AuthorizedUser, err error) {
+	// NOTE: to allow/block headers, edit cmd/gateway/gateway.go -> incomingHeaders
 	meta, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return auth, fmt.Errorf("missing metadata")
 	}
 
-	cookies := meta.Get("grpcgateway-cookie")
+	cookies := meta.Get("cookie")
 	if len(cookies) > 0 {
 		for _, c := range strings.Split(cookies[0], "; ") {
 			if parts := strings.Split(c, "="); len(parts) == 2 {
@@ -52,11 +53,9 @@ func (s *Server) authorize(ctx context.Context, refresh ...bool) (auth Authorize
 
 	//  extracting authorizationHeader
 	values := meta.Get("authorization")
-	if len(values) != 0 {
-		authHeader := values[0]
-		if fields := strings.Fields(authHeader); len(fields) == 2 {
-			auth.token = fields[1]
-		}
+	authHeader := strings.Join(values, ",")
+	if fields := strings.Fields(authHeader); len(fields) == 2 {
+		auth.token = fields[1]
 	}
 
 	if len(auth.token) == 0 {

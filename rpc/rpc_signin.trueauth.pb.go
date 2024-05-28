@@ -26,8 +26,11 @@ type SigninRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	User    bool `protobuf:"varint,1,opt,name=user,proto3" json:"user,omitempty"`
-	Tokens  bool `protobuf:"varint,2,opt,name=tokens,proto3" json:"tokens,omitempty"`
+	// set to true to return user in response body
+	User bool `protobuf:"varint,1,opt,name=user,proto3" json:"user,omitempty"`
+	// set to true to return tokens in response body
+	Tokens bool `protobuf:"varint,2,opt,name=tokens,proto3" json:"tokens,omitempty"`
+	// set to true to set cookies in response headers
 	Cookies bool `protobuf:"varint,3,opt,name=cookies,proto3" json:"cookies,omitempty"`
 }
 
@@ -89,13 +92,20 @@ type SigninResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	User                  *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	SessionId             string                 `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	AccessToken           string                 `protobuf:"bytes,3,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	RefreshToken          string                 `protobuf:"bytes,4,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	AccessTokenExpiresAt  *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=access_token_expires_at,json=accessTokenExpiresAt,proto3" json:"access_token_expires_at,omitempty"`
+	// if user is set, user is returned in response body
+	User *User `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	// if tokens is set, session_id is returned in response body
+	SessionId string `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	// if tokens is set, access_token is returned in response body
+	AccessToken string `protobuf:"bytes,3,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	// if tokens is set, refresh_token is returned in response body
+	RefreshToken string `protobuf:"bytes,4,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	// if tokens is set, access_token_expires_at is returned in response body
+	AccessTokenExpiresAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=access_token_expires_at,json=accessTokenExpiresAt,proto3" json:"access_token_expires_at,omitempty"`
+	// if tokens is set, refresh_token_expires_at is returned in response body
 	RefreshTokenExpiresAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=refresh_token_expires_at,json=refreshTokenExpiresAt,proto3" json:"refresh_token_expires_at,omitempty"`
-	Message               string                 `protobuf:"bytes,7,opt,name=message,proto3" json:"message,omitempty"`
+	// successfull message
+	Message string `protobuf:"bytes,7,opt,name=message,proto3" json:"message,omitempty"`
 }
 
 func (x *SigninResponse) Reset() {

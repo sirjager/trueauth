@@ -48,7 +48,7 @@ func init() {
 
 func main() {
 	// NOTE: change name of .env file here. For defaults, use "defaults"
-	config, err := config.LoadConfigs(".", "prod")
+	config, err := config.LoadConfigs(".", "defaults")
 	if err != nil {
 		logr.Fatal().Err(err).Msg("failed to load configurations")
 	}
@@ -139,7 +139,7 @@ func main() {
 	// start rest server if port is not empty
 	if config.Server.RestPort != "" {
 		address := config.Server.Host + ":" + config.Server.RestPort
-		gateway.StartServer(ctx, wg, address, srvr)
+		gateway.StartServer(ctx, wg, address, srvr, config)
 	}
 
 	// start grpc server if port is not empty

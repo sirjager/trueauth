@@ -25,9 +25,10 @@ type SignoutRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// session are optional if you want to target
+	// set sessionId to signout specific session
 	Session string `protobuf:"bytes,1,opt,name=session,proto3" json:"session,omitempty"`
-	All     bool   `protobuf:"varint,2,opt,name=all,proto3" json:"all,omitempty"`
+	// set to true to signout all sessions
+	All bool `protobuf:"varint,2,opt,name=all,proto3" json:"all,omitempty"`
 }
 
 func (x *SignoutRequest) Reset() {

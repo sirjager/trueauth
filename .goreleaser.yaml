@@ -20,6 +20,9 @@ builds:
     goarch:
       - amd64
     no_unique_dist_dir: true
+    hooks:
+      post:
+        - cp -f defaults.env dist
 
   - id: windows-amd64
     binary: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
@@ -28,6 +31,9 @@ builds:
     goarch:
       - amd64
     no_unique_dist_dir: true
+    hooks:
+      post:
+        - cp -f defaults.env dist
 
 archives:
   - format: tar.xz
