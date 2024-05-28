@@ -4,7 +4,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/sirjager/trueauth/db/db"
-	rpc "github.com/sirjager/trueauth/stubs"
+	rpc "github.com/sirjager/trueauth/rpc"
 )
 
 func publicProfile(user *db.Profile) *rpc.User {

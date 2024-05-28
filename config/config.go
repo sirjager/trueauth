@@ -12,10 +12,11 @@ import (
 
 // Config represents the application configuration.
 type Config struct {
-	Server   ServerConfig // holds the configuration for server itself
-	Database db.Config    // holds the configuration for the database.
-	Mail     mail.Config  // holds the configuration for the email smtp server.
-	Auth     AuthConfig   // holds the configuration for the auth.
+	Database    db.Config
+	Mail        mail.Config
+	RabbitMQURL string `mapstructure:"RABBITMQ_URL"`
+	Server      ServerConfig
+	Auth        AuthConfig
 }
 
 // LoadConfigs loads the configuration from the specified YAML file.

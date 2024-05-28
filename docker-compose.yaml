@@ -36,8 +36,7 @@ services:
       - trueauth-pg:/var/lib/postgresql/data
     networks:
       - trueauth-proxy
-    # Disable ports in production
-    ports: [5432:5432]
+    ports: [5432:5432]  # Disable ports in production
 
   redis:
     <<: *x-logging
@@ -51,8 +50,7 @@ services:
       - trueauth-redis:/data
     networks:
       - trueauth-proxy
-    # Disable ports in production
-    ports: [6379:6379]
+    ports: [6381:6379]   # Disable ports in production
 
   # trueauth:
   #   <<: *x-logging

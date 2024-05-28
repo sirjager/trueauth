@@ -12,7 +12,7 @@ import (
 	"github.com/sirjager/trueauth/db/db"
 	"github.com/sirjager/trueauth/pkg/tokens"
 	"github.com/sirjager/trueauth/pkg/utils"
-	rpc "github.com/sirjager/trueauth/stubs"
+	rpc "github.com/sirjager/trueauth/rpc"
 	"github.com/sirjager/trueauth/worker"
 )
 
@@ -62,8 +62,8 @@ func (s *Server) Verify(ctx context.Context, req *rpc.VerifyRequest) (*rpc.Verif
 			Code:      code,
 			UserID:    user.ID,
 			UserEmail: user.Email,
-			ClientIP:  meta.ClientIP,
-			UserAgent: meta.UserAgent,
+			ClientIP:  meta.clientIP,
+			UserAgent: meta.userAgent,
 		}
 		token, _, tokenErr := s.tokens.CreateToken(tokenParams, s.config.Auth.VerifyTokenExpDur)
 		if tokenErr != nil {

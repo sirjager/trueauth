@@ -12,11 +12,11 @@ import (
 	"github.com/sirjager/trueauth/pkg/hash"
 	"github.com/sirjager/trueauth/pkg/utils"
 	"github.com/sirjager/trueauth/pkg/validator"
-	rpc "github.com/sirjager/trueauth/stubs"
+	rpc "github.com/sirjager/trueauth/rpc"
 )
 
 func (s *Server) Signup(ctx context.Context, req *rpc.SignupRequest) (*rpc.SignupResponse, error) {
-	// NOTE: returns invalid requests
+	// returns invalid requests
 	if violations := validateSignupRequest(req); violations != nil {
 		return nil, invalidArgumentsError(violations)
 	}
@@ -35,6 +35,7 @@ func (s *Server) Signup(ctx context.Context, req *rpc.SignupRequest) (*rpc.Signu
 		HashPass:  hashedPassword,
 		Firstname: req.GetFirstname(),
 		Lastname:  req.GetLastname(),
+		Verified: true,
 	}
 
 	user, err := s.store.CreateUser(ctx, createUserParams)

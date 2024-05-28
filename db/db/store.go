@@ -1,7 +1,7 @@
 package db
 
 import (
-	_"github.com/golang/mock/mockgen/model"
+	_ "github.com/golang/mock/mockgen/model"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

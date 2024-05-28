@@ -8,33 +8,6 @@ import (
 	"time"
 )
 
-type Session struct {
-	// refresh token id
-	ID []byte `json:"id"`
-	// refresh token
-	RefreshToken string `json:"refresh_token"`
-	// access token id
-	AccessTokenID []byte `json:"access_token_id"`
-	// short lived access token
-	AccessToken string `json:"access_token"`
-	// client ip address
-	ClientIp string `json:"client_ip"`
-	// client user agent
-	UserAgent string `json:"user_agent"`
-	// id of the user assigned to this session
-	UserID []byte `json:"user_id"`
-	// session is blocked or not
-	Blocked bool `json:"blocked"`
-	// expiration time of access token
-	AccessTokenExpiresAt time.Time `json:"access_token_expires_at"`
-	// expiration time of a refresh token
-	RefreshTokenExpiresAt time.Time `json:"refresh_token_expires_at"`
-	// created at timestamp of this session
-	CreatedAt time.Time `json:"created_at"`
-	// last updated at timestamp of this session
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
 type User struct {
 	// account id
 	ID []byte `json:"id"`

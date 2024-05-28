@@ -16,14 +16,17 @@ import (
 	"github.com/sirjager/trueauth/pkg/tokens"
 	"github.com/sirjager/trueauth/pkg/utils"
 	"github.com/sirjager/trueauth/pkg/validator"
-	rpc "github.com/sirjager/trueauth/stubs"
+	rpc "github.com/sirjager/trueauth/rpc"
 	"github.com/sirjager/trueauth/worker"
 )
 
 const passwordResetCodeDigitsCount = 7
 
-func (s *Server) Reset(ctx context.Context, req *rpc.ResetRequest) (*rpc.ResetResponse, error) {
-	// NOTE: this will validate email new pasword and everything
+func (s *Server) Reset(
+	ctx context.Context,
+	req *rpc.ResetRequest,
+) (*rpc.ResetResponse, error) {
+	//  this will validate email new pasword and everything
 	if violations := validateResetRequest(req); violations != nil {
 		return nil, invalidArgumentsError(violations)
 	}
@@ -32,7 +35,7 @@ func (s *Server) Reset(ctx context.Context, req *rpc.ResetRequest) (*rpc.ResetRe
 	user, err := s.store.ReadUserByEmail(ctx, req.GetEmail())
 	if err != nil {
 		if errors.Is(err, db.ErrRecordNotFound) {
-			// NOTE: we don't want to disclose if user exists or not, so we simply return email sent.
+			// we don't want to disclose if user exists or not, so we simply return email sent.
 			return &rpc.ResetResponse{Message: "you will receive an email shortly"}, nil
 		}
 		// if something else goes wrong, we return error
@@ -41,7 +44,7 @@ func (s *Server) Reset(ctx context.Context, req *rpc.ResetRequest) (*rpc.ResetRe
 
 	meta := s.extractMetadata(ctx)
 
-	// NOTE: If code is not provided, that means user does not have password reset code,
+	// If code is not provided, that means user does not have password reset code,
 	// we will create a new one and send it to user via email
 	if req.GetCode() == "" {
 		// check if user has requested deletion code recently, if yes, then return error
@@ -60,8 +63,8 @@ func (s *Server) Reset(ctx context.Context, req *rpc.ResetRequest) (*rpc.ResetRe
 			Code:      code,
 			UserID:    user.ID,
 			UserEmail: user.Email,
-			ClientIP:  meta.ClientIP,
-			UserAgent: meta.UserAgent,
+			ClientIP:  meta.clientIP,
+			UserAgent: meta.userAgent,
 		}
 		token, _, tokenErr := s.tokens.CreateToken(params, s.config.Auth.ResetTokenExpDur)
 		if tokenErr != nil {
@@ -95,7 +98,7 @@ func (s *Server) Reset(ctx context.Context, req *rpc.ResetRequest) (*rpc.ResetRe
 		return &rpc.ResetResponse{Message: "check your inbox for further instructions"}, nil
 	}
 
-	// NOTE: If code is not empty, we will check if it is valid and process it
+	// If code is not empty, we will check if it is valid and process it
 	//
 	// this will validate if token is invalid or expired  and what not...
 	tokenPayoad, err := s.tokens.VerifyToken(user.TokenPasswordReset)
@@ -103,7 +106,7 @@ func (s *Server) Reset(ctx context.Context, req *rpc.ResetRequest) (*rpc.ResetRe
 		return nil, status.Errorf(_unauthenticated, err.Error())
 	}
 
-	// NOTE: we can also return a normal errors like: "invalid code" instead of detailed error
+	// we can also return a normal errors like: "invalid code" instead of detailed error
 	if tokenPayoad.Payload.Code != req.GetCode() {
 		return nil, status.Errorf(_unauthenticated, "invalid code, code does not match")
 	}
@@ -116,10 +119,10 @@ func (s *Server) Reset(ctx context.Context, req *rpc.ResetRequest) (*rpc.ResetRe
 
 	// following 2 checks are optional, there is no need to enforce same ip and useragent
 	// but it makes whole process more secure
-	if tokenPayoad.Payload.UserAgent != meta.UserAgent {
+	if tokenPayoad.Payload.UserAgent != meta.userAgent {
 		return nil, status.Errorf(_unauthenticated, "invalid code, user agent does not match")
 	}
-	if tokenPayoad.Payload.ClientIP != meta.ClientIP {
+	if tokenPayoad.Payload.ClientIP != meta.clientIP {
 		return nil, status.Errorf(_unauthenticated, "invalid code, client ip does not match")
 	}
 
@@ -134,12 +137,6 @@ func (s *Server) Reset(ctx context.Context, req *rpc.ResetRequest) (*rpc.ResetRe
 			ID:       user.ID,
 			HashSalt: hashingSalt,
 			HashPass: hashedPassword,
-		},
-		BeforeUpdate: func() error {
-			if req.GetSignoutAll() {
-				return s.store.DeleteSessionByUserID(ctx, user.ID)
-			}
-			return nil
 		},
 	}); err != nil {
 		return nil, status.Errorf(_internal, err.Error())

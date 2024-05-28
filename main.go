@@ -47,48 +47,42 @@ func init() {
 }
 
 func main() {
-	// INFO: change name of .env file here. For defaults, use "defaults"
+	// NOTE: change name of .env file here. For defaults, use "defaults"
 	config, err := config.LoadConfigs(".", "prod")
 	if err != nil {
 		logr.Fatal().Err(err).Msg("failed to load configurations")
 	}
+	config.Server.StartTime = startTime
+	logr = logr.With().Str("server", config.Server.ServerName).Logger()
+	docs.SwaggerInfo.Host = fmt.Sprintf("%s:%s", config.Server.Host, config.Server.Port)
 
 	ctx, stop := signal.NotifyContext(context.Background(), interuptSignals...)
 	defer stop()
 
 	wg, ctx := errgroup.WithContext(ctx)
 
-	docs.SwaggerInfo.Host = fmt.Sprintf("%s:%s", config.Server.Host, config.Server.Port)
-
-	// NOTE: store server start time in config
-	config.Server.StartTime = startTime
-	// NOTE: store email template in config
-
-	// NOTE: update server name in logger
-	logr = logr.With().Str("server", config.Server.ServerName).Logger()
-
-	// NOTE: initialize database
+	// initialize database
 	database, conn, err := dbPkg.NewDatabae(ctx, config.Database, logr)
 	if err != nil {
 		logr.Fatal().Err(err).Msg("failed to create new database instance")
 	}
 	defer database.Close()
 
-	// NOTE: migrate database to latest version
+	// migrate database to latest version
 	if err = database.MigrateUsingBindata(); err != nil {
 		logr.Fatal().Err(err).Msg("failed to migrate database")
 	}
 
-	// NOTE: initialize mailer for sending emails
+	// initialize mailer for sending emails
 	mailer, err := mail.NewGmailSender(config.Mail)
 	if err != nil {
 		logr.Fatal().Err(err).Msg("failed to initialize gmail smtp")
 	}
 
-	// NOTE: initialize store for database operations
+	// initialize store for database operations
 	store := db.NewStore(conn)
 
-	// NOTE: initialize redis for task distributor
+	// initialize redis for task distributor
 	redisOpt := asynq.RedisClientOpt{
 		Addr:     config.Database.RedisAddr,
 		Password: config.Database.RedisPass,
@@ -106,7 +100,7 @@ func main() {
 	tasks := worker.NewRedisTaskDistributor(logr, redisOpt)
 	defer tasks.Shutdown()
 
-	// NOTE: redis client for cache system
+	// redis client for cache system
 	redisClient := redis.NewClient(&redis.Options{Addr: redisOpt.Addr})
 	if pingErr := redisClient.Ping(ctx).Err(); pingErr != nil {
 		logr.Fatal().Err(pingErr).Msg("failed to ping redis client")
@@ -114,7 +108,7 @@ func main() {
 	defer redisClient.Close()
 	cache := cache.NewCacheRedis(redisClient, logr)
 
-	// NOTE: initialize token builder for token generation
+	// initialize token builder for token generation
 	tokens, err := tokens.NewPasetoBuilder(config.Auth.Secret)
 	if err != nil {
 		logr.Fatal().Err(err).Msg("failed to create token builder")
@@ -133,23 +127,26 @@ func main() {
 		Config: config,
 	}
 
-	// NOTE: initialize server with logr, config, store, tasks, mailer, and tokens
-	srvr := server.NewServer(adapters)
+	// initialize server
+	srvr, err := server.New(adapters)
+	if err != nil {
+		logr.Fatal().Err(err).Msg("failed to initialize server")
+	}
 
-	// NOTE: start rest server if port is not empty
+	// start task processor to process tasks in background
+	worker.RunTaskProcessor(ctx, wg, logr, store, mailer, config, redisOpt)
+
+	// start rest server if port is not empty
 	if config.Server.RestPort != "" {
 		address := config.Server.Host + ":" + config.Server.RestPort
 		gateway.StartServer(ctx, wg, address, srvr)
 	}
 
-	// NOTE: start grpc server if port is not empty
+	// start grpc server if port is not empty
 	if config.Server.GrpcPort != "" {
 		address := config.Server.Host + ":" + config.Server.GrpcPort
 		grpc.RunServer(ctx, wg, address, srvr)
 	}
-
-	// NOTE: start task processor to process tasks in background
-	worker.RunTaskProcessor(ctx, wg, logr, store, mailer, config, redisOpt)
 
 	err = wg.Wait()
 	if err != nil {

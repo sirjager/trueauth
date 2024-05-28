@@ -29,9 +29,10 @@ const (
 
 const (
 	errUserDoesNotExist     = "user does not exists: %s"
-	errUnauthorized         = "unauthorized, invalid or expired token"
+	errInvalidToken         = "unauthorized, invalid token"
+	errExpiredToken         = "unauthorized, expired token"
 	errMissingAuthorization = "unauthorized, missing or invalid token"
 	errFailedToRetrieveUser = "failed to retrieve user: %s"
-	errEmailNotVerified     = "email not verified, please verify your email first"
+	errEmailNotVerified     = "email not verified"
 	errEmailNotRegistered   = "email not registered"
 )

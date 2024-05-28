@@ -6,15 +6,14 @@ import (
 	"fmt"
 	"net/http"
 
-
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rakyll/statik/fs"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	_ "github.com/sirjager/trueauth/statik"
+	"github.com/sirjager/trueauth/rpc"
 	"github.com/sirjager/trueauth/server"
-	"github.com/sirjager/trueauth/stubs"
+	_ "github.com/sirjager/trueauth/statik"
 )
 
 func StartServer(ctx context.Context, wg *errgroup.Group, address string, srvr *server.Server) {
@@ -24,21 +23,21 @@ func StartServer(ctx context.Context, wg *errgroup.Group, address string, srvr *
 
 	opts := []runtime.ServeMuxOption{
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
-			UnmarshalOptions: protojson.UnmarshalOptions{DiscardUnknown: false},
+			UnmarshalOptions: protojson.UnmarshalOptions{DiscardUnknown: true},
 			MarshalOptions: protojson.MarshalOptions{
 				UseProtoNames:   false,
 				UseEnumNumbers:  false,
 				EmitUnpopulated: false,
 			},
 		}),
-		runtime.WithIncomingHeaderMatcher(customHeaderMatcher(srvr.Logr, allowedIncoming)),
-		runtime.WithForwardResponseOption(mutateResponse(srvr.Logr)),
-		runtime.WithOutgoingHeaderMatcher(customHeaderMatcher(srvr.Logr, allowedOutgoing)),
+		runtime.WithIncomingHeaderMatcher(customHeaderMatcher(allowedIncoming)),
+		runtime.WithForwardResponseOption(mutateResponse()),
+		runtime.WithOutgoingHeaderMatcher(customHeaderMatcher(allowedOutgoing)),
 	}
 
 	grpcMux := runtime.NewServeMux(opts...)
 
-	err := stubs.RegisterTrueAuthHandlerServer(ctx, grpcMux, srvr)
+	err := rpc.RegisterTrueAuthHandlerServer(ctx, grpcMux, srvr)
 	if err != nil {
 		srvr.Logr.Fatal().Err(err).Msg("can not register handler server")
 	}

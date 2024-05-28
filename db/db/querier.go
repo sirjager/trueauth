@@ -9,15 +9,8 @@ import (
 )
 
 type Querier interface {
-	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	DeleteSession(ctx context.Context, id []byte) error
-	DeleteSessionByAccessTokenID(ctx context.Context, accessTokenID []byte) error
-	DeleteSessionByUserID(ctx context.Context, userID []byte) error
 	DeleteUser(ctx context.Context, id []byte) error
-	ReadSession(ctx context.Context, id []byte) (Session, error)
-	ReadSessionByAccessTokenID(ctx context.Context, accessTokenID []byte) (Session, error)
-	ReadSessionsByUserID(ctx context.Context, arg ReadSessionsByUserIDParams) ([]Session, error)
 	ReadUser(ctx context.Context, id []byte) (User, error)
 	ReadUserByEmail(ctx context.Context, email string) (User, error)
 	ReadUserByUsername(ctx context.Context, username string) (User, error)

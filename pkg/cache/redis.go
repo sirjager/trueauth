@@ -16,11 +16,18 @@ type redisCache struct {
 	logr   zerolog.Logger
 }
 
-var ErrNoRecord = redis.Nil
+var (
+	ErrNoRecord  = redis.Nil
+	ErrUnMarshal = errors.New("failed to unmarshal data")
+)
 
 // NewRedisClient creates a new RedisClient
 func NewCacheRedis(client *redis.Client, logr zerolog.Logger) Cache {
 	return &redisCache{client, logr}
+}
+
+func (r *redisCache) Flush(ctx context.Context) error {
+	return r.client.FlushAll(ctx).Err()
 }
 
 func (r *redisCache) Set(
@@ -35,39 +42,91 @@ func (r *redisCache) Set(
 	}
 	data, err := json.Marshal(value)
 	if err != nil {
-		r.logr.Error().Err(err).Msgf("failed to marshal redis cache for key::%s", key)
 		return err
 	}
 	err = r.client.Set(ctx, key, data, expirationTime).Err()
 	if err != nil {
-		r.logr.Error().Err(err).Msgf("failed to set redis cache for key::%s", key)
 		return err
 	}
 	return nil
-}
-
-func (r *redisCache) Get(ctx context.Context, key string, value any) error {
-	data, err := r.client.Get(ctx, key).Bytes()
-	if err != nil {
-		if errors.Is(err, ErrNoRecord) {
-			r.logr.Error().Err(err).Msgf("no record found for key::%s", key)
-			return err
-		}
-		r.logr.Error().Err(err).Msgf("failed to get redis cache for key::%s", key)
-		return err
-	}
-	return json.Unmarshal(data, value)
 }
 
 func (r *redisCache) Delete(ctx context.Context, keys ...string) error {
 	err := r.client.Del(ctx, keys...).Err()
 	if err != nil {
-		r.logr.Error().Err(err).Msgf("failed to delete redis cache for key::%v", keys)
 		return err
 	}
 	return nil
 }
 
-func (r *redisCache) Flush(ctx context.Context) error {
-	return r.client.FlushAll(ctx).Err()
+func (r *redisCache) DeleteWithPrefix(ctx context.Context, prefix string) error {
+	var cursor uint64 = 0
+	var keysToDelete []string
+	for {
+		keys, nextCursor, err := r.client.Scan(ctx, cursor, prefix+"*", -1).Result()
+		if err != nil {
+			return err
+		}
+		keysToDelete = append(keysToDelete, keys...)
+		cursor = nextCursor
+		if cursor == 0 {
+			break
+		}
+	}
+	return r.Delete(ctx, keysToDelete...)
+}
+
+func (r *redisCache) GetKeys(ctx context.Context, pattern string) ([]string, error) {
+	keys, err := r.client.Keys(ctx, pattern).Result()
+	if err != nil {
+		return nil, err
+	}
+	return keys, nil
+}
+
+func (r *redisCache) GetKeysWithPrefix(ctx context.Context, prefix string) ([]string, error) {
+	pattern := prefix + "*"
+	return r.GetKeys(ctx, pattern)
+}
+
+func (r *redisCache) Get(ctx context.Context, key string, value interface{}) error {
+	data, err := r.client.Get(ctx, key).Bytes()
+	if err != nil {
+		if errors.Is(err, ErrNoRecord) {
+			// can do somethig here, or return different error
+			return err // key does not exist
+		}
+		return err
+	}
+
+	if err = json.Unmarshal(data, &value); err != nil {
+		return ErrUnMarshal
+	}
+	return nil
+}
+
+func (r *redisCache) GetWithPrefix(ctx context.Context, prefix string, values any) error {
+	keys, err := r.GetKeysWithPrefix(ctx, prefix)
+	if err != nil {
+		if errors.Is(err, ErrNoRecord) {
+			// can do somethig here, or return different error
+			return err // key does not exist
+		}
+		return err
+	}
+	if len(keys) == 0 {
+		return ErrNoRecord
+	}
+
+	for _, key := range keys {
+		data, err := r.client.Get(ctx, key).Bytes()
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(data, values)
+		if err != nil {
+			return ErrUnMarshal
+		}
+	}
+	return nil
 }

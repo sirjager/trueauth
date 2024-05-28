@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	rpc "github.com/sirjager/trueauth/stubs"
+	"github.com/sirjager/trueauth/rpc"
 )
 
 // welcomeMessage returns a formatted welcome message string.

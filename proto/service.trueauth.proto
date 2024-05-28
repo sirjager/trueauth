@@ -1,0 +1,208 @@
+syntax = "proto3";
+
+package trueauth;
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "rpc_delete.trueauth.proto";
+import "rpc_health.trueauth.proto";
+import "rpc_refresh.trueauth.proto";
+import "rpc_reset.trueauth.proto";
+import "rpc_signin.trueauth.proto";
+import "rpc_signout.trueauth.proto";
+import "rpc_signup.trueauth.proto";
+import "rpc_user.trueauth.proto";
+import "rpc_validate.trueauth.proto";
+import "rpc_verify.trueauth.proto";
+import "rpc_welcome.trueauth.proto";
+
+option go_package = "github.com/sirjager/trueauth/rpc";
+// Define OpenAPI v2 options for generating Swagger documentation.
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "TrueAuth";
+    version: "0.1.0";
+    contact: {
+      name: "SirJager";
+      url: "https://github.com/sirjager/trueauth";
+    };
+  };
+
+  schemes: HTTP;
+  schemes: HTTPS;
+  schemes: WSS;
+  consumes: "application/json";
+  produces: "application/json";
+
+  security_definitions: {
+    security: {
+      key: "BasicAuth";
+      value: {type: TYPE_BASIC}
+    }
+
+    security: {
+      key: "AccessToken";
+      value: {
+        type: TYPE_API_KEY;
+        in: IN_HEADER;
+        name: "Authorization";
+      }
+    }
+
+    security: {
+      key: "RefreshToken";
+      value: {
+        type: TYPE_API_KEY;
+        in: IN_HEADER;
+        name: "Authorization";
+      }
+    }
+
+    //
+  }
+};
+
+// Micro service
+service TrueAuth {
+  // Define OpenAPI v2 options for generating tags and external documentation.
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_tag) = {
+    description: "True Auth is a standalone authentication gRPC and rest api";
+    external_docs: {
+      url: "https://github.com/sirjager/trueauth";
+      description: "Find out more about TrueAuth";
+    };
+  };
+
+  // Welcome endpoint returns a welcome message.
+  rpc Welcome(WelcomeRequest) returns (WelcomeResponse) {
+    option (google.api.http) = {get: "/"};
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "welcome message";
+      tags: "System";
+    };
+  }
+
+  // Health endpoint returns the health status of the API.
+  rpc Health(HealthRequest) returns (HealthResponse) {
+    option (google.api.http) = {get: "/v1/health"};
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "api health";
+      tags: "System";
+    };
+  }
+
+  // NOTE: ===================== Authentication ===============================
+
+  rpc Signup(SignupRequest) returns (SignupResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/signup"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "signup new user";
+      tags: "Authentication";
+    };
+  }
+
+  rpc Signin(SigninRequest) returns (SigninResponse) {
+    option (google.api.http) = {
+      get: "/v1/auth/signin"
+      //
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "signin user";
+      tags: "Authentication";
+      security: {
+        security_requirement: {key: "BasicAuth"}
+      }
+    };
+  }
+
+  rpc Validate(ValidateRequest) returns (ValidateResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/validate"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "validates token";
+      tags: "Authentication";
+    };
+  }
+
+  rpc Signout(SignoutRequest) returns (SignoutResponse) {
+    option (google.api.http) = {
+      delete: "/v1/auth/signout"
+      //
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "signout sessions";
+      tags: "Authentication";
+      security: {
+        security_requirement: {key: "AccessToken"}
+      }
+    };
+  }
+
+  rpc Refresh(RefreshRequest) returns (RefreshResponse) {
+    option (google.api.http) = {
+      get: "/v1/auth/refresh"
+      //
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "refresh access token";
+      tags: "Authentication";
+      security: {
+        security_requirement: {key: "RefreshToken"}
+      }
+    };
+  }
+
+  rpc Reset(ResetRequest) returns (ResetResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/reset"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "password reset";
+      tags: "Authentication";
+    };
+  }
+
+  rpc Verify(VerifyRequest) returns (VerifyResponse) {
+    option (google.api.http) = {get: "/v1/auth/verify"};
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "email verification"
+      tags: "Authentication";
+    };
+  }
+
+  rpc Delete(DeleteRequest) returns (DeleteResponse) {
+    option (google.api.http) = {
+      delete: "/v1/auth/user"
+      //
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "user deletion";
+      tags: "Authentication";
+      security: {
+        security_requirement: {key: "AccessToken"}
+      }
+    };
+  }
+
+  rpc User(UserRequest) returns (UserResponse) {
+    option (google.api.http) = {
+      get: "/v1/auth/user"
+      //
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "get user";
+      tags: "Authentication";
+      security: {
+        security_requirement: {key: "AccessToken"}
+      }
+    };
+  }
+
+  //
+}

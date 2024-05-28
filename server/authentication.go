@@ -14,7 +14,8 @@ import (
 )
 
 type Authenticated struct {
-	Profile *db.Profile
+	profile *db.Profile
+	MetaData
 }
 
 const (
@@ -86,10 +87,14 @@ func (s *Server) authenticate(ctx context.Context) (authenticated Authenticated,
 		return authenticated, fmt.Errorf(errInvalidCredentials)
 	}
 
-	authenticated.Profile, err = user.Profile()
+	authenticated.profile, err = user.Profile()
 	if err != nil {
 		return authenticated, fmt.Errorf("failed to retrieve profile: %s", err.Error())
 	}
+
+	meta_ := s.extractMetadata(ctx)
+	authenticated.clientIP = meta_.clientIP
+	authenticated.userAgent = meta_.userAgent
 
 	return authenticated, err
 }

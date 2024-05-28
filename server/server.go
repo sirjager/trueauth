@@ -9,13 +9,13 @@ import (
 	"github.com/sirjager/trueauth/pkg/hash"
 	"github.com/sirjager/trueauth/pkg/mail"
 	"github.com/sirjager/trueauth/pkg/tokens"
-	"github.com/sirjager/trueauth/stubs"
+	"github.com/sirjager/trueauth/rpc"
 	"github.com/sirjager/trueauth/worker"
 )
 
 // Server represents the core service of your application.
 type Server struct {
-	stubs.UnimplementedTrueAuthServer
+	rpc.UnimplementedTrueAuthServer
 	Logr   zerolog.Logger
 	store  db.Store
 	tokens tokens.TokenBuilder
@@ -38,7 +38,7 @@ type Adapters struct {
 }
 
 // NewServer creates a new instance of the Service.
-func NewServer(adapters *Adapters) *Server {
+func New(adapters *Adapters) (*Server, error) {
 	return &Server{
 		Logr:   adapters.Logr,
 		store:  adapters.Store,
@@ -48,5 +48,5 @@ func NewServer(adapters *Adapters) *Server {
 		cache:  adapters.Cache,
 		tokens: adapters.Tokens,
 		config: adapters.Config,
-	}
+	}, nil
 }

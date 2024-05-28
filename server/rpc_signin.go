@@ -2,88 +2,101 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/sirjager/trueauth/db/db"
 	"github.com/sirjager/trueauth/pkg/tokens"
 	"github.com/sirjager/trueauth/pkg/utils"
-	rpc "github.com/sirjager/trueauth/stubs"
+	rpc "github.com/sirjager/trueauth/rpc"
 )
 
-func (s *Server) Signin(ctx context.Context, req *rpc.SigninRequest) (*rpc.SigninResponse, error) {
-	authenticated, err := s.authenticate(ctx)
+func sessionKey(userID []byte, sessionID string) string {
+	return fmt.Sprintf("sess:%s:%s", utils.BytesToBase64(userID), sessionID)
+}
+
+func userSessionsKey(userID []byte) string {
+	return fmt.Sprintf("sess:%s", utils.BytesToBase64(userID))
+}
+
+func tokenKey(userID []byte, sessionID, tokenType string) string {
+	return fmt.Sprintf(
+		"sess:%s:%s:%s", // sess:userID:sessionID:(refresh|access)
+		utils.BytesToBase64(userID), sessionID, tokenType,
+	)
+}
+
+func (s *Server) Signin(
+	ctx context.Context,
+	req *rpc.SigninRequest,
+) (*rpc.SigninResponse, error) {
+	auth, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, status.Errorf(_unauthenticated, err.Error())
 	}
 
-	meta := s.extractMetadata(ctx)
+	sessionID := utils.XIDNew().String()
 
-	tokenParams := tokens.PayloadData{UserID: authenticated.Profile.ID, Type: "access"}
-	accessTokenDuration := s.config.Auth.AccessTokenExpDur
-	accessToken, accessPayload, err := s.tokens.CreateToken(tokenParams, accessTokenDuration)
+	tokenPayload := tokens.PayloadData{
+		UserID:    auth.profile.ID,
+		ClientIP:  auth.clientIP,
+		UserAgent: auth.userAgent,
+		SessionID: sessionID,
+	}
+
+	aTDuration := s.config.Auth.AccessTokenExpDur
+	aToken, aPayload, err := s.tokens.CreateToken(tokenPayload, aTDuration)
 	if err != nil {
 		return nil, status.Errorf(_internal, err.Error())
 	}
 
-	tokenParams.Type = "refresh"
-	refreshTokenDuration := s.config.Auth.RefreshTokenExpDur
-	refreshToken, refreshPayload, err := s.tokens.CreateToken(tokenParams, refreshTokenDuration)
+	rTDuration := s.config.Auth.RefreshTokenExpDur
+	rToken, rPayload, err := s.tokens.CreateToken(tokenPayload, rTDuration)
 	if err != nil {
 		return nil, status.Errorf(_internal, err.Error())
 	}
 
-	// create new session
-	createSessionParams := db.CreateSessionParams{
-		ID:                    refreshPayload.ID,
-		ClientIp:              meta.ClientIP,
-		UserAgent:             meta.UserAgent,
-		RefreshToken:          refreshToken,
-		RefreshTokenExpiresAt: refreshPayload.ExpiresAt,
-		AccessTokenID:         accessPayload.ID,
-		AccessToken:           accessToken,
-		AccessTokenExpiresAt:  accessPayload.ExpiresAt,
-		UserID:                authenticated.Profile.ID,
-		Blocked:               false,
+	accessKey := tokenKey(auth.profile.ID, sessionID, TokenTypeAccess)
+	if err = s.cache.Set(ctx, accessKey, aPayload, aTDuration); err != nil {
+		return nil, status.Errorf(_internal, err.Error())
 	}
 
-	// save new session in store
-	session, err := s.store.CreateSession(ctx, createSessionParams)
-	if err != nil {
+	refreshKey := tokenKey(auth.profile.ID, sessionID, TokenTypeRefresh)
+	if err = s.cache.Set(ctx, refreshKey, rPayload, rTDuration); err != nil {
 		return nil, status.Errorf(_internal, err.Error())
 	}
 
 	response := &rpc.SigninResponse{Message: "successfully signed in"}
 
 	if req.GetTokens() {
-		response.SessionId = session.ID
-		response.AccessToken = accessToken
-		response.RefreshToken = refreshToken
-		response.AccessTokenExpiresAt = timestamppb.New(accessPayload.ExpiresAt)
-		response.RefreshTokenExpiresAt = timestamppb.New(refreshPayload.ExpiresAt)
+		response.SessionId = sessionID
+		response.AccessToken = aToken
+		response.RefreshToken = rToken
+		response.AccessTokenExpiresAt = timestamppb.New(aPayload.ExpiresAt)
+		response.RefreshTokenExpiresAt = timestamppb.New(rPayload.ExpiresAt)
 	}
 
 	if req.GetUser() {
-		response.User = publicProfile(authenticated.Profile)
+		response.User = publicProfile(auth.profile)
 	}
 
 	if req.GetCookies() {
 		if err = s.sendCookies(ctx, []http.Cookie{
 			{
-				Name: "sessionId", Value: utils.BytesToBase64(session.ID),
-				Path: "/", Expires: accessPayload.ExpiresAt,
+				Name: "sessionId", Value: sessionID,
+				Path: "/", Expires: aPayload.ExpiresAt,
 				HttpOnly: true, SameSite: http.SameSiteDefaultMode, Secure: false,
 			},
 			{
-				Name: "accessToken", Value: accessToken,
-				Path: "/", Expires: accessPayload.ExpiresAt,
+				Name: "accessToken", Value: aToken,
+				Path: "/", Expires: aPayload.ExpiresAt,
 				HttpOnly: true, SameSite: http.SameSiteDefaultMode, Secure: false,
 			},
 			{
-				Name: "refreshToken", Value: refreshToken,
-				Path: "/", Expires: refreshPayload.ExpiresAt,
+				Name: "refreshToken", Value: rToken,
+				Path: "/", Expires: rPayload.ExpiresAt,
 				HttpOnly: true, SameSite: http.SameSiteDefaultMode, Secure: false,
 			},
 		}); err != nil {

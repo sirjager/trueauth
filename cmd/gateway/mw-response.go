@@ -7,16 +7,11 @@ import (
 	"strings"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/rs/zerolog"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func mutateResponse(
-	logr zerolog.Logger,
-) func(context.Context, http.ResponseWriter, protoreflect.ProtoMessage) error {
-	logr.Info().Str("middleware", "mutateResponse").Msg(REGISTER)
+func mutateResponse() func(context.Context, http.ResponseWriter, protoreflect.ProtoMessage) error {
 	return func(ctx context.Context, w http.ResponseWriter, m protoreflect.ProtoMessage) error {
-
 		if md, ok := runtime.ServerMetadataFromContext(ctx); ok {
 			for k, v := range md.HeaderMD {
 				if strings.HasPrefix(k, "set-cookie:") {

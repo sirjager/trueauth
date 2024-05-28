@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package trueauth;
+
+import "model_user.trueauth.proto";
+
+option go_package = "github.com/sirjager/trueauth/rpc";
+
+message VerifyRequest {
+    string email = 1;
+    string code = 2;
+}
+
+message VerifyResponse {
+    User user = 1;
+    string message = 2;
+}

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package trueauth;
+
+import "google/protobuf/timestamp.proto";
+import "model_user.trueauth.proto";
+
+option go_package = "github.com/sirjager/trueauth/rpc";
+
+message RefreshRequest {
+    bool user = 1;
+    bool tokens = 2;
+    bool cookies = 3;
+}
+
+message RefreshResponse {
+    string session_id = 1;
+    string access_token = 2;
+    google.protobuf.Timestamp access_token_expires_at = 4;
+    User user = 5;
+    string message = 6;
+}

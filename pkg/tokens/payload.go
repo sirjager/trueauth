@@ -9,7 +9,7 @@ import (
 
 var (
 	// ErrExpiredToken is returned when a token has expired
-	ErrExpiredToken = errors.New("token expired")
+	ErrExpiredToken = errors.New("expired token")
 
 	// ErrInvalidToken is returned when a token is invalid
 	ErrInvalidToken = errors.New("invalid token")
@@ -18,19 +18,19 @@ var (
 // PayloadData contains the payload data of the token
 type PayloadData struct {
 	Code      string `json:"code,omitempty"`
-	Type      string `json:"type,omitempty"`
-	UserID    []byte `json:"user_id,omitempty"`
+	SessionID string `json:"session_id,omitempty"`
 	UserEmail string `json:"user_email,omitempty"`
 	ClientIP  string `json:"client_ip,omitempty"`
 	UserAgent string `json:"user_agent,omitempty"`
+	UserID    []byte `json:"user_id,omitempty"`
 }
 
 // Payload contains the payload data of the token
 type Payload struct {
 	IssuedAt  time.Time   `json:"iat,omitempty"`
 	ExpiresAt time.Time   `json:"expires,omitempty"`
+	ID        string      `json:"id,omitempty"`
 	Payload   PayloadData `json:"payload,omitempty"`
-	ID        []byte      `json:"id,omitempty"`
 }
 
 // NewPayload creates a new payload for a specific username and duration
@@ -38,7 +38,7 @@ func NewPayload(p PayloadData, duration time.Duration) (*Payload, error) {
 	payload := &Payload{
 		Payload:   p,
 		IssuedAt:  time.Now(),
-		ID:        utils.XIDNew().Bytes(),
+		ID:        utils.XIDNew().String(),
 		ExpiresAt: time.Now().Add(duration),
 	}
 	return payload, nil

@@ -12,8 +12,6 @@ builds:
     hooks:
       post:
         - cp -f defaults.env dist
-        - cp -f LICENSE dist
-        - cp -f README.md dist
 
   - id: darwin-amd64
     binary: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
@@ -36,8 +34,6 @@ archives:
     name_template: "{{.ProjectName}}_{{.Os}}_{{.Arch}}"
     files:
       - defaults.env
-      - LICENSE
-      - README.md
 
 checksum:
   name_template: "{{.ProjectName}}_checksums.txt"

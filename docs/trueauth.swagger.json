@@ -8,16 +8,6 @@
       "url": "https://github.com/sirjager/trueauth"
     }
   },
-  "tags": [
-    {
-      "name": "TrueAuth",
-      "description": "True Auth is a standalone authentication gRPC and rest api",
-      "externalDocs": {
-        "description": "Find out more about TrueAuth",
-        "url": "https://github.com/sirjager/trueauth"
-      }
-    }
-  ],
   "schemes": [
     "http",
     "https",
@@ -74,6 +64,18 @@
         "parameters": [
           {
             "name": "user",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "tokens",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "cookies",
             "in": "query",
             "required": false,
             "type": "boolean"
@@ -308,6 +310,39 @@
         ]
       }
     },
+    "/v1/auth/validate": {
+      "post": {
+        "summary": "validates token",
+        "operationId": "TrueAuth_Validate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/trueauthValidateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/trueauthValidateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
     "/v1/auth/verify": {
       "get": {
         "summary": "email verification",
@@ -433,8 +468,7 @@
       "type": "object",
       "properties": {
         "sessionId": {
-          "type": "string",
-          "format": "byte"
+          "type": "string"
         },
         "accessToken": {
           "type": "string"
@@ -445,6 +479,9 @@
         },
         "user": {
           "$ref": "#/definitions/trueauthUser"
+        },
+        "message": {
+          "type": "string"
         }
       }
     },
@@ -484,8 +521,7 @@
           "$ref": "#/definitions/trueauthUser"
         },
         "sessionId": {
-          "type": "string",
-          "format": "byte"
+          "type": "string"
         },
         "accessToken": {
           "type": "string"
@@ -587,6 +623,31 @@
       "properties": {
         "user": {
           "$ref": "#/definitions/trueauthUser"
+        }
+      }
+    },
+    "trueauthValidateRequest": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        },
+        "user": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "token"
+      ]
+    },
+    "trueauthValidateResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "$ref": "#/definitions/trueauthUser"
+        },
+        "message": {
+          "type": "string"
         }
       }
     },

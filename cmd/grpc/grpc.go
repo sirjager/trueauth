@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/sirjager/trueauth/server"
-	"github.com/sirjager/trueauth/stubs"
+	"github.com/sirjager/trueauth/rpc"
 )
 
 func RunServer(ctx context.Context, wg *errgroup.Group, address string, srvr *server.Server) {
@@ -30,7 +30,7 @@ func RunServer(ctx context.Context, wg *errgroup.Group, address string, srvr *se
 		grpc.MaxConcurrentStreams(100), // to limit max concurrent streams
 	)
 
-	stubs.RegisterTrueAuthServer(grpcServer, srvr)
+	rpc.RegisterTrueAuthServer(grpcServer, srvr)
 
 	reflection.Register(grpcServer)
 
