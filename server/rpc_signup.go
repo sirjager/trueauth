@@ -8,10 +8,10 @@ import (
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/status"
 
+	"github.com/sirjager/gopkg/hash"
+	"github.com/sirjager/gopkg/utils"
+	"github.com/sirjager/gopkg/validator"
 	"github.com/sirjager/trueauth/db/db"
-	"github.com/sirjager/trueauth/pkg/hash"
-	"github.com/sirjager/trueauth/pkg/utils"
-	"github.com/sirjager/trueauth/pkg/validator"
 	rpc "github.com/sirjager/trueauth/rpc"
 )
 

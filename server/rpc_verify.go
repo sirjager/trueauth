@@ -9,9 +9,9 @@ import (
 	"github.com/hibiken/asynq"
 	"google.golang.org/grpc/status"
 
+	"github.com/sirjager/gopkg/tokens"
+	"github.com/sirjager/gopkg/utils"
 	"github.com/sirjager/trueauth/db/db"
-	"github.com/sirjager/trueauth/pkg/tokens"
-	"github.com/sirjager/trueauth/pkg/utils"
 	rpc "github.com/sirjager/trueauth/rpc"
 	"github.com/sirjager/trueauth/worker"
 )

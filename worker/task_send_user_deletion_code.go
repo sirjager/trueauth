@@ -7,7 +7,7 @@ import (
 
 	"github.com/hibiken/asynq"
 
-	"github.com/sirjager/trueauth/pkg/mail"
+	"github.com/sirjager/gopkg/mail"
 )
 
 const TaskSendUserDeletionCode = "task:sendEmailUserDeletion"

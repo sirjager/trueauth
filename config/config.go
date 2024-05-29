@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/sirjager/trueauth/pkg/db"
-	"github.com/sirjager/trueauth/pkg/mail"
+	"github.com/sirjager/gopkg/db"
+	"github.com/sirjager/gopkg/mail"
 )
 
 // Config represents the application configuration.

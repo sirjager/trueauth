@@ -12,6 +12,12 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
+	"github.com/sirjager/gopkg/cache"
+	dbPkg "github.com/sirjager/gopkg/db"
+	"github.com/sirjager/gopkg/hash"
+	"github.com/sirjager/gopkg/mail"
+	"github.com/sirjager/gopkg/tokens"
+	"github.com/sirjager/gopkg/utils"
 	"github.com/swaggo/swag/example/basic/docs"
 	"golang.org/x/sync/errgroup"
 
@@ -19,11 +25,7 @@ import (
 	"github.com/sirjager/trueauth/cmd/grpc"
 	"github.com/sirjager/trueauth/config"
 	"github.com/sirjager/trueauth/db/db"
-	"github.com/sirjager/trueauth/pkg/cache"
-	dbPkg "github.com/sirjager/trueauth/pkg/db"
-	"github.com/sirjager/trueauth/pkg/hash"
-	"github.com/sirjager/trueauth/pkg/mail"
-	"github.com/sirjager/trueauth/pkg/tokens"
+	"github.com/sirjager/trueauth/migrations"
 	"github.com/sirjager/trueauth/server"
 	"github.com/sirjager/trueauth/worker"
 )
@@ -44,11 +46,13 @@ func init() {
 	startTime = time.Now()
 	logr = zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: false})
 	logr = logr.With().Timestamp().Logger()
+	asd := utils.RandomInt(0, 100)
+	fmt.Println(asd)
 }
 
 func main() {
 	// NOTE: change name of .env file here. For defaults, use "defaults"
-	config, err := config.LoadConfigs(".", "defaults")
+	config, err := config.LoadConfigs(".", "prod")
 	if err != nil {
 		logr.Fatal().Err(err).Msg("failed to load configurations")
 	}
@@ -69,7 +73,7 @@ func main() {
 	defer database.Close()
 
 	// migrate database to latest version
-	if err = database.MigrateUsingBindata(); err != nil {
+	if err = database.MigrateUsingBindata(migrations.AssetNames(), migrations.Asset); err != nil {
 		logr.Fatal().Err(err).Msg("failed to migrate database")
 	}
 

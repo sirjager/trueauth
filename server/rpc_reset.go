@@ -11,11 +11,11 @@ import (
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/status"
 
+	"github.com/sirjager/gopkg/utils"
 	"github.com/sirjager/trueauth/db/db"
-	"github.com/sirjager/trueauth/pkg/hash"
-	"github.com/sirjager/trueauth/pkg/tokens"
-	"github.com/sirjager/trueauth/pkg/utils"
-	"github.com/sirjager/trueauth/pkg/validator"
+	"github.com/sirjager/gopkg/hash"
+	"github.com/sirjager/gopkg/tokens"
+	"github.com/sirjager/gopkg/validator"
 	rpc "github.com/sirjager/trueauth/rpc"
 	"github.com/sirjager/trueauth/worker"
 )

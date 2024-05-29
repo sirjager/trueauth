@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/sirjager/trueauth/pkg/tokens"
-	"github.com/sirjager/trueauth/pkg/utils"
+	"github.com/sirjager/gopkg/tokens"
+	"github.com/sirjager/gopkg/utils"
 	rpc "github.com/sirjager/trueauth/rpc"
 )
 
