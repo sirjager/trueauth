@@ -1,21 +1,22 @@
 package config
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/sirjager/gopkg/db"
+	"github.com/sirjager/gopkg/mail"
 	"github.com/spf13/viper"
 
-	"github.com/sirjager/trueauth/pkg/db"
-	"github.com/sirjager/trueauth/pkg/mail"
+	"github.com/sirjager/trueauth/logger"
 )
 
 // Config represents the application configuration.
 type Config struct {
-	Database    db.Config
-	Mail        mail.Config
-	Server      ServerConfig
-	Auth        AuthConfig
+	Database db.Config
+	Mail     mail.Config
+	Logger   logger.Config
+	Server   ServerConfig
+	Auth     AuthConfig
 }
 
 // LoadConfigs loads the configuration from the specified YAML file.
@@ -41,6 +42,10 @@ func LoadConfigs(path string, name string) (config Config, err error) {
 		return
 	}
 
+	if err = viper.Unmarshal(&config.Logger); err != nil {
+		return
+	}
+
 	if err = viper.Unmarshal(&config.Database); err != nil {
 		return
 	}
@@ -48,19 +53,9 @@ func LoadConfigs(path string, name string) (config Config, err error) {
 	config.Database.Migrations = "file://" + config.Database.Migrations
 
 	// Construct the DBUrl using the DBConfig values.
-	config.Database.URL = fmt.Sprintf(
-		"%s://%s:%s@%s:%s/%s%s",
-		config.Database.Driver,
-		config.Database.User,
-		config.Database.Pass,
-		config.Database.Host,
-		config.Database.Port,
-		config.Database.Name,
-		config.Database.Args,
-	)
-
 	if config.Server.ServerName == "" {
 		config.Server.ServerName, _ = os.Hostname()
+		config.Logger.ServerName, _ = os.Hostname()
 	}
 
 	return

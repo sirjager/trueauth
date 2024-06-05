@@ -9,8 +9,8 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
+	"github.com/sirjager/gopkg/validator"
 	"github.com/sirjager/trueauth/db/db"
-	"github.com/sirjager/trueauth/pkg/validator"
 )
 
 type Authenticated struct {

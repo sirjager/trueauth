@@ -9,9 +9,9 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
+	"github.com/sirjager/gopkg/cache"
+	"github.com/sirjager/gopkg/tokens"
 	"github.com/sirjager/trueauth/db/db"
-	"github.com/sirjager/trueauth/pkg/cache"
-	"github.com/sirjager/trueauth/pkg/tokens"
 )
 
 type AuthorizedUser struct {

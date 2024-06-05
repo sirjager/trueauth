@@ -7,9 +7,9 @@ import (
 	"github.com/rs/zerolog"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/sirjager/gopkg/mail"
 	"github.com/sirjager/trueauth/config"
 	"github.com/sirjager/trueauth/db/db"
-	"github.com/sirjager/trueauth/pkg/mail"
 )
 
 func RunTaskProcessor(
