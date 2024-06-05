@@ -11,13 +11,12 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/hibiken/asynq"
-	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/sirjager/gopkg/cache"
 	dbPkg "github.com/sirjager/gopkg/db"
 	"github.com/sirjager/gopkg/hash"
 	"github.com/sirjager/gopkg/mail"
 	"github.com/sirjager/gopkg/tokens"
-	"github.com/sirjager/gopkg/utils"
 	"github.com/swaggo/swag/example/basic/docs"
 	"golang.org/x/sync/errgroup"
 
@@ -25,15 +24,13 @@ import (
 	"github.com/sirjager/trueauth/cmd/grpc"
 	"github.com/sirjager/trueauth/config"
 	"github.com/sirjager/trueauth/db/db"
+	"github.com/sirjager/trueauth/logger"
 	"github.com/sirjager/trueauth/migrations"
 	"github.com/sirjager/trueauth/server"
 	"github.com/sirjager/trueauth/worker"
 )
 
-var (
-	logr      zerolog.Logger
-	startTime time.Time
-)
+var startTime time.Time
 
 // NOTE: Listenting to thse signals for gracefull shutdown
 var interuptSignals = []os.Signal{
@@ -44,21 +41,22 @@ var interuptSignals = []os.Signal{
 
 func init() {
 	startTime = time.Now()
-	logr = zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: false})
-	logr = logr.With().Timestamp().Logger()
-	asd := utils.RandomInt(0, 100)
-	fmt.Println(asd)
 }
 
 func main() {
 	// NOTE: change name of .env file here. For defaults, use "defaults"
 	config, err := config.LoadConfigs(".", "prod")
 	if err != nil {
-		logr.Fatal().Err(err).Msg("failed to load configurations")
+		log.Fatal().Err(err).Msg("failed to load configurations")
 	}
 	config.Server.StartTime = startTime
-	logr = logr.With().Str("server", config.Server.ServerName).Logger()
 	docs.SwaggerInfo.Host = fmt.Sprintf("%s:%s", config.Server.Host, config.Server.Port)
+
+	logger, err := logger.NewLogger(config.Logger)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to initialize logger")
+	}
+	defer logger.Close()
 
 	ctx, stop := signal.NotifyContext(context.Background(), interuptSignals...)
 	defer stop()
@@ -66,21 +64,21 @@ func main() {
 	wg, ctx := errgroup.WithContext(ctx)
 
 	// initialize database
-	database, conn, err := dbPkg.NewDatabae(ctx, config.Database, logr)
+	database, conn, err := dbPkg.NewDatabae(ctx, config.Database, logger.Logr)
 	if err != nil {
-		logr.Fatal().Err(err).Msg("failed to create new database instance")
+		logger.Logr.Fatal().Err(err).Msg("failed to create new database instance")
 	}
 	defer database.Close()
 
 	// migrate database to latest version
 	if err = database.MigrateUsingBindata(migrations.AssetNames(), migrations.Asset); err != nil {
-		logr.Fatal().Err(err).Msg("failed to migrate database")
+		logger.Logr.Fatal().Err(err).Msg("failed to migrate database")
 	}
 
 	// initialize mailer for sending emails
 	mailer, err := mail.NewGmailSender(config.Mail)
 	if err != nil {
-		logr.Fatal().Err(err).Msg("failed to initialize gmail smtp")
+		logger.Logr.Fatal().Err(err).Msg("failed to initialize gmail smtp")
 	}
 
 	// initialize store for database operations
@@ -101,28 +99,28 @@ func main() {
 			redisOpt.Network = opts.Network
 		}
 	}
-	tasks := worker.NewRedisTaskDistributor(logr, redisOpt)
+	tasks := worker.NewRedisTaskDistributor(logger.Logr, redisOpt)
 	defer tasks.Shutdown()
 
 	// redis client for cache system
 	redisClient := redis.NewClient(&redis.Options{Addr: redisOpt.Addr})
 	if pingErr := redisClient.Ping(ctx).Err(); pingErr != nil {
-		logr.Fatal().Err(pingErr).Msg("failed to ping redis client")
+		logger.Logr.Fatal().Err(pingErr).Msg("failed to ping redis client")
 	}
 	defer redisClient.Close()
-	cache := cache.NewCacheRedis(redisClient, logr)
+	cache := cache.NewCacheRedis(redisClient, logger.Logr)
 
 	// initialize token builder for token generation
 	tokens, err := tokens.NewPasetoBuilder(config.Auth.Secret)
 	if err != nil {
-		logr.Fatal().Err(err).Msg("failed to create token builder")
+		logger.Logr.Fatal().Err(err).Msg("failed to create token builder")
 	}
 
 	hasher := hash.NewBryptHash()
 
 	adapters := &server.Adapters{
 		Cache:  cache,
-		Logr:   logr,
+		Logr:   logger.Logr,
 		Store:  store,
 		Tasks:  tasks,
 		Mail:   mailer,
@@ -134,11 +132,11 @@ func main() {
 	// initialize server
 	srvr, err := server.New(adapters)
 	if err != nil {
-		logr.Fatal().Err(err).Msg("failed to initialize server")
+		logger.Logr.Fatal().Err(err).Msg("failed to initialize server")
 	}
 
 	// start task processor to process tasks in background
-	worker.RunTaskProcessor(ctx, wg, logr, store, mailer, config, redisOpt)
+	worker.RunTaskProcessor(ctx, wg, logger.Logr, store, mailer, config, redisOpt)
 
 	// start rest server if port is not empty
 	if config.Server.RestPort != "" {
@@ -154,6 +152,6 @@ func main() {
 
 	err = wg.Wait()
 	if err != nil {
-		logr.Fatal().Err(err).Msg("error from wait group")
+		logger.Logr.Fatal().Err(err).Msg("error from wait group")
 	}
 }

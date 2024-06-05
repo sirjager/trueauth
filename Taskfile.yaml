@@ -77,6 +77,11 @@ tasks:
       - go mod tidy
       # - go mod vendor
 
+  update:
+    desc: runs go get -u ./
+    cmd: go get -u ./...
+
+
   test:
     desc: run go test
     cmds:

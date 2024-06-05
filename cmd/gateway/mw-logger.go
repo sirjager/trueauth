@@ -32,13 +32,12 @@ func logger(logr zerolog.Logger, handler http.Handler) http.Handler {
 		}
 
 		event.
-			Str("protocol", "REST").
 			Str("method", req.Method).
 			Str("path", req.RequestURI).
-			Str("duration", duration.String()).
+			Str("latency", duration.String()).
 			Int("code", int(rec.StatusCode)).
-			Str("status", http.StatusText(rec.StatusCode)).
-			Msg("")
+			// Str("status", http.StatusText(rec.StatusCode)).
+			Msg("|")
 	})
 }
 

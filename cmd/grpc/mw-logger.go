@@ -29,12 +29,11 @@ func Logger(
 		}
 
 		event.
-			Str("protocol", "gRPC").
-			Str("method", info.FullMethod).
+			Str("path", info.FullMethod).
 			Int("code", int(statusCode)).
-			Str("status", statusCode.String()).
-			Str("duration", duration.String()).
-			Msg("")
+			// Str("status", statusCode.String()).
+			Str("latency", duration.String()).
+			Msg("|")
 
 		return res, err
 	}
