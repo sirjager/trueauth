@@ -45,7 +45,7 @@ func init() {
 
 func main() {
 	// NOTE: change name of .env file here. For defaults, use "defaults"
-	config, err := config.LoadConfigs(".", "prod")
+	config, err := config.LoadConfigs(".", "defaults")
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to load configurations")
 	}
