@@ -14,7 +14,7 @@ require (
 	github.com/rakyll/statik v0.1.7
 	github.com/rs/xid v1.5.0
 	github.com/rs/zerolog v1.33.0
-	github.com/sirjager/gopkg v0.2.0
+	github.com/sirjager/gopkg v0.2.1
 	github.com/spf13/viper v1.19.0
 	github.com/swaggo/swag v1.16.3
 	go.uber.org/mock v0.4.0
