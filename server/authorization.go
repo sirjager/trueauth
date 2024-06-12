@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"strings"
 
-	"google.golang.org/grpc/metadata"
-
 	"github.com/sirjager/gopkg/cache"
 	"github.com/sirjager/gopkg/tokens"
+	"google.golang.org/grpc/metadata"
+
 	"github.com/sirjager/trueauth/db/db"
 )
 
@@ -32,7 +32,9 @@ func (s *Server) authorize(ctx context.Context, refresh ...bool) (auth Authorize
 	// NOTE: to allow/block headers, edit cmd/gateway/gateway.go -> incomingHeaders
 	meta, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return auth, fmt.Errorf("missing metadata")
+		err = fmt.Errorf("missing metadata from context")
+		s.Logr.Error().Err(err).Msg("missing metadata from context")
+		return auth, err
 	}
 
 	cookies := meta.Get("cookie")
@@ -59,6 +61,7 @@ func (s *Server) authorize(ctx context.Context, refresh ...bool) (auth Authorize
 	}
 
 	if len(auth.token) == 0 {
+		s.Logr.Error().Err(err).Msg("missing authorization token")
 		return auth, fmt.Errorf(errMissingAuthorization)
 	}
 
@@ -66,8 +69,10 @@ func (s *Server) authorize(ctx context.Context, refresh ...bool) (auth Authorize
 	incoming, err := s.tokens.VerifyToken(auth.token)
 	if err != nil {
 		if errors.Is(tokens.ErrExpiredToken, err) {
+			s.Logr.Error().Err(err).Msg("expired authorization token")
 			return auth, fmt.Errorf(errExpiredToken)
 		}
+		s.Logr.Error().Err(err).Msg("failed to verify authorization token")
 		return auth, fmt.Errorf(errInvalidToken)
 	}
 	auth.payload = incoming
@@ -79,22 +84,27 @@ func (s *Server) authorize(ctx context.Context, refresh ...bool) (auth Authorize
 	}
 	if err = s.cache.Get(ctx, _key, &stored); err != nil {
 		if errors.Is(cache.ErrNoRecord, err) {
+			s.Logr.Error().Err(err).Msg("session not found")
 			return auth, fmt.Errorf(errInvalidToken)
 		}
-		return auth, fmt.Errorf(errInvalidToken)
+		s.Logr.Error().Err(err).Msg("failed to get session")
+		return auth, err
 	}
 
 	// checking if user exits or not, using user id of token
 	auth.user, err = s.store.ReadUser(ctx, stored.Payload.UserID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			s.Logr.Error().Err(err).Msg("user not found")
 			return auth, fmt.Errorf(errInvalidToken)
 		}
+		s.Logr.Error().Err(err).Msg("failed to get user")
 		return auth, err
 	}
 
 	// check if user is verified
 	if !auth.user.Verified {
+		s.Logr.Error().Msg("email not verified")
 		return auth, fmt.Errorf(errEmailNotVerified)
 	}
 

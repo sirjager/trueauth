@@ -43,6 +43,29 @@
         ]
       }
     },
+    "/health": {
+      "get": {
+        "summary": "api health",
+        "operationId": "TrueAuth_Health",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/trueauthHealthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "System"
+        ]
+      }
+    },
     "/v1/auth/refresh": {
       "get": {
         "summary": "refresh access token",
@@ -383,29 +406,6 @@
           "Authentication"
         ]
       }
-    },
-    "/v1/health": {
-      "get": {
-        "summary": "api health",
-        "operationId": "TrueAuth_Health",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/trueauthHealthResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "tags": [
-          "System"
-        ]
-      }
     }
   },
   "definitions": {
@@ -450,7 +450,15 @@
       "properties": {
         "status": {
           "type": "string",
-          "description": "Status represents the current status of the API."
+          "title": "Status represents the current status of the service"
+        },
+        "service": {
+          "type": "string",
+          "description": "service is the name of the service."
+        },
+        "server": {
+          "type": "string",
+          "description": "server is the name of the current server."
         },
         "uptime": {
           "type": "string",

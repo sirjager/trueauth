@@ -10,15 +10,21 @@ option go_package = "github.com/sirjager/trueauth/rpc";
 message HealthRequest {}
 
 message HealthResponse {
-    // Status represents the current status of the API.
+    // Status represents the current status of the service
     string status = 1;
 
+    // service is the name of the service.
+    string service = 2;
+
+    // server is the name of the current server.
+    string server = 3;
+
     // Uptime represents the duration since the API was started.
-    google.protobuf.Duration uptime = 2;
+    google.protobuf.Duration uptime = 4;
 
     // Started represents the timestamp when the API was started.
-    google.protobuf.Timestamp started = 3;
+    google.protobuf.Timestamp started = 5;
 
     // Timestamp represents the current timestamp.
-    google.protobuf.Timestamp timestamp = 4;
+    google.protobuf.Timestamp timestamp = 6;
 }

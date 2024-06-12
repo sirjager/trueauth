@@ -7,10 +7,12 @@ import (
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/sirjager/trueauth/server"
 	"github.com/sirjager/trueauth/rpc"
+	"github.com/sirjager/trueauth/server"
 )
 
 func RunServer(ctx context.Context, wg *errgroup.Group, address string, srvr *server.Server) {
@@ -31,8 +33,12 @@ func RunServer(ctx context.Context, wg *errgroup.Group, address string, srvr *se
 	)
 
 	rpc.RegisterTrueAuthServer(grpcServer, srvr)
-
 	reflection.Register(grpcServer)
+
+	// health server to check if server is up
+	healthServer := health.NewServer()
+	healthpb.RegisterHealthServer(grpcServer, healthServer)
+	healthServer.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
 
 	listener, err := net.Listen("tcp", address)
 	if err != nil {

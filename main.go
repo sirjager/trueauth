@@ -23,6 +23,7 @@ import (
 	"github.com/sirjager/trueauth/cmd/gateway"
 	"github.com/sirjager/trueauth/cmd/grpc"
 	"github.com/sirjager/trueauth/config"
+	"github.com/sirjager/trueauth/consul"
 	"github.com/sirjager/trueauth/db/db"
 	"github.com/sirjager/trueauth/logger"
 	"github.com/sirjager/trueauth/migrations"
@@ -45,12 +46,11 @@ func init() {
 
 func main() {
 	// NOTE: change name of .env file here. For defaults, use "defaults"
-	config, err := config.LoadConfigs(".", "defaults")
+	config, err := config.LoadConfigs(".", "defaults", startTime)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to load configurations")
 	}
-	config.Server.StartTime = startTime
-	docs.SwaggerInfo.Host = fmt.Sprintf("%s:%s", config.Server.Host, config.Server.Port)
+	docs.SwaggerInfo.Host = fmt.Sprintf("%s:%d", config.Host, config.RestPort)
 
 	logger, err := logger.NewLogger(config.Logger)
 	if err != nil {
@@ -84,26 +84,24 @@ func main() {
 	// initialize store for database operations
 	store := db.NewStore(conn)
 
-	// initialize redis for task distributor
-	redisOpt := asynq.RedisClientOpt{
-		Addr:     config.Database.RedisAddr,
-		Password: config.Database.RedisPass,
-		Username: config.Database.RedisUser,
+	rOpts, pErr := redis.ParseURL(config.Database.RedisURL)
+	if pErr != nil {
+		logger.Logr.Fatal().Err(pErr).Msg("failed to parse redis url")
 	}
-	if config.Database.RedisURL != "" {
-		if opts, pErr := redis.ParseURL(config.Database.RedisURL); pErr != nil {
-			redisOpt.Addr = opts.Addr
-			redisOpt.Username = opts.Username
-			redisOpt.Password = opts.Password
-			redisOpt.TLSConfig = opts.TLSConfig
-			redisOpt.Network = opts.Network
-		}
+	redisOpt := asynq.RedisClientOpt{
+		Addr:      rOpts.Addr,
+		Password:  rOpts.Password,
+		Username:  rOpts.Username,
+		Network:   rOpts.Network,
+		TLSConfig: rOpts.TLSConfig,
+		DB:        rOpts.DB,
+		PoolSize:  rOpts.PoolSize,
 	}
 	tasks := worker.NewRedisTaskDistributor(logger.Logr, redisOpt)
 	defer tasks.Shutdown()
 
 	// redis client for cache system
-	redisClient := redis.NewClient(&redis.Options{Addr: redisOpt.Addr})
+	redisClient := redis.NewClient(rOpts)
 	if pingErr := redisClient.Ping(ctx).Err(); pingErr != nil {
 		logger.Logr.Fatal().Err(pingErr).Msg("failed to ping redis client")
 	}
@@ -139,15 +137,27 @@ func main() {
 	worker.RunTaskProcessor(ctx, wg, logger.Logr, store, mailer, config, redisOpt)
 
 	// start rest server if port is not empty
-	if config.Server.RestPort != "" {
-		address := config.Server.Host + ":" + config.Server.RestPort
+	if config.RestPort != 0 {
+		address := fmt.Sprintf("%s:%d", config.Host, config.RestPort)
 		gateway.StartServer(ctx, wg, address, srvr, config)
 	}
 
 	// start grpc server if port is not empty
-	if config.Server.GrpcPort != "" {
-		address := config.Server.Host + ":" + config.Server.GrpcPort
+	if config.GrpcPort != 0 {
+		address := fmt.Sprintf("%s:%d", config.Host, config.GrpcPort)
 		grpc.RunServer(ctx, wg, address, srvr)
+	}
+
+	if config.Consul.ConsulAddr != "" {
+		consul, cErr := consul.NewClient(log.Logger, config.Consul)
+		if cErr != nil {
+			logger.Logr.Fatal().Err(cErr).Msg("failed to initialize consul client")
+		}
+		if cErr = consul.Register(); cErr != nil {
+			logger.Logr.Fatal().Err(cErr).Msg("failed to register service in consul")
+		}
+		logger.Logr.Info().Msg("successfully registered service in consul")
+		defer consul.Deregister()
 	}
 
 	err = wg.Wait()

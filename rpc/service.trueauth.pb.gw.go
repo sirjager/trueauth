@@ -406,7 +406,7 @@ func RegisterTrueAuthHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/trueauth.TrueAuth/Health", runtime.WithHTTPPathPattern("/v1/health"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/trueauth.TrueAuth/Health", runtime.WithHTTPPathPattern("/health"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -717,7 +717,7 @@ func RegisterTrueAuthHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/trueauth.TrueAuth/Health", runtime.WithHTTPPathPattern("/v1/health"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/trueauth.TrueAuth/Health", runtime.WithHTTPPathPattern("/health"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -937,7 +937,7 @@ func RegisterTrueAuthHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 var (
 	pattern_TrueAuth_Welcome_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{""}, ""))
 
-	pattern_TrueAuth_Health_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "health"}, ""))
+	pattern_TrueAuth_Health_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"health"}, ""))
 
 	pattern_TrueAuth_Signup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "auth", "signup"}, ""))
 

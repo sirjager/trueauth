@@ -84,7 +84,7 @@ service TrueAuth {
 
   // Health endpoint returns the health status of the API.
   rpc Health(HealthRequest) returns (HealthResponse) {
-    option (google.api.http) = {get: "/v1/health"};
+    option (google.api.http) = {get: "/health"};
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       summary: "api health";
       tags: "System";
