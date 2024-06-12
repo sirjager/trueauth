@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sirjager/gopkg/utils"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/status"
 
-	"github.com/sirjager/gopkg/hash"
-	"github.com/sirjager/gopkg/utils"
-	"github.com/sirjager/gopkg/validator"
 	"github.com/sirjager/trueauth/db/db"
+	"github.com/sirjager/trueauth/internal/hash"
 	rpc "github.com/sirjager/trueauth/rpc"
 )
 
@@ -45,37 +44,32 @@ func (s *Server) Signup(ctx context.Context, req *rpc.SignupRequest) (*rpc.Signu
 		return nil, status.Errorf(_internal, err.Error())
 	}
 
-	profile, err := user.Profile()
-	if err != nil {
-		return nil, status.Errorf(_internal, err.Error())
-	}
-
-	return &rpc.SignupResponse{User: publicProfile(profile)}, nil
+	return &rpc.SignupResponse{User: publicProfile(user)}, nil
 }
 
 func validateSignupRequest(
 	req *rpc.SignupRequest,
 ) (violations []*errdetails.BadRequest_FieldViolation) {
-	if err := validator.ValidateEmail(req.GetEmail()); err != nil {
+	if err := validateEmail(req.GetEmail()); err != nil {
 		violations = append(violations, fieldViolation("email", err))
 	}
 
-	if err := validator.ValidateUsername(req.GetUsername()); err != nil {
+	if err := validateUsername(req.GetUsername()); err != nil {
 		violations = append(violations, fieldViolation("username", err))
 	}
 
-	if err := validator.ValidatePassword(req.GetPassword()); err != nil {
+	if err := validatePassword(req.GetPassword()); err != nil {
 		violations = append(violations, fieldViolation("password", err))
 	}
 
 	if req.GetFirstname() != "" {
-		if err := validator.ValidateName(req.GetFirstname()); err != nil {
+		if err := validateName(req.GetFirstname()); err != nil {
 			violations = append(violations, fieldViolation("firstname", err))
 		}
 	}
 
 	if req.GetLastname() != "" {
-		if err := validator.ValidateName(req.GetLastname()); err != nil {
+		if err := validateName(req.GetLastname()); err != nil {
 			violations = append(violations, fieldViolation("lastname", err))
 		}
 	}

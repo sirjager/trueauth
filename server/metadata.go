@@ -10,35 +10,48 @@ import (
 	"google.golang.org/grpc/peer"
 )
 
-type MetaData struct {
-	userAgent string
-	clientIP  string
+type MetaData interface {
+	clientIP() string
+	userAgent() string
 }
 
-func (s *Server) extractMetadata(ctx context.Context) *MetaData {
-	meta := &MetaData{}
+type _MetaData struct {
+	_userAgent string
+	_clientIP  string
+}
+
+func (s *Server) extractMetadata(ctx context.Context) MetaData {
+	meta := &_MetaData{}
 
 	// For gRPC client-ip
 	if p, ok := peer.FromContext(ctx); ok {
-		meta.clientIP = p.Addr.String()
+		meta._clientIP = p.Addr.String()
 	}
 
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		//  For HTTP user-agent
 		if userAgent := md.Get("grpcgateway-user-agent"); len(userAgent) > 0 {
-			meta.userAgent = userAgent[0]
+			meta._userAgent = userAgent[0]
 		}
 		//  For HTTP client-ip
 		if clientIP := md.Get("x-forwarded-for"); len(clientIP) > 0 {
-			meta.clientIP = clientIP[0]
+			meta._clientIP = clientIP[0]
 		}
 		//  For gRPC user-agent
 		if userAgent := md.Get("user-agent"); len(userAgent) > 0 {
-			meta.userAgent = userAgent[0]
+			meta._userAgent = userAgent[0]
 		}
 	}
 
 	return meta
+}
+
+func (m *_MetaData) clientIP() string {
+	return m._clientIP
+}
+
+func (m *_MetaData) userAgent() string {
+	return m._userAgent
 }
 
 func (s *Server) sendHeaders(ctx context.Context, headers map[string]string) error {

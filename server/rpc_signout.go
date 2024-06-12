@@ -30,7 +30,7 @@ func (s *Server) Signout(
 
 	if req.GetAll() {
 		// delete all session for this user
-		if err = s.cache.DeleteWithPrefix(ctx, userSessionsKey(auth.user.ID)); err != nil {
+		if err = s.cache.DeleteWithPrefix(ctx, userSessionsKey(auth.User().ID)); err != nil {
 			return nil, status.Errorf(_internal, err.Error())
 		}
 		if err = removeCookies(ctx); err != nil {
@@ -40,13 +40,13 @@ func (s *Server) Signout(
 	}
 
 	if req.Session != "" {
-		targetSession := sessionKey(auth.user.ID, req.Session)
+		targetSession := sessionKey(auth.User().ID, req.Session)
 		if err = s.cache.DeleteWithPrefix(ctx, targetSession); err != nil {
 			fmt.Println(err.Error())
 			return nil, status.Errorf(_internal, err.Error())
 		}
 		// if the targeted session is current session then we will remove cookies
-		if req.GetSession() == auth.payload.Payload.SessionID {
+		if req.GetSession() == auth.Payload().Payload.SessionID {
 			if err = removeCookies(ctx); err != nil {
 				return nil, status.Errorf(_internal, err.Error())
 			}
@@ -54,7 +54,7 @@ func (s *Server) Signout(
 		return &rpc.SignoutResponse{Message: "session deleted"}, nil
 	}
 
-	currentSession := sessionKey(auth.user.ID, auth.payload.Payload.SessionID)
+	currentSession := sessionKey(auth.User().ID, auth.Payload().Payload.SessionID)
 	if err = s.cache.DeleteWithPrefix(ctx, currentSession); err != nil {
 		return nil, status.Errorf(_internal, err.Error())
 	}

@@ -3,11 +3,11 @@ package server
 import (
 	"context"
 
+	"github.com/sirjager/gopkg/utils"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/sirjager/gopkg/tokens"
-	"github.com/sirjager/gopkg/utils"
+	"github.com/sirjager/trueauth/internal/tokens"
 	"github.com/sirjager/trueauth/rpc"
 )
 
@@ -22,13 +22,11 @@ func (s *Server) Refresh(
 		return nil, status.Errorf(_unauthenticated, err.Error())
 	}
 
-	meta := s.extractMetadata(ctx)
-
 	sessionID := utils.XIDNew().String()
 	tokenPayload := tokens.PayloadData{
-		UserID:    auth.user.ID,
-		ClientIP:  meta.clientIP,
-		UserAgent: meta.userAgent,
+		UserID:    auth.User().ID,
+		ClientIP:  auth.ClientIP(),
+		UserAgent: auth.UserAgent(),
 		SessionID: sessionID,
 	}
 	accessTokenDuration := s.config.Auth.AccessTokenExpDur
@@ -37,7 +35,7 @@ func (s *Server) Refresh(
 		return nil, status.Errorf(_internal, err.Error())
 	}
 
-	accessKey := tokenKey(auth.user.ID, sessionID, TokenTypeAccess)
+	accessKey := tokenKey(auth.User().ID, sessionID, TokenTypeAccess)
 	if err = s.cache.Set(ctx, accessKey, accessPayload, accessTokenDuration); err != nil {
 		return nil, status.Errorf(_internal, err.Error())
 	}
@@ -49,11 +47,7 @@ func (s *Server) Refresh(
 	}
 
 	if req.GetUser() {
-		_profile, err := auth.user.Profile()
-		if err != nil {
-			return nil, status.Errorf(_internal, err.Error())
-		}
-		response.User = publicProfile(_profile)
+		response.User = auth.Profile()
 	}
 
 	return response, nil

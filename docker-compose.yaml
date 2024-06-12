@@ -40,6 +40,19 @@ services:
     networks: [trueauth]
     # ports: [6379:6379]   # Disable ports in production
 
+
+  haproxy:
+    image: haproxy:lts-alpine
+    container_name: trueauth
+    restart: unless-stopped
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on: [trueauth]
+    ports: 
+      - 4420:80  # Http port
+      - 4421:50051  # Grpc port
+    networks: [proxy]
+
   trueauth:
     security_opt: [no-new-privileges:true]
     build:
@@ -48,7 +61,6 @@ services:
     command: ["/app/main"]
     entrypoint: ["/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh"]
     environment:
-      DATABASE_HOST: postgres
       REDIS_ADDRESS: redis:6379
     volumes:
       - /etc/timezone:/etc/timezone:ro
@@ -60,15 +72,3 @@ services:
       resources:
         limits:
           memory: 256M
-
-  haproxy:
-    image: haproxy:lts-alpine
-    container_name: haproxy
-    restart: unless-stopped
-    volumes:
-      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-    depends_on: [trueauth]
-    ports: 
-      - 4420:80  # Http port
-      - 4421:50051  # Grpc port
-    networks: [proxy]

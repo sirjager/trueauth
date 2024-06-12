@@ -117,28 +117,28 @@ tasks:
     cmd: |
       migrate \
       -source file://{{.MIGRATIONS_DIR}} \
-      -database {{.DATABASE_URL}} -verbose up
+      -database {{.POSTGRES_URL}} -verbose up
 
   migration-drop:
     desc: drop everything inside database
     cmd: |
       migrate \
       -source file://{{.MIGRATIONS_DIR}} \
-      -database {{.DATABASE_URL}} -verbose drop -f
+      -database {{.POSTGRES_URL}} -verbose drop -f
 
   migration-up:
     desc: run migrations up
     cmd: |
       migrate \
       -source file://{{.MIGRATIONS_DIR}} \
-      -database {{.DATABASE_URL}} -verbose up
+      -database {{.POSTGRES_URL}} -verbose up
 
   migration-down:
     desc: run migrations down
     cmd: |
       migrate \
       -source file://{{.MIGRATIONS_DIR}} \
-      -database {{.DATABASE_URL}} -verbose down -all
+      -database {{.POSTGRES_URL}} -verbose down -all
 
   migration-build:
     desc: build migration files as binary code

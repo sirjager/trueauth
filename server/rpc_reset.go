@@ -8,14 +8,13 @@ import (
 	"time"
 
 	"github.com/hibiken/asynq"
+	"github.com/sirjager/gopkg/utils"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/status"
 
-	"github.com/sirjager/gopkg/hash"
-	"github.com/sirjager/gopkg/tokens"
-	"github.com/sirjager/gopkg/utils"
-	"github.com/sirjager/gopkg/validator"
 	"github.com/sirjager/trueauth/db/db"
+	"github.com/sirjager/trueauth/internal/hash"
+	"github.com/sirjager/trueauth/internal/tokens"
 	rpc "github.com/sirjager/trueauth/rpc"
 	"github.com/sirjager/trueauth/worker"
 )
@@ -63,8 +62,8 @@ func (s *Server) Reset(
 			Code:      code,
 			UserID:    user.ID,
 			UserEmail: user.Email,
-			ClientIP:  meta.clientIP,
-			UserAgent: meta.userAgent,
+			ClientIP:  meta.clientIP(),
+			UserAgent: meta.userAgent(),
 		}
 		token, _, tokenErr := s.tokens.CreateToken(params, s.config.Auth.ResetTokenExpDur)
 		if tokenErr != nil {
@@ -119,10 +118,10 @@ func (s *Server) Reset(
 
 	// following 2 checks are optional, there is no need to enforce same ip and useragent
 	// but it makes whole process more secure
-	if tokenPayoad.Payload.UserAgent != meta.userAgent {
+	if tokenPayoad.Payload.UserAgent != meta.userAgent() {
 		return nil, status.Errorf(_unauthenticated, "invalid code, user agent does not match")
 	}
-	if tokenPayoad.Payload.ClientIP != meta.clientIP {
+	if tokenPayoad.Payload.ClientIP != meta.clientIP() {
 		return nil, status.Errorf(_unauthenticated, "invalid code, client ip does not match")
 	}
 
@@ -148,7 +147,7 @@ func (s *Server) Reset(
 func validateResetRequest(
 	req *rpc.ResetRequest,
 ) (violations []*errdetails.BadRequest_FieldViolation) {
-	if err := validator.ValidateEmail(req.GetEmail()); err != nil {
+	if err := validateEmail(req.GetEmail()); err != nil {
 		violations = append(violations, fieldViolation("email", err))
 	}
 
@@ -156,7 +155,7 @@ func validateResetRequest(
 		if len(req.GetCode()) != passwordResetCodeDigitsCount {
 			violations = append(violations, fieldViolation("code", fmt.Errorf("invalid code")))
 		}
-		if err := validator.ValidatePassword(req.GetNewPassword()); err != nil {
+		if err := validatePassword(req.GetNewPassword()); err != nil {
 			violations = append(violations, fieldViolation("newPassword", err))
 		}
 	}

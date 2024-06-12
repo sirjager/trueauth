@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/sirjager/gopkg/utils"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/sirjager/gopkg/tokens"
-	"github.com/sirjager/gopkg/utils"
+	"github.com/sirjager/trueauth/internal/tokens"
 	rpc "github.com/sirjager/trueauth/rpc"
 )
 
@@ -40,9 +40,9 @@ func (s *Server) Signin(
 	sessionID := utils.XIDNew().String()
 
 	tokenPayload := tokens.PayloadData{
-		UserID:    auth.profile.ID,
-		ClientIP:  auth.clientIP,
-		UserAgent: auth.userAgent,
+		UserID:    auth.Profile().Id,
+		ClientIP:  auth.ClientIP(),
+		UserAgent: auth.UserAgent(),
 		SessionID: sessionID,
 	}
 
@@ -58,12 +58,12 @@ func (s *Server) Signin(
 		return nil, status.Errorf(_internal, err.Error())
 	}
 
-	accessKey := tokenKey(auth.profile.ID, sessionID, TokenTypeAccess)
+	accessKey := tokenKey(auth.Profile().Id, sessionID, TokenTypeAccess)
 	if err = s.cache.Set(ctx, accessKey, aPayload, aTDuration); err != nil {
 		return nil, status.Errorf(_internal, err.Error())
 	}
 
-	refreshKey := tokenKey(auth.profile.ID, sessionID, TokenTypeRefresh)
+	refreshKey := tokenKey(auth.Profile().Id, sessionID, TokenTypeRefresh)
 	if err = s.cache.Set(ctx, refreshKey, rPayload, rTDuration); err != nil {
 		return nil, status.Errorf(_internal, err.Error())
 	}
@@ -79,7 +79,7 @@ func (s *Server) Signin(
 	}
 
 	if req.GetUser() {
-		response.User = publicProfile(auth.profile)
+		response.User = auth.Profile()
 	}
 
 	if req.GetCookies() {

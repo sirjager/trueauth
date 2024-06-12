@@ -5,11 +5,11 @@ import (
 	"context"
 	"errors"
 
+	"github.com/sirjager/gopkg/cache"
 	"google.golang.org/grpc/status"
 
-	"github.com/sirjager/gopkg/cache"
-	"github.com/sirjager/gopkg/tokens"
 	"github.com/sirjager/trueauth/db/db"
+	"github.com/sirjager/trueauth/internal/tokens"
 	"github.com/sirjager/trueauth/rpc"
 )
 
@@ -41,7 +41,7 @@ func (s *Server) Validate(
 		return &rpc.ValidateResponse{Message: tokens.ErrInvalidToken.Error()}, nil
 	}
 
-	user, err := s.store.ReadUser(ctx, incoming.Payload.UserID)
+	dbuser, err := s.store.ReadUser(ctx, incoming.Payload.UserID)
 	if err != nil {
 		if errors.Is(err, db.ErrRecordNotFound) {
 			return &rpc.ValidateResponse{Message: tokens.ErrInvalidToken.Error()}, nil
@@ -50,18 +50,14 @@ func (s *Server) Validate(
 	}
 
 	// verified users are not supposed to have token, though it will never happen
-	if !user.Verified {
+	if !dbuser.Verified {
 		return &rpc.ValidateResponse{Message: tokens.ErrInvalidToken.Error()}, nil
 	}
 
 	response := &rpc.ValidateResponse{Message: "valid token"}
 
 	if req.GetUser() {
-		profile, err := user.Profile()
-		if err != nil {
-			return nil, status.Errorf(_internal, err.Error())
-		}
-		response.User = publicProfile(profile)
+		response.User = publicProfile(dbuser)
 	}
 
 	return response, nil

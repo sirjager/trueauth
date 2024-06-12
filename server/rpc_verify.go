@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/hibiken/asynq"
+	"github.com/sirjager/gopkg/utils"
 	"google.golang.org/grpc/status"
 
-	"github.com/sirjager/gopkg/tokens"
-	"github.com/sirjager/gopkg/utils"
 	"github.com/sirjager/trueauth/db/db"
+	"github.com/sirjager/trueauth/internal/tokens"
 	rpc "github.com/sirjager/trueauth/rpc"
 	"github.com/sirjager/trueauth/worker"
 )
@@ -26,7 +26,7 @@ func (s *Server) Verify(ctx context.Context, req *rpc.VerifyRequest) (*rpc.Verif
 		return nil, status.Errorf(_aborted, errInvaidCode)
 	}
 
-	user, err := s.store.ReadUserByEmail(ctx, req.GetEmail())
+	dbuser, err := s.store.ReadUserByEmail(ctx, req.GetEmail())
 	if err != nil {
 		// NOTE: Here we can also return ErrEmailNotRegistered, but
 		// we dont want to disclose if user exists or not, so we simply return email sent.
@@ -36,20 +36,15 @@ func (s *Server) Verify(ctx context.Context, req *rpc.VerifyRequest) (*rpc.Verif
 		return nil, status.Errorf(_internal, err.Error())
 	}
 
-	profile, err := user.Profile()
-	if err != nil {
-		return nil, status.Errorf(_internal, err.Error())
-	}
-
-	if user.Verified {
-		return &rpc.VerifyResponse{User: publicProfile(profile)}, nil
+	if dbuser.Verified {
+		return &rpc.VerifyResponse{User: publicProfile(dbuser)}, nil
 	}
 
 	meta := s.extractMetadata(ctx)
 
 	if len(req.GetCode()) == 0 {
-		if time.Since(user.LastEmailVerify) < s.config.Auth.VerifyTokenCooldown {
-			tryAfter := s.config.Auth.VerifyTokenCooldown - time.Since(user.LastEmailVerify)
+		if time.Since(dbuser.LastEmailVerify) < s.config.Auth.VerifyTokenCooldown {
+			tryAfter := s.config.Auth.VerifyTokenCooldown - time.Since(dbuser.LastEmailVerify)
 			return nil, status.Errorf(
 				_aborted,
 				"email verification has been requested recently, please try again after %s",
@@ -60,10 +55,10 @@ func (s *Server) Verify(ctx context.Context, req *rpc.VerifyRequest) (*rpc.Verif
 		code := utils.RandomNumberAsString(verifyCodeDigitsCount)
 		tokenParams := tokens.PayloadData{
 			Code:      code,
-			UserID:    user.ID,
-			UserEmail: user.Email,
-			ClientIP:  meta.clientIP,
-			UserAgent: meta.userAgent,
+			UserID:    dbuser.ID,
+			UserEmail: dbuser.Email,
+			ClientIP:  meta.clientIP(),
+			UserAgent: meta.userAgent(),
 		}
 		token, _, tokenErr := s.tokens.CreateToken(tokenParams, s.config.Auth.VerifyTokenExpDur)
 		if tokenErr != nil {
@@ -81,7 +76,7 @@ func (s *Server) Verify(ctx context.Context, req *rpc.VerifyRequest) (*rpc.Verif
 		}
 
 		updateParam := db.UpdateUserEmailVerificationTokenParams{
-			ID:               user.ID,
+			ID:               dbuser.ID,
 			LastEmailVerify:  time.Now(),
 			TokenEmailVerify: token,
 		}
@@ -92,12 +87,12 @@ func (s *Server) Verify(ctx context.Context, req *rpc.VerifyRequest) (*rpc.Verif
 		return &rpc.VerifyResponse{Message: "check your inbox for further instructions"}, nil
 	}
 
-	tokenPayload, err := s.tokens.VerifyToken(user.TokenEmailVerify)
+	tokenPayload, err := s.tokens.VerifyToken(dbuser.TokenEmailVerify)
 	if err != nil {
 		return nil, status.Errorf(_aborted, "invalid code: %s", err.Error())
 	}
 
-	if !bytes.Equal(tokenPayload.Payload.UserID, user.ID) {
+	if !bytes.Equal(tokenPayload.Payload.UserID, dbuser.ID) {
 		return nil, status.Errorf(_aborted, errInvaidCode)
 	}
 
@@ -105,20 +100,15 @@ func (s *Server) Verify(ctx context.Context, req *rpc.VerifyRequest) (*rpc.Verif
 		return nil, status.Errorf(_aborted, errInvaidCode)
 	}
 
-	if tokenPayload.Payload.UserEmail != user.Email {
+	if tokenPayload.Payload.UserEmail != dbuser.Email {
 		return nil, status.Errorf(_aborted, errInvaidCode)
 	}
 
-	params := db.UpdateUserEmailVerifiedParams{Verified: true, TokenEmailVerify: "", ID: user.ID}
-	user, err = s.store.UpdateUserEmailVerified(ctx, params)
+	params := db.UpdateUserEmailVerifiedParams{Verified: true, TokenEmailVerify: "", ID: dbuser.ID}
+	dbuser, err = s.store.UpdateUserEmailVerified(ctx, params)
 	if err != nil {
 		return nil, status.Errorf(_internal, "failed to update verified status, %s", err.Error())
 	}
 
-	profile, err = user.Profile()
-	if err != nil {
-		return nil, status.Errorf(_internal, err.Error())
-	}
-
-	return &rpc.VerifyResponse{User: publicProfile(profile)}, nil
+	return &rpc.VerifyResponse{User: publicProfile(dbuser)}, nil
 }

@@ -3,8 +3,6 @@ package server
 import (
 	"context"
 
-	"google.golang.org/grpc/status"
-
 	"github.com/sirjager/trueauth/rpc"
 )
 
@@ -14,10 +12,5 @@ func (s *Server) User(ctx context.Context, r *rpc.UserRequest) (*rpc.UserRespons
 	if err != nil {
 		return nil, unAuthorizedError(err)
 	}
-	profile, err := auth.user.Profile()
-	if err != nil {
-		return nil, status.Errorf(_internal, err.Error())
-	}
-
-	return &rpc.UserResponse{User: publicProfile(profile)}, nil
+	return &rpc.UserResponse{User: auth.Profile()}, nil
 }

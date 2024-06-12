@@ -14,9 +14,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/sirjager/gopkg/cache"
 	dbPkg "github.com/sirjager/gopkg/db"
-	"github.com/sirjager/gopkg/hash"
 	"github.com/sirjager/gopkg/mail"
-	"github.com/sirjager/gopkg/tokens"
+	"github.com/sirjager/trueauth/internal/tokens"
 	"github.com/swaggo/swag/example/basic/docs"
 	"golang.org/x/sync/errgroup"
 
@@ -26,6 +25,7 @@ import (
 	"github.com/sirjager/trueauth/db/db"
 	"github.com/sirjager/trueauth/logger"
 	"github.com/sirjager/trueauth/migrations"
+	"github.com/sirjager/trueauth/internal/hash"
 	"github.com/sirjager/trueauth/server"
 	"github.com/sirjager/trueauth/worker"
 )

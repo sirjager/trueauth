@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/hibiken/asynq"
+	"github.com/sirjager/gopkg/utils"
 	"google.golang.org/grpc/status"
 
-	"github.com/sirjager/gopkg/tokens"
-	"github.com/sirjager/gopkg/utils"
 	"github.com/sirjager/trueauth/db/db"
+	"github.com/sirjager/trueauth/internal/tokens"
 	rpc "github.com/sirjager/trueauth/rpc"
 	"github.com/sirjager/trueauth/worker"
 )
@@ -29,16 +29,14 @@ func (s *Server) Delete(
 		return nil, unAuthorizedError(err)
 	}
 
-	meta := s.extractMetadata(ctx)
-
 	// NOTE: If the code is not provided, that means user does not have deletion code,
 	// we will create a new one and send it to user via email
 	if len(req.GetCode()) == 0 {
 
 		// check if user has requested deletion code recently, if yes, then return error
-		if time.Since(auth.user.LastUserDeletion) < s.config.Auth.DeleteTokenCooldown {
+		if time.Since(auth.User().LastUserDeletion) < s.config.Auth.DeleteTokenCooldown {
 			tryAfter := s.config.Auth.DeleteTokenCooldown - time.Since(
-				auth.user.LastUserDeletion,
+				auth.User().LastUserDeletion,
 			)
 			errMessage := "account deletion has been requested recently, please try again after %s"
 			return nil, status.Errorf(_aborted, errMessage, tryAfter)
@@ -49,10 +47,10 @@ func (s *Server) Delete(
 		// later we will check if token is valid
 		params := tokens.PayloadData{
 			Code:      code,
-			UserID:    auth.user.ID,
-			UserEmail: auth.user.Email,
-			ClientIP:  meta.clientIP,
-			UserAgent: meta.userAgent,
+			UserID:    auth.User().ID,
+			UserEmail: auth.User().Email,
+			ClientIP:  auth.ClientIP(),
+			UserAgent: auth.UserAgent(),
 		}
 		token, _, tokenErr := s.tokens.CreateToken(params, s.config.Auth.DeleteTokenExpDur)
 		if tokenErr != nil {
@@ -77,7 +75,7 @@ func (s *Server) Delete(
 		// after task is successfully distributed then we will save deletion token in database
 		// so that mutltiple requests can be minimized
 		updateParam := db.UpdateUserDeletionTokenParams{
-			ID:                auth.user.ID,
+			ID:                auth.User().ID,
 			TokenUserDeletion: token,
 			LastUserDeletion:  time.Now(),
 		}
@@ -94,35 +92,35 @@ func (s *Server) Delete(
 	// NOTE: If the code is not empty we will validate and continue with deletion
 	//
 	// this will validate if token is invalid or expired  and what not...
-	tokenPayoad, err := s.tokens.VerifyToken(auth.user.TokenUserDeletion)
+	tokenPayoad, err := s.tokens.VerifyToken(auth.User().TokenUserDeletion)
 	if err != nil {
 		return nil, status.Errorf(_unauthenticated, err.Error())
 	}
 	if tokenPayoad.Payload.Code != req.GetCode() {
 		return nil, status.Errorf(_unauthenticated, "invalid code")
 	}
-	if tokenPayoad.Payload.UserEmail != auth.user.Email {
+	if tokenPayoad.Payload.UserEmail != auth.User().Email {
 		return nil, status.Errorf(_unauthenticated, "invalid code")
 	}
-	if !bytes.Equal(tokenPayoad.Payload.UserID, auth.user.ID) {
+	if !bytes.Equal(tokenPayoad.Payload.UserID, auth.User().ID) {
 		return nil, status.Errorf(_unauthenticated, "invalid code")
 	}
 
 	// following 2 checks are optional, but it makes more secure
 	// there is no need to enforce same ip and useragent
-	if tokenPayoad.Payload.UserAgent != meta.userAgent {
+	if tokenPayoad.Payload.UserAgent != auth.UserAgent() {
 		return nil, status.Errorf(_unauthenticated, "invalid code")
 	}
-	if tokenPayoad.Payload.ClientIP != meta.clientIP {
+	if tokenPayoad.Payload.ClientIP != auth.ClientIP() {
 		return nil, status.Errorf(_unauthenticated, "invalid code")
 	}
 
 	// delete user document
-	if err = s.store.DeleteUser(ctx, auth.user.ID); err != nil {
+	if err = s.store.DeleteUser(ctx, auth.User().ID); err != nil {
 		return nil, status.Errorf(_internal, err.Error())
 	}
 
-	if err = s.cache.DeleteWithPrefix(ctx, userSessionsKey(auth.user.ID)); err != nil {
+	if err = s.cache.DeleteWithPrefix(ctx, userSessionsKey(auth.User().ID)); err != nil {
 		return nil, status.Errorf(_internal, err.Error())
 	}
 
