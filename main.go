@@ -23,7 +23,6 @@ import (
 	"github.com/sirjager/trueauth/cmd/gateway"
 	"github.com/sirjager/trueauth/cmd/grpc"
 	"github.com/sirjager/trueauth/config"
-	"github.com/sirjager/trueauth/consul"
 	"github.com/sirjager/trueauth/db/db"
 	"github.com/sirjager/trueauth/logger"
 	"github.com/sirjager/trueauth/migrations"
@@ -146,18 +145,6 @@ func main() {
 	if config.GrpcPort != 0 {
 		address := fmt.Sprintf("%s:%d", config.Host, config.GrpcPort)
 		grpc.RunServer(ctx, wg, address, srvr)
-	}
-
-	if config.Consul.ConsulAddr != "" {
-		consul, cErr := consul.NewClient(log.Logger, config.Consul)
-		if cErr != nil {
-			logger.Logr.Fatal().Err(cErr).Msg("failed to initialize consul client")
-		}
-		if cErr = consul.Register(); cErr != nil {
-			logger.Logr.Fatal().Err(cErr).Msg("failed to register service in consul")
-		}
-		logger.Logr.Info().Msg("successfully registered service in consul")
-		defer consul.Deregister()
 	}
 
 	err = wg.Wait()

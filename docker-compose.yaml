@@ -68,5 +68,7 @@ services:
     volumes:
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     depends_on: [trueauth]
-    ports: ["4420:80"]
+    ports: 
+      - 4420:80  # Http port
+      - 4421:50051  # Grpc port
     networks: [proxy]

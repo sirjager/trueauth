@@ -8,7 +8,6 @@ import (
 	"github.com/sirjager/gopkg/mail"
 	"github.com/spf13/viper"
 
-	"github.com/sirjager/trueauth/consul"
 	"github.com/sirjager/trueauth/logger"
 )
 
@@ -41,7 +40,6 @@ type Config struct {
 	Mail     mail.Config
 	Logger   logger.Config
 	Auth     AuthConfig
-	Consul   consul.Config
 }
 
 // LoadConfigs loads the configuration from the specified YAML file.
@@ -77,19 +75,13 @@ func LoadConfigs(path string, name string, startTime time.Time) (config Config, 
 
 	config.Database.Migrations = "file://" + config.Database.Migrations
 
-	if err = viper.Unmarshal(&config.Consul); err != nil {
-		return
-	}
-
 	// Construct the DBUrl using the DBConfig values.
 	if config.ServerName == "" {
 		config.ServerName, _ = os.Hostname()
 		config.Logger.ServerName = config.ServerName
-		config.Consul.ServerName = config.ServerName
 	}
 
 	config.StartTime = startTime
-	config.Consul.StartTime = startTime
 
 	return
 }
