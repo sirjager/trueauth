@@ -26,7 +26,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - trueauth-pg:/var/lib/postgresql/data
     networks: [trueauth]
-    # ports: [5432:5432]  # Disable ports in production
+    ports: [5432:5432]  # Disable ports in production
 
   redis:
     security_opt: [no-new-privileges:true]
@@ -38,36 +38,36 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - trueauth-redis:/data
     networks: [trueauth]
-    # ports: [6379:6379]   # Disable ports in production
+    ports: [6379:6379]   # Disable ports in production
 
 
-  haproxy:
-    image: haproxy:lts-alpine
-    container_name: trueauth
-    restart: unless-stopped
-    volumes:
-      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-    depends_on: [trueauth]
-    ports: 
-      - 4420:80  # Http port
-      - 4421:50051  # Grpc port
-      - 4422:8085  # stats port
-    networks: [proxy]
+  # haproxy:
+  #   image: haproxy:lts-alpine
+  #   container_name: trueauth
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+  #   depends_on: [trueauth]
+  #   ports: 
+  #     - 4420:80  # Http port
+  #     - 4421:50051  # Grpc port
+  #     - 4422:8085  # stats port
+  #   networks: [proxy]
 
-  trueauth:
-    security_opt: [no-new-privileges:true]
-    build:
-      context: .
-    restart: unless-stopped
-    command: ["/app/main"]
-    entrypoint: ["/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh"]
-    volumes:
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    depends_on: [postgres, redis]
-    networks: [trueauth, proxy]
-    deploy:
-      replicas: 2
-      resources:
-        limits:
-          memory: 256M
+  # trueauth:
+  #   security_opt: [no-new-privileges:true]
+  #   build:
+  #     context: .
+  #   restart: unless-stopped
+  #   command: ["/app/main"]
+  #   entrypoint: ["/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh"]
+  #   volumes:
+  #     - /etc/timezone:/etc/timezone:ro
+  #     - /etc/localtime:/etc/localtime:ro
+  #   depends_on: [postgres, redis]
+  #   networks: [trueauth, proxy]
+  #   deploy:
+  #     replicas: 2
+  #     resources:
+  #       limits:
+  #         memory: 256M

@@ -17,8 +17,12 @@ type PasetoBuilder struct {
 // NewPasetoBuilder returns a new PasetoBuilder
 func NewPasetoBuilder(symmetricKey string) (TokenBuilder, error) {
 	if len(symmetricKey) != chacha20poly1305.KeySize {
-		return nil, fmt.Errorf("invalid key size: must be exactly %d characters", chacha20poly1305.KeySize)
+		return nil, fmt.Errorf(
+			"invalid key size: must be exactly %d characters",
+			chacha20poly1305.KeySize,
+		)
 	}
+
 	builder := &PasetoBuilder{
 		paseto:       paseto.NewV2(),
 		symmetricKey: []byte(symmetricKey),
@@ -28,11 +32,15 @@ func NewPasetoBuilder(symmetricKey string) (TokenBuilder, error) {
 }
 
 // CreateToken creates a new token
-func (pb *PasetoBuilder) CreateToken(p PayloadData, duration time.Duration) (string, *Payload, error) {
+func (pb *PasetoBuilder) CreateToken(
+	p PayloadData,
+	duration time.Duration,
+) (string, *Payload, error) {
 	payload, err := NewPayload(p, duration)
 	if err != nil {
 		return "", payload, err
 	}
+
 	token, err := pb.paseto.Encrypt(pb.symmetricKey, payload, nil)
 	if err != nil {
 		return "", nil, err

@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/sirjager/trueauth/db/db"
-	"github.com/sirjager/trueauth/internal/hash"
+	"github.com/sirjager/trueauth/pkg/hash"
 	rpc "github.com/sirjager/trueauth/rpc"
 )
 

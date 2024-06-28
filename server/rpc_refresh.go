@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/sirjager/trueauth/internal/tokens"
+	"github.com/sirjager/trueauth/pkg/tokens"
 	"github.com/sirjager/trueauth/rpc"
 )
 
