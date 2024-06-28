@@ -2,8 +2,8 @@
 version: "3.8"
 
 volumes:
-  trueauth-pg:
   trueauth-redis:
+  trueauth-postgres:
 
 networks:
   trueauth:
@@ -12,7 +12,7 @@ networks:
 
 services:
 
-  postgres:
+  trueauth-postgres:
     security_opt: [no-new-privileges:true]
     restart: unless-stopped
     container_name: trueauth-postgres
@@ -24,11 +24,10 @@ services:
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      - trueauth-pg:/var/lib/postgresql/data
+      - trueauth-postgres:/var/lib/postgresql/data
     networks: [trueauth]
-    ports: [5432:5432]  # Disable ports in production
 
-  redis:
+  trueauth-redis:
     security_opt: [no-new-privileges:true]
     restart: unless-stopped
     container_name: trueauth-redis
@@ -38,36 +37,34 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - trueauth-redis:/data
     networks: [trueauth]
-    ports: [6379:6379]   # Disable ports in production
 
 
-  # haproxy:
-  #   image: haproxy:lts-alpine
-  #   container_name: trueauth
-  #   restart: unless-stopped
-  #   volumes:
-  #     - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-  #   depends_on: [trueauth]
-  #   ports: 
-  #     - 4420:80  # Http port
-  #     - 4421:50051  # Grpc port
-  #     - 4422:8085  # stats port
-  #   networks: [proxy]
+  trueauth-haproxy:
+    image: haproxy:lts-alpine
+    container_name: trueauth-haproxy
+    restart: unless-stopped
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on: [trueauth]
+    ports: 
+      - 4420:80  # Http port
+      - 4421:50051  # Grpc port
+    networks: [proxy]
 
-  # trueauth:
-  #   security_opt: [no-new-privileges:true]
-  #   build:
-  #     context: .
-  #   restart: unless-stopped
-  #   command: ["/app/main"]
-  #   entrypoint: ["/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh"]
-  #   volumes:
-  #     - /etc/timezone:/etc/timezone:ro
-  #     - /etc/localtime:/etc/localtime:ro
-  #   depends_on: [postgres, redis]
-  #   networks: [trueauth, proxy]
-  #   deploy:
-  #     replicas: 2
-  #     resources:
-  #       limits:
-  #         memory: 256M
+  trueauth:
+    security_opt: [no-new-privileges:true]
+    build:
+      context: .
+    restart: unless-stopped
+    command: ["/app/main"]
+    entrypoint: ["/app/wait-for.sh", "trueauth-postgres:5432", "--", "/app/start.sh"]
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    depends_on: [trueauth-postgres, trueauth-redis]
+    networks: [trueauth, proxy]
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 256M
