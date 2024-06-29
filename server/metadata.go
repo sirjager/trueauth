@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"google.golang.org/grpc"
@@ -54,11 +55,15 @@ func (m *_MetaData) userAgent() string {
 	return m._userAgent
 }
 
-func (s *Server) sendHeaders(ctx context.Context, headers map[string]string) error {
+func (s *Server) SetStatusCode(ctx context.Context, code int) error {
+	return grpc.SendHeader(ctx, metadata.Pairs("x-http-code", fmt.Sprintf("%d", code)))
+}
+
+func (s *Server) SetHeaders(ctx context.Context, headers map[string]string) error {
 	return grpc.SendHeader(ctx, metadata.New(headers))
 }
 
-func (s *Server) sendCookies(ctx context.Context, cookies []http.Cookie) error {
+func (s *Server) SetCookies(ctx context.Context, cookies []http.Cookie) error {
 	headers := map[string]string{}
 	for _, cookie := range cookies {
 		bytes, err := json.Marshal(cookie)

@@ -7,8 +7,8 @@ import (
 
 	"github.com/sirjager/trueauth/config"
 	"github.com/sirjager/trueauth/db/db"
-	"github.com/sirjager/trueauth/pkg/hash"
-	"github.com/sirjager/trueauth/pkg/tokens"
+	"github.com/sirjager/trueauth/internal/hash"
+	"github.com/sirjager/trueauth/internal/tokens"
 	"github.com/sirjager/trueauth/rpc"
 	"github.com/sirjager/trueauth/worker"
 )

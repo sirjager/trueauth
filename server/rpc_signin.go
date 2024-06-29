@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/sirjager/trueauth/pkg/tokens"
+	"github.com/sirjager/trueauth/internal/tokens"
 	rpc "github.com/sirjager/trueauth/rpc"
 )
 
@@ -83,7 +83,7 @@ func (s *Server) Signin(
 	}
 
 	if req.GetCookies() {
-		if err = s.sendCookies(ctx, []http.Cookie{
+		if err = s.SetCookies(ctx, []http.Cookie{
 			{
 				Name: "sessionId", Value: sessionID,
 				Path: "/", Expires: aPayload.ExpiresAt,

@@ -16,6 +16,6 @@ func welcomeMessage(name string) string {
 func (s *Server) Welcome(ctx context.Context, r *rpc.WelcomeRequest) (*rpc.WelcomeResponse, error) {
 	return &rpc.WelcomeResponse{
 		Message: welcomeMessage(s.config.ServiceName),
-		Docs:    "/v1/docs",
+		Docs:   "/docs/",
 	}, nil
 }

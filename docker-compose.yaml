@@ -26,6 +26,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - trueauth-postgres:/var/lib/postgresql/data
     networks: [trueauth]
+    ports: [5432:5432]   # Disable ports in production
 
   trueauth-redis:
     security_opt: [no-new-privileges:true]
@@ -37,34 +38,35 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - trueauth-redis:/data
     networks: [trueauth]
+    ports: [6379:6379]   # Disable ports in production
 
 
-  trueauth-haproxy:
-    image: haproxy:lts-alpine
-    container_name: trueauth-haproxy
-    restart: unless-stopped
-    volumes:
-      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-    depends_on: [trueauth]
-    ports: 
-      - 4420:80  # Http port
-      - 4421:50051  # Grpc port
-    networks: [proxy]
+  # trueauth-haproxy:
+  #   image: haproxy:lts-alpine
+  #   container_name: trueauth-haproxy
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+  #   depends_on: [trueauth]
+  #   ports: 
+  #     - 4420:80  # Http port
+  #     - 4421:50051  # Grpc port
+  #   networks: [proxy]
 
-  trueauth:
-    security_opt: [no-new-privileges:true]
-    build:
-      context: .
-    restart: unless-stopped
-    command: ["/app/main"]
-    entrypoint: ["/app/wait-for.sh", "trueauth-postgres:5432", "--", "/app/start.sh"]
-    volumes:
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    depends_on: [trueauth-postgres, trueauth-redis]
-    networks: [trueauth, proxy]
-    deploy:
-      replicas: 1
-      resources:
-        limits:
-          memory: 256M
+  # trueauth:
+  #   security_opt: [no-new-privileges:true]
+  #   build:
+  #     context: .
+  #   restart: unless-stopped
+  #   command: ["/app/main"]
+  #   entrypoint: ["/app/wait-for.sh", "trueauth-postgres:5432", "--", "/app/start.sh"]
+  #   volumes:
+  #     - /etc/timezone:/etc/timezone:ro
+  #     - /etc/localtime:/etc/localtime:ro
+  #   depends_on: [trueauth-postgres, trueauth-redis]
+  #   networks: [trueauth, proxy]
+  #   deploy:
+  #     replicas: 1
+  #     resources:
+  #       limits:
+  #         memory: 256M

@@ -10,7 +10,7 @@ import (
 	"github.com/sirjager/gopkg/mail"
 	"github.com/sirjager/trueauth/config"
 	"github.com/sirjager/trueauth/db/db"
-	"github.com/sirjager/trueauth/pkg/tokens"
+	"github.com/sirjager/trueauth/internal/tokens"
 )
 
 const (

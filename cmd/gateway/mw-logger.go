@@ -15,11 +15,12 @@ const (
 	RUNNING   = "running"
 )
 
-func logger(logr zerolog.Logger, handler http.Handler) http.Handler {
-	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+func logger(logr zerolog.Logger, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		rec := &ResponseRecorder{ResponseWriter: res, StatusCode: 200, Body: &bytes.Buffer{}}
-		handler.ServeHTTP(rec, req)
+		rec := &ResponseRecorder{ResponseWriter: w, StatusCode: 200, Body: &bytes.Buffer{}}
+		next.ServeHTTP(rec, r)
+
 		duration := time.Since(start)
 		event := logr.Info()
 
@@ -32,8 +33,8 @@ func logger(logr zerolog.Logger, handler http.Handler) http.Handler {
 		}
 
 		event.
-			Str("method", req.Method).
-			Str("path", req.RequestURI).
+			Str("method", r.Method).
+			Str("path", r.RequestURI).
 			Str("latency", duration.String()).
 			Int("code", int(rec.StatusCode)).
 			// Str("status", http.StatusText(rec.StatusCode)).

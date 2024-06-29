@@ -12,7 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/sirjager/trueauth/db/db"
-	"github.com/sirjager/trueauth/pkg/tokens"
+	"github.com/sirjager/trueauth/internal/tokens"
 	rpc "github.com/sirjager/trueauth/rpc"
 )
 
@@ -22,15 +22,15 @@ type AuthorizedUser interface {
 	UserAgent() string
 	Token() string
 	Payload() tokens.Payload
-	User () db.User
+	User() db.User
 }
 
 type _authorizedUser struct {
-	user    *rpc.User
 	dbuser  db.User
-	payload tokens.Payload
-	token   string
 	meta    MetaData
+	user    *rpc.User
+	token   string
+	payload tokens.Payload
 }
 
 const (
@@ -128,7 +128,7 @@ func (s *Server) authorize(ctx context.Context, refresh ...bool) (AuthorizedUser
 	if !auth.dbuser.Verified {
 		// return error if email not verified
 		s.Logr.Error().Msg("email not verified")
-		return nil, fmt.Errorf(errEmailNotVerified)
+		return nil, fmt.Errorf(errEmailVerificationRequired)
 	}
 
 	auth.meta = s.extractMetadata(ctx)

@@ -3,7 +3,6 @@ package gateway
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -31,6 +30,7 @@ func StartServer(
 	outgoingHeaders := []string{
 		"+x-server-name",
 		"+x-latency",
+		"+x-http-code",
 	}
 
 	opts := []runtime.ServeMuxOption{
@@ -62,8 +62,8 @@ func StartServer(
 	if err != nil {
 		srvr.Logr.Fatal().Err(err).Msg("can not statik file server")
 	}
-	swaggerHander := http.StripPrefix("/v1/docs/", http.FileServer(statikFS))
-	mux.Handle("/v1/docs/", swaggerHander)
+	swaggerHander := http.StripPrefix("/docs/", http.FileServer(statikFS))
+	mux.Handle("/docs/", swaggerHander)
 
 	handler := logger(srvr.Logr, mux)
 
@@ -81,7 +81,6 @@ func StartServer(
 
 	wg.Go(func() error {
 		<-ctx.Done()
-		fmt.Println()
 		srvr.Logr.Info().Msg("gracefully shutting down http server")
 		// NOTE: here we can limit maximum time for graceful shutdown
 		// but for now we do not need it, we can use context.Background()

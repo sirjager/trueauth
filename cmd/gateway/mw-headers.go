@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -38,13 +39,25 @@ func addCustomHeaders(
 	return func(ctx context.Context, w http.ResponseWriter, m protoreflect.ProtoMessage) error {
 		if md, ok := runtime.ServerMetadataFromContext(ctx); ok {
 			for k, v := range md.HeaderMD {
-				if strings.HasPrefix(k, "set-cookie:") {
+				switch true {
+
+				// rewriting status code
+				case k == "x-http-code":
+					code, err := strconv.Atoi(v[0])
+					if err != nil {
+						return err
+					}
+					w.WriteHeader(code)
+
+					// setting cookies
+				case strings.HasPrefix(k, "set-cookie:"):
 					cookie := http.Cookie{}
 					if err := json.Unmarshal([]byte(v[0]), &cookie); err != nil {
 						return err
 					}
 					http.SetCookie(w, &cookie)
-				} else {
+				default:
+					// default write headers
 					w.Header().Set(k, strings.Join(v, ","))
 				}
 			}

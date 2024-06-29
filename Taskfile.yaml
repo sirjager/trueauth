@@ -183,3 +183,4 @@ tasks:
     cmds:
       - mockgen -package mockdb -destination \
         db/mock/store.go github.com/sirjager/{{.SERVICE_NAME}}/db/db Store
+

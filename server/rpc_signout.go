@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -21,7 +20,7 @@ func (s *Server) Signout(
 	}
 
 	removeCookies := func(ctx context.Context) error {
-		return s.sendCookies(ctx, []http.Cookie{
+		return s.SetCookies(ctx, []http.Cookie{
 			{Name: "sessionId", Value: "", Path: "/", Expires: time.Now(), HttpOnly: true},
 			{Name: "accessToken", Value: "", Path: "/", Expires: time.Now(), HttpOnly: true},
 			{Name: "refreshToken", Value: "", Path: "/", Expires: time.Now(), HttpOnly: true},
@@ -42,7 +41,6 @@ func (s *Server) Signout(
 	if req.Session != "" {
 		targetSession := sessionKey(auth.User().ID, req.Session)
 		if err = s.cache.DeleteWithPrefix(ctx, targetSession); err != nil {
-			fmt.Println(err.Error())
 			return nil, status.Errorf(_internal, err.Error())
 		}
 		// if the targeted session is current session then we will remove cookies

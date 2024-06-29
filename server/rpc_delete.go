@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/sirjager/trueauth/db/db"
-	"github.com/sirjager/trueauth/pkg/tokens"
+	"github.com/sirjager/trueauth/internal/tokens"
 	rpc "github.com/sirjager/trueauth/rpc"
 	"github.com/sirjager/trueauth/worker"
 )
@@ -125,7 +125,7 @@ func (s *Server) Delete(
 	}
 
 	// clear cookies
-	if err = s.sendCookies(ctx, []http.Cookie{
+	if err = s.SetCookies(ctx, []http.Cookie{
 		{Name: "sessionId", Value: "", Path: "/", Expires: time.Now(), HttpOnly: true},
 		{Name: "accessToken", Value: "", Path: "/", Expires: time.Now(), HttpOnly: true},
 		{Name: "refreshToken", Value: "", Path: "/", Expires: time.Now(), HttpOnly: true},

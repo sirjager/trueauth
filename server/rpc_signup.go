@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/sirjager/gopkg/utils"
@@ -10,7 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/sirjager/trueauth/db/db"
-	"github.com/sirjager/trueauth/pkg/hash"
+	"github.com/sirjager/trueauth/internal/hash"
 	rpc "github.com/sirjager/trueauth/rpc"
 )
 
@@ -41,6 +42,10 @@ func (s *Server) Signup(ctx context.Context, req *rpc.SignupRequest) (*rpc.Signu
 		if db.ErrorCode(err) == db.ErrUniqueViolation.Code {
 			return nil, status.Errorf(_conflict, uniqueViolationError(err))
 		}
+		return nil, status.Errorf(_internal, err.Error())
+	}
+
+	if err = s.SetStatusCode(ctx, http.StatusCreated); err != nil {
 		return nil, status.Errorf(_internal, err.Error())
 	}
 

@@ -24,15 +24,14 @@ const (
 	_canceled           = codes.Canceled
 	_unknown            = codes.Unknown
 	_resourceExhausted  = codes.ResourceExhausted
-	_outOfRange         = codes.OutOfRange
 )
 
 const (
-	errUserDoesNotExist     = "user does not exists: %s"
-	errInvalidToken         = "unauthorized, invalid token"
-	errExpiredToken         = "unauthorized, expired token"
-	errMissingAuthorization = "unauthorized, missing or invalid token"
-	errFailedToRetrieveUser = "failed to retrieve user: %s"
-	errEmailNotVerified     = "email not verified"
-	errEmailNotRegistered   = "email not registered"
+	errUserDoesNotExist          = "user does not exists: %s"
+	errInvalidToken              = "unauthorized, invalid token"
+	errExpiredToken              = "unauthorized, expired token"
+	errMissingAuthorization      = "unauthorized, missing or invalid token"
+	errFailedToRetrieveUser      = "failed to retrieve user: %s"
+	errEmailVerificationRequired = "email verification required"
+	errEmailNotRegistered        = "email not registered"
 )
