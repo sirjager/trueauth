@@ -100,11 +100,11 @@ func (s *Server) authenticate(ctx context.Context) (Authenticated, error) {
 		return nil, fmt.Errorf(errFailedToRetrieveUser, err.Error())
 	}
 
-	// if !dbuser.Verified {
-	// 	// return error if email not verified
-	// 	s.Logr.Error().Err(err).Msg("email not verified")
-	// 	return nil, fmt.Errorf(errEmailVerificationRequired)
-	// }
+	if !dbuser.Verified {
+		// return error if email not verified
+		s.Logr.Error().Err(err).Msg("email not verified")
+		return nil, fmt.Errorf(errEmailVerificationRequired)
+	}
 
 	if err = s.hasher.Verify(dbuser.HashSalt, dbuser.HashPass, password); err != nil {
 		// return error invalid credentials if password does not match
